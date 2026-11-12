@@ -248,7 +248,7 @@ dialog#ed[open]{display:flex;flex-direction:column}
 .prow.cp{padding:5px 12px 5px 8px}.cp .pt{font-weight:500}.cp .pck{width:30px;height:30px}
 .card .pn.dn{right:36px}
 @media(hover:none){.card .pn{opacity:.6}.card .pn.on{opacity:1}}
-.dseg{max-width:320px;margin:12px 4px 4px}
+.dseg{max-width:none;margin:12px 4px 8px}.dseg button{height:40px;font-size:15px}
 .er.dnote{align-items:flex-start;padding-top:2px}.er.dnote .cb{margin-top:3px}
 .er.dnote .t{min-width:0}.er.dnote .tm{margin-top:6px}.er.dnote .t .pt{display:block}.er.dnote .ppv{font-size:12.5px;max-width:100%}
 /* 설정 */
@@ -470,7 +470,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.9';
+const VER='1.10';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
