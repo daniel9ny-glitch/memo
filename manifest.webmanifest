@@ -2,7 +2,7 @@
   "name": "늘메모",
   "short_name": "늘메모",
   "description": "체크한 항목이 날짜별로 남는 체크리스트 메모장",
-  "start_url": "./index.html",
+  "start_url": "./memo.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
