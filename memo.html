@@ -126,6 +126,11 @@ dialog#ed[open]{display:flex;flex-direction:column}
 @media(hover:none){.row .x{opacity:.6}}
 .row .x:hover{background:var(--hover)}
 .row.drag{background:var(--hover)}
+.row{border-left:4px solid transparent;border-radius:8px;margin:2px 6px 2px 0;transition:background .12s}
+.row textarea{caret-color:var(--accent);caret-width:3px}
+.row textarea::placeholder{color:var(--accent);opacity:.75;font-weight:600}
+.row:focus-within{background:color-mix(in srgb,var(--accent) 16%,transparent);border-left-color:var(--accent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 60%,transparent)}
+.row:focus-within textarea{font-weight:600}
 .row.dropb{border-top-color:var(--accent)}
 .row.dropa{border-bottom-color:var(--accent)}
 .row.done .t{flex:1;padding:8px 4px;line-height:20px;text-decoration:line-through;color:var(--fg2);word-break:break-word}
@@ -471,7 +476,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.11';
+const VER='1.12';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1295,7 +1300,7 @@ function actRow(n,it){
   const r=h('div','row');r.dataset.id=id;r.style.paddingLeft=(2+it.i*28)+'px';
   const g=h('span','grip');g.innerHTML=ico('grip');g.title='끌어서 순서 바꾸기';
   const cb=cbEl(false);cb.addEventListener('click',()=>{const m=cur(),x=get();if(!m||!x)return;setDone(m,x,true);renderItems();});
-  const ta=h('textarea');ta.rows=1;ta.value=it.t;ta.spellcheck=false;ta.setAttribute('aria-label','항목');
+  const ta=h('textarea');ta.rows=1;ta.value=it.t;ta.spellcheck=false;ta.placeholder='여기에 새 항목 입력';ta.setAttribute('aria-label','항목');
   const x=h('button','x');x.type='button';x.innerHTML=ico('x');x.title='항목 삭제';x.setAttribute('aria-label','항목 삭제');
   x.addEventListener('click',()=>{const m=cur(),i=get();if(!m||!i)return;removeItem(m,i);save();renderItems();});
   ta.addEventListener('input',()=>{const m=cur(),i=get();if(!m||!i)return;i.t=ta.value;i.u=stamp(m);save();grow(ta);});
