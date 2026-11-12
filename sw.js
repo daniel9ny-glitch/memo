@@ -1,5 +1,5 @@
 /* 늘메모 서비스워커: 네트워크 우선, 오프라인이면 저장해 둔 앱 파일로 */
-const CACHE = 'neulmemo-v7';
+const CACHE = 'neulmemo-v9';
 const SHELL = ['./', './memo.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

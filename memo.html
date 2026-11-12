@@ -356,6 +356,11 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 #lblList{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 #lblList .lc.part{opacity:.75;border-style:dashed}
 .search input{min-width:0;width:100%}.top .ib{flex:none}
+.swr.lift{transform:scale(1.03);transition:transform .15s;z-index:3}
+.sbar{display:flex;gap:6px;margin:0 0 12px}
+.sbar label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--fg2)}
+.sbar select{flex:1 1 0;min-width:0;height:36px;border:1px solid var(--line);border-radius:18px;background:var(--bg);color:var(--fg);padding:0 8px;font-size:13px}
+.sbar .hint{font-size:12px;color:var(--fg2);align-self:center}
 </style>
 </head>
 <body>
@@ -457,7 +462,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.6';
+const VER='1.8';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -781,14 +786,14 @@ function mergeNote(a,b){
   for(const it of b.items){const o=mp.get(it.id);if(!o||(it.u||0)>(o.u||0))mp.set(it.id,it);}
   const cut=now()-30*864e5;
   const mm=k=>{const q=new Map();for(const it of a[k]||[])q.set(it.id,it);for(const it of b[k]||[]){const o=q.get(it.id);if(!o||(it.u||0)>(o.u||0))q.set(it.id,it);}return [...q.values()].filter(i=>!(i.x&&(i.u||0)<cut));};
-  return JSON.parse(JSON.stringify({id:a.id,type:m.type,title:m.title,color:m.color,pin:m.pin,trash:m.trash,tm:Math.max(a.tm||0,b.tm||0),
+  return JSON.parse(JSON.stringify({id:a.id,type:m.type,title:m.title,color:m.color,pin:m.pin,trash:m.trash,tm:Math.max(a.tm||0,b.tm||0),po:m.po,
     text:x.text,rich:x.rich||'',dn:m.dn||0,labels:m.labels||[],tx:Math.max(a.tx||0,b.tx||0),cr:Math.min(a.cr||now(),b.cr||now()),mod:Math.max(a.mod||0,b.mod||0),
     items:[...mp.values()].filter(i=>!(i.x&&(i.u||0)<cut)),imgs:mm('imgs'),auds:mm('auds')}));
 }
-const ser=n=>JSON.stringify([n.type,n.title,n.color,!!n.pin,n.trash,n.dn||0,n.tm,n.text,n.rich||'',(n.labels||[]).join('\u0001'),n.tx,n.items.slice().sort((p,q)=>p.id<q.id?-1:1).map(i=>[i.id,i.t,i.d,i.i,i.o,i.u,i.c||0,i.x?1:0]),[...(n.imgs||[]),...(n.auds||[])].map(m=>[m.id,m.u||0,m.x?1:0,m.dur||0]).sort((p,q)=>p[0]<q[0]?-1:1)]);
+const ser=n=>JSON.stringify([n.po||0,n.type,n.title,n.color,!!n.pin,n.trash,n.dn||0,n.tm,n.text,n.rich||'',(n.labels||[]).join('\u0001'),n.tx,n.items.slice().sort((p,q)=>p.id<q.id?-1:1).map(i=>[i.id,i.t,i.d,i.i,i.o,i.u,i.c||0,i.x?1:0]),[...(n.imgs||[]),...(n.auds||[])].map(m=>[m.id,m.u||0,m.x?1:0,m.dur||0]).sort((p,q)=>p[0]<q[0]?-1:1)]);
 
 /* ---------- 화면 ---------- */
-const V={view:'memo',q:'',note:'',label:'',vm:(['card','list','compact'].includes(LS.get('nm-vm'))?LS.get('nm-vm'):'card'),dtab:LS.get('nm-dtab')==='list'?'list':'memo'};
+const V={view:'memo',q:'',note:'',label:'',vm:(['card','list','compact'].includes(LS.get('nm-vm'))?LS.get('nm-vm'):'card'),dtab:LS.get('nm-dtab')==='list'?'list':'memo',sort:(['mod','cr','abc'].includes(LS.get('nm-sort'))?LS.get('nm-sort'):'mod'),kind:(['list','text','photo','voice'].includes(LS.get('nm-kind'))?LS.get('nm-kind'):'')};
 const colorOf=n=>'c-'+(n.color||'none');
 function matches(n,q){
   if((n.title||'').toLowerCase().includes(q)||(n.labels||[]).some(l=>l.toLowerCase().includes(q)))return true;
@@ -830,13 +835,17 @@ function wrapNote(el,n){
   w.addEventListener('touchstart',e=>{if(e.touches.length>1)return;
     if(SWOPEN&&SWOPEN!==w)swClose();
     x0=e.touches[0].clientX;y0=e.touches[0].clientY;mode=0;dx=0;
-    clearTimeout(lp);lp=setTimeout(()=>{lp=0;if(open)return;mode=3;sup=Date.now();if(navigator.vibrate)try{navigator.vibrate(25);}catch(_){}selStart(n.id);},520);
+    clearTimeout(lp);lp=setTimeout(()=>{lp=0;if(open)return;sup=Date.now();if(navigator.vibrate)try{navigator.vibrate(25);}catch(_){}
+      if(n.pin&&!SEL.on&&V.view==='memo'){mode=4;w.classList.add('lift');return;}
+      mode=3;selStart(n.id);},520);
   },{passive:true});
   w.addEventListener('touchmove',e=>{if(mode===3)return;const t=e.touches[0],mx=t.clientX-x0,my=t.clientY-y0;
+    if(mode===4){if(e.cancelable)e.preventDefault();if(!DRG)dragStart(w,t.clientY);dragMove(t.clientX,t.clientY);return;}
     if(!mode&&(Math.abs(mx)>8||Math.abs(my)>8)){clearTimeout(lp);lp=0;mode=(Math.abs(mx)>Math.abs(my)*1.2&&!SEL.on)?1:2;}
     if(mode===1){dx=Math.max(-R,Math.min(0,(open?-R:0)+mx));w.classList.add('swing');w._set(dx);sup=Date.now();}
-  },{passive:true});
+  },{passive:false});
   const end=()=>{clearTimeout(lp);lp=0;
+    if(mode===4){w.classList.remove('lift');if(DRG)dragEnd();else selStart(n.id);sup=Date.now();mode=0;return;}
     if(mode===1){const o=dx<-R/2;w._set(o?-R:0,1);if(o)SWOPEN=w;else{SWOPEN=null;setTimeout(()=>w.classList.remove('swing'),200);}sup=Date.now();}
     else if(mode===3)sup=Date.now();
     mode=0;};
@@ -846,7 +855,8 @@ function wrapNote(el,n){
     if(Date.now()-sup<450){e.stopPropagation();e.preventDefault();return;}
     if(open&&!e.target.closest('.swa')){e.stopPropagation();e.preventDefault();swClose();}
   },true);
-  w.addEventListener('contextmenu',e=>{e.preventDefault();if(!SEL.on)selStart(n.id);});
+  w.dataset.pid=n.id;
+  w.addEventListener('contextmenu',e=>{e.preventDefault();if(!SEL.on&&matchMedia('(pointer:fine)').matches)selStart(n.id);});
   return w;
 }
 function lblDlg(){
@@ -876,6 +886,37 @@ function bindSel(){
     if(!confirm(ns.length+'개 메모를 삭제하시겠습니까?\n(휴지통으로 옮겨지며 30일 뒤 완전히 삭제됩니다)'))return;
     ns.forEach(toTrash);selExit();render();toast(ns.length+'개 메모를 휴지통으로 옮겼습니다');});
   addEventListener('keydown',e=>{if(e.key==='Escape'&&SEL.on&&!$('#dlgLbl').open){selExit();}});
+}
+
+/* ---------- 고정 메모 순서 바꾸기 (꾹 눌러 끌기) + 정렬·종류 필터 ---------- */
+const pinSort=a=>a.slice().sort((x,y)=>{const px=x.po==null?Infinity:x.po,py=y.po==null?Infinity:y.po;if(px!==py)return px<py?-1:1;return (y.mod||0)-(x.mod||0);});
+const SORTS=[['mod','최근 수정순'],['cr','최근 작성순'],['abc','가나다순']];
+const KINDS=[['','모든 종류'],['list','체크리스트만'],['text','텍스트메모만'],['photo','사진메모만'],['voice','음성메모만']];
+function sortRest(a){
+  const f={mod:(x,y)=>(y.mod||0)-(x.mod||0),cr:(x,y)=>(y.cr||0)-(x.cr||0),abc:(x,y)=>titleOf(x).localeCompare(titleOf(y),'ko')||(y.mod||0)-(x.mod||0)}[V.sort]||((x,y)=>(y.mod||0)-(x.mod||0));
+  return a.slice().sort(f);
+}
+let DRG=null;
+function dragStart(w,y){
+  const r=w.getBoundingClientRect(),g=w.cloneNode(true);g.classList.remove('lift');g.removeAttribute('data-pid');
+  g.style.cssText='position:fixed;left:'+r.left+'px;top:'+r.top+'px;width:'+r.width+'px;z-index:90;pointer-events:none;opacity:.95;box-shadow:0 10px 28px rgba(0,0,0,.4);transform:scale(1.03);transition:none;margin:0';
+  document.body.appendChild(g);w.style.opacity='.25';
+  DRG={w,g,off:y-r.top,y,x:r.left,tm:setInterval(()=>{if(!DRG)return;if(DRG.y<100)scrollBy(0,-14);else if(DRG.y>innerHeight-100)scrollBy(0,14);else return;dragHit();},30)};
+}
+function dragHit(){
+  const {w,x,y}=DRG,sibs=[...w.parentNode.children].filter(c=>c!==w&&c.classList.contains('swr'));
+  for(const s of sibs){const r=s.getBoundingClientRect();
+    if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom){if(y<r.top+r.height/2)s.before(w);else s.after(w);break;}}
+}
+function dragMove(x,y){DRG.x=x;DRG.y=y;DRG.g.style.top=(y-DRG.off)+'px';dragHit();}
+function dragEnd(){
+  const {w,g,tm}=DRG;DRG=null;clearInterval(tm);g.remove();w.style.opacity='';
+  const vis=[...w.parentNode.children].filter(c=>c.dataset&&c.dataset.pid).map(c=>c.dataset.pid),vs=new Set(vis);
+  const all=pinSort(S.notes.filter(n=>!n.trash&&!n.dn&&n.pin)),slots=[];
+  all.forEach((n,i)=>{if(vs.has(n.id))slots.push(i);});
+  const out=all.slice();slots.forEach((si,k)=>{out[si]=noteById(vis[k]);});
+  let ch=0;out.forEach((n,i)=>{const po=(i+1)*1000;if(n&&n.po!==po){n.po=po;n.tm=stamp(n);ch++;}});
+  if(ch){save();toast('고정 메모 순서를 바꿨습니다');}
 }
 function prow(n,q,mode){   /* 게시글 목록 / 제목만 보기 */
   const r=h('div','prow '+colorOf(n)+(mode==='compact'?' cp':''));r.dataset.id=n.id;
@@ -956,10 +997,15 @@ function renderMemo(box){
   for(const [k,ic,t] of [['card','vgrid','카드 보기'],['list','vlist','목록 보기 (게시글)'],['compact','vline','제목만 보기']]){
     const b=h('button',V.vm===k?'on':'');b.type='button';b.title=t;b.setAttribute('aria-label',t);b.setAttribute('aria-pressed',String(V.vm===k));b.innerHTML=ico(ic);
     b.addEventListener('click',()=>{V.vm=k;LS.set('nm-vm',k);render();});seg.appendChild(b);}
-  vb.append(chips,seg);box.appendChild(vb);
-  const list=live.filter(n=>(!q||matches(n,q))&&(q||!V.label||(n.labels||[]).includes(V.label))).sort((a,b)=>(b.mod||0)-(a.mod||0));
-  if(!list.length){const e=h('div','empty');e.innerHTML=q?`<b>찾는 메모가 없습니다</b>'${V.q.replace(/[<>&]/g,'')}'와 일치하는 제목·항목이 없습니다.`:'<b>메모가 없습니다</b>위의 “메모 작성…”을 눌러 첫 메모를 만들어 보세요.';box.appendChild(e);return;}
-  const pins=list.filter(n=>n.pin),rest=list.filter(n=>!n.pin),vm=V.vm;
+  if(chips.children.length){vb.append(chips);box.appendChild(vb);}
+  const sb=h('div','sbar');
+  const mk=(lbl,opts,key,ls)=>{const se=h('select');se.setAttribute('aria-label',lbl);se.title=lbl;for(const [v,t] of opts)se.add(new Option(t,v));se.value=V[key];
+    se.addEventListener('change',()=>{V[key]=se.value;LS.set(ls,se.value);render();});return se;};
+  sb.append(mk('정렬',SORTS,'sort','nm-sort'),mk('종류',KINDS,'kind','nm-kind'),mk('보기 방식',[['card','카드 보기'],['list','목록 보기'],['compact','제목만 보기']],'vm','nm-vm'));
+  box.appendChild(sb);
+  const list=live.filter(n=>(!V.kind||n.type===V.kind)&&(!q||matches(n,q))&&(q||!V.label||(n.labels||[]).includes(V.label)));
+  if(!list.length){const e=h('div','empty');e.innerHTML=q?`<b>찾는 메모가 없습니다</b>'${V.q.replace(/[<>&]/g,'')}'와 일치하는 제목·항목이 없습니다.`:V.kind?'<b>이 종류의 메모가 없습니다</b>위의 「종류」에서 다른 종류를 고르거나 「모든 종류」로 바꿔 보세요.':'<b>메모가 없습니다</b>위의 “메모 작성…”을 눌러 첫 메모를 만들어 보세요.';box.appendChild(e);return;}
+  const pins=pinSort(list.filter(n=>n.pin)),rest=sortRest(list.filter(n=>!n.pin)),vm=V.vm;
   const host=vm==='card'?box:box.appendChild(h('div','pwrap'));
   const body=l=>{if(vm==='card'){const g=h('div','grid');for(const n of l)g.appendChild(wrapNote(card(n,q),n));return g;}
     const w=h('div','plist');for(const n of l)w.appendChild(wrapNote(prow(n,q,vm),n));return w;};
