@@ -112,8 +112,10 @@ dialog{border:1px solid var(--line);padding:0;color:var(--fg)}
 dialog::backdrop{background:rgba(0,0,0,.6)}
 dialog#ed{width:min(620px,100vw);max-height:min(90dvh,860px);border-radius:12px;background:var(--nc,var(--bg));box-shadow:var(--shadow)}
 dialog#ed[open]{display:flex;flex-direction:column}
-.eh{display:flex;align-items:center;padding:12px 8px 4px 18px;gap:4px}
-.eh input{flex:1;min-width:0;border:0;background:none;outline:none;font-size:20px;font-weight:700;padding:6px 0}
+.etop{display:flex;align-items:center;gap:2px;padding:max(6px,env(safe-area-inset-top)) 6px 0 6px;flex:none}.etop .sp{flex:1}
+.etop .ib{width:44px;height:44px}
+.eh{display:flex;align-items:center;padding:4px 18px 2px 18px;gap:4px;flex:none}
+.eh input{flex:1;min-width:0;border:0;background:none;outline:none;font-size:22px;font-weight:700;padding:6px 0}
 .eh input::placeholder{color:var(--fg2);font-weight:500}
 .eb{flex:1;overflow:auto;padding:4px 0 6px}
 .row{display:flex;align-items:flex-start;gap:0;padding:0 8px 0 2px;border-top:1px solid transparent;border-bottom:1px solid transparent}
@@ -393,7 +395,8 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 <main id="view"></main>
 
 <dialog id="ed" aria-label="메모 편집">
-  <div class="eh"><input id="edTitle" placeholder="제목" maxlength="120" autocomplete="off"><button class="ib" id="edDone" type="button" title="완료로 처리" aria-label="완료로 처리"></button><button class="ib" id="edPin" type="button" title="고정" aria-label="고정"></button></div>
+  <div class="etop"><button class="ib" id="edBack" type="button" title="뒤로" aria-label="뒤로"></button><span class="sp"></span><button class="ib" id="edDone" type="button" title="완료로 처리" aria-label="완료로 처리"></button><button class="ib" id="edPin" type="button" title="고정" aria-label="고정"></button></div>
+  <div class="eh"><input id="edTitle" placeholder="제목" maxlength="120" autocomplete="off"></div>
   <div class="eb" id="edBody"></div>
   <div class="dock" id="edDock">
     <div class="pal" id="edPal" hidden></div>
@@ -476,7 +479,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.12';
+const VER='1.13';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -492,6 +495,7 @@ const IC={
  trash:'<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
  plus:'<path d="M12 5v14M5 12h14"/>',
  tag:'<path d="M3 12V4h8l9 9-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/>',
+ back:'<path d="M19 12H5M11 18l-6-6 6-6"/>',
  cam:'<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
  stp:'<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
@@ -1282,7 +1286,7 @@ function openEd(id,fresh){
     ta.addEventListener('paste',e=>{const tx=(e.clipboardData||window.clipboardData).getData('text/plain');e.preventDefault();document.execCommand('insertText',false,tx);});
     const cr=h('div','banner cdate');cr.id='tBanner';cr.textContent=tInfo(n);
     if(n.type==='photo'||n.type==='voice'){$('#edBody').append(cr,mediaPanel(n),ta);renderMedia();}else $('#edBody').append(cr,ta);
-    $('#edFmtBar').hidden=LS.get('nm-fbar')==='0';$('#fbSize').value='15';$('#fbBlock').value='div';$('#fbFont').value='';fmtSync();if(fresh&&n.type!=='voice')ta.focus();
+    $('#edFmtBar').hidden=LS.get('nm-fbar')==='0';$('#fbSize').value='15';$('#fbBlock').value='div';$('#fbFont').value='';fmtSync();
   }else{
     const a=h('div',null);a.id='actList';const add=h('button','add');add.type='button';add.innerHTML=ico('plus')+'<span>항목 추가</span>';
     add.addEventListener('click',()=>{const m=cur(),it=addItem(m,'',0);save();renderItems({id:it.id});});
@@ -1290,10 +1294,8 @@ function openEd(id,fresh){
     const bn=h('div','banner');bn.id='nBanner';bn.hidden=true;
     const cr=h('div','banner cdate');cr.id='tBanner';cr.textContent=tInfo(n);
     $('#edBody').append(cr,bn,a,add,dw);
-    renderItems(fresh?{id:(active(n)[0]||{}).id}:null);
-    if(!fresh&&!n.title)$('#edTitle').focus();
+    renderItems(null);
   }
-  if(fresh&&n.type==='list'&&!n.title){/* 새 체크리스트: 제목 먼저 */setTimeout(()=>$('#edTitle').focus(),30);}
 }
 function actRow(n,it){
   const id=it.id,get=()=>{const m=cur();return m&&m.items.find(x=>x.id===id);};
@@ -1437,6 +1439,8 @@ function bindEd(){
   $('#edColor').addEventListener('click',()=>{const p=$('#edPal');p.hidden=!p.hidden;});
   $('#edPal').addEventListener('click',e=>{const s=e.target.closest('.sw');if(!s)return;const n=cur();if(!n)return;n.color=s.dataset.c;touchMeta(n);edMeta();});
   $('#edClose').addEventListener('click',closeEd);
+  $('#edBack').innerHTML=ico('back');$('#edBack').addEventListener('click',closeEd);
+  $('#edBody').addEventListener('click',e=>{if(e.target!==$('#edBody'))return;const t=$('#edBody .etx');if(t){t.focus();const g=getSelection(),r=document.createRange();r.selectNodeContents(t);r.collapse(false);g.removeAllRanges();g.addRange(r);}});
   d.addEventListener('click',e=>{if(e.target===d)closeEd();});
   d.addEventListener('close',()=>{edCleanup();render();});
   $('#edColor').innerHTML=ico('pal');$('#edPin').innerHTML=ico('pin');
