@@ -304,6 +304,8 @@ dialog#set,dialog#dlgSync{width:min(460px,calc(100vw - 24px));border-radius:14px
 .madd .i{width:18px;height:18px}
 .vbox{border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--fg) 4%,transparent)}
 .vtop{display:flex;align-items:center;gap:12px}
+.vpick{display:flex;gap:10px}.vb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 6px;border-radius:14px;color:#fff;font-weight:700;font-size:15px}.vb[hidden]{display:none}
+.vb.rec{background:var(--danger)}.vb.dic{background:var(--accent);color:var(--accent-fg)}.vb .i{width:26px;height:26px}.vb small{font-weight:400;font-size:11px;opacity:.9}.vb.on{animation:vpulse 1.2s infinite}
 .vrec{width:56px;height:56px;border-radius:50%;background:var(--danger);color:#fff;display:grid;place-items:center;flex:none}
 .vrec .i{width:26px;height:26px}.vrec.on{animation:vpulse 1.2s infinite}
 @keyframes vpulse{0%,100%{box-shadow:0 0 0 0 rgba(220,50,50,.5)}50%{box-shadow:0 0 0 10px rgba(220,50,50,0)}}
@@ -421,7 +423,7 @@ dialog#dlgImg .ib{position:absolute;top:10px;right:10px;color:#fff;z-index:2}
 
 <script>
 (()=>{'use strict';
-const VER='1.2';
+const VER='1.4';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -656,17 +658,19 @@ const VC={on:false,id:null,rec:null,stream:null,chunks:[],t0:0,tick:0,mime:''};
 const DK={on:false,rec:null,tmr:0,live:'',last:null,lastText:'',lastT:0,id:null};
 function vbox(){
   const b=h('div','vbox');
-  b.innerHTML='<div class="vtop"><button class="vrec" type="button" id="vRec"></button><div><div class="vtm" id="vTm">0:00</div><div class="vst" id="vSt"></div></div></div>'
-   +'<div class="vlive" id="dkLive" hidden></div>'
-   +'<label class="vopt"><input type="checkbox" id="vKeep"> 음성 파일도 함께 저장 (끄면 받아쓰기만 합니다)</label>';
-  const keep=b.querySelector('#vKeep');keep.checked=LS.get('nm-vrec')!=='0'&&typeof MediaRecorder!=='undefined';keep.disabled=typeof MediaRecorder==='undefined';
-  keep.addEventListener('change',()=>LS.set('nm-vrec',keep.checked?'1':'0'));
-  const rb=b.querySelector('#vRec');rb.innerHTML=ico('mic');rb.setAttribute('aria-label','녹음 시작');
-  rb.addEventListener('click',()=>{VC.on?vcStop():vcStart();});
-  b.querySelector('#vSt').textContent=SRec?'녹음 버튼을 누르면 말하는 대로 받아 적습니다':'이 브라우저는 받아쓰기를 지원하지 않아 녹음만 저장됩니다';
+  b.innerHTML='<div class="vpick" id="vPick"><button class="vb rec" type="button" id="vRec"></button><button class="vb dic" type="button" id="vDic"></button></div>'
+   +'<div class="vtop"><div class="vtm" id="vTm">0:00</div><div class="vst" id="vSt"></div></div>'
+   +'<div class="vlive" id="dkLive" hidden></div>';
+  b.querySelector('#vRec').innerHTML=ico('mic')+'<span>녹음</span><small>소리를 파일로 저장</small>';
+  b.querySelector('#vDic').innerHTML=ico('text')+'<span>받아쓰기</span><small>말을 글로 바로 적기</small>';
+  b.querySelector('#vRec').addEventListener('click',()=>{VC.on?vcStop():vcStart('rec');});
+  b.querySelector('#vDic').addEventListener('click',()=>{VC.on?vcStop():vcStart('dic');});
+  if(!SRec||typeof MediaRecorder==='undefined'){const d=b.querySelector(!SRec?'#vDic':'#vRec');d.disabled=true;d.style.opacity='.45';}
+  b.querySelector('#vSt').textContent=SRec?'하나를 골라 누르세요 (녹음과 받아쓰기는 폰에서 동시에 안 될 수 있어요)':'이 브라우저는 받아쓰기를 지원하지 않아 녹음만 됩니다';
   return b;
 }
 const dkN=s=>(s||'').replace(/\s+/g,'');
+function vSt(t){const e=$('#vSt');if(e)e.textContent=t;}
 function dkShow(t){const e=$('#dkLive');if(e){e.textContent=t||'';e.hidden=!t;}}
 function dkCommit(){
   clearTimeout(DK.tmr);const t=(DK.live||'').trim();DK.live='';dkShow('');if(!t)return;
@@ -689,19 +693,19 @@ function dkFeed(e){
 function dkListen(){
   if(!DK.on||!SRec)return;
   const r=new SRec();r.lang='ko-KR';r.continuous=true;r.interimResults=true;DK.rec=r;
-  r.onresult=dkFeed;
-  r.onerror=e=>{const er=e&&e.error;
+  r.onresult=e=>{DK.got=1;dkFeed(e);};
+  r.onerror=e=>{const er=e&&e.error;if(er&&er!=='no-speech'&&er!=='aborted')vSt('받아쓰기 오류: '+er);
     if(er==='not-allowed'||er==='service-not-allowed'){toast('마이크 권한이 거부되어 받아쓰기를 할 수 없습니다','err');DK.on=false;}
     else if(er==='audio-capture'){toast(VC.stream&&VC.rec?'이 기기는 녹음과 받아쓰기를 동시에 못 합니다 · 「음성 파일도 함께 저장」을 끄면 받아쓰기만 됩니다':'마이크를 사용할 수 없습니다','err');DK.on=false;}
     else if(er==='network'){toast('받아쓰기 서버에 연결하지 못했습니다 (인터넷 필요)','err');DK.on=false;}};
   r.onend=()=>{dkCommit();if(DK.on&&DK.rec===r)setTimeout(dkListen,200);};
   try{r.start();}catch(e){}
 }
-function dkStart(id){DK.on=true;DK.id=id;DK.live='';DK.last=null;DK.lastText='';dkListen();}
+function dkStart(id){DK.got=0;clearTimeout(DK.hint);DK.hint=setTimeout(()=>{if(DK.on&&!DK.got)vSt('아직 들리는 소리가 없습니다 · 계속 안 되면 「녹음 파일도 함께 저장」을 꺼 보세요');},7000);DK.on=true;DK.id=id;DK.live='';DK.last=null;DK.lastText='';dkListen();}
 function dkStop(){DK.on=false;dkCommit();try{DK.rec&&DK.rec.stop();}catch(e){}DK.rec=null;}
-async function vcStart(){
+async function vcStart(mode){
   const n=cur();if(!n||VC.on)return;
-  const keep=$('#vKeep')&&$('#vKeep').checked&&typeof MediaRecorder!=='undefined';
+  const keep=mode==='rec';VC.mode=mode;
   VC.id=n.id;VC.chunks=[];VC.rec=null;VC.stream=null;
   if(keep){
     try{VC.stream=await navigator.mediaDevices.getUserMedia({audio:true});
@@ -710,19 +714,19 @@ async function vcStart(){
       VC.rec.ondataavailable=e=>{if(e.data&&e.data.size)VC.chunks.push(e.data);};
       VC.rec.start(1000);
     }catch(e){toast(e&&e.name==='NotAllowedError'?'마이크 권한이 거부되었습니다. 브라우저 설정에서 허용해 주세요':'마이크를 열 수 없습니다','err');vcRelease();return;}
-  }else if(!SRec){toast('이 브라우저는 받아쓰기를 지원하지 않습니다 · 음성 파일 저장을 켜 주세요','err');return;}
-  VC.on=true;VC.t0=now();
-  if(SRec)dkStart(n.id);
-  const rb=$('#vRec');if(rb){rb.classList.add('on');rb.innerHTML=ico('stp');rb.setAttribute('aria-label','녹음 끝내기');}
-  const st=$('#vSt');if(st)st.textContent=SRec?'듣고 받아 적는 중…':'녹음 중…';
+  }else if(!SRec){toast('이 브라우저는 받아쓰기를 지원하지 않습니다','err');return;}
+  VC.on=true;VC.t0=now();try{if(navigator.wakeLock)navigator.wakeLock.request('screen').then(l=>{VC.wl=l;}).catch(()=>{});}catch(e){}
+  if(!keep)dkStart(n.id);
+  const a=$(keep?'#vRec':'#vDic'),o=$(keep?'#vDic':'#vRec');if(a){a.classList.add('on');a.innerHTML=ico('stp')+'<span>끝내기</span>';}if(o)o.hidden=true;
+  vSt(keep?'녹음 중…':'듣고 받아 적는 중… 말씀하세요');
   VC.tick=setInterval(()=>{const t=$('#vTm');if(t)t.textContent=fmtDur((now()-VC.t0)/1000);},250);
 }
 function vcRelease(){if(VC.stream){VC.stream.getTracks().forEach(t=>t.stop());}VC.stream=null;VC.rec=null;}
 async function vcStop(){
-  if(!VC.on)return;VC.on=false;clearInterval(VC.tick);dkStop();
+  if(!VC.on)return;VC.on=false;clearInterval(VC.tick);clearTimeout(DK.hint);dkStop();try{VC.wl&&VC.wl.release();}catch(e){}VC.wl=null;
   const id=VC.id,dur=(now()-VC.t0)/1000,rec=VC.rec,mime=VC.mime;
-  const rb=$('#vRec');if(rb){rb.classList.remove('on');rb.innerHTML=ico('mic');rb.setAttribute('aria-label','녹음 시작');}
-  const st=$('#vSt');if(st)st.textContent='저장했습니다 · 다시 누르면 이어서 녹음합니다';
+  const r1=$('#vRec'),r2=$('#vDic');if(r1){r1.classList.remove('on');r1.hidden=false;r1.innerHTML=ico('mic')+'<span>녹음</span><small>소리를 파일로 저장</small>';}if(r2){r2.classList.remove('on');r2.hidden=false;r2.innerHTML=ico('text')+'<span>받아쓰기</span><small>말을 글로 바로 적기</small>';}
+  vSt('끝났습니다 · 다시 누르면 이어서 합니다');
   if(rec&&rec.state!=='inactive'){
     await new Promise(res=>{rec.onstop=res;try{rec.stop();}catch(e){res();}});
   }
@@ -1097,7 +1101,7 @@ function openEd(id,fresh){
     ta.addEventListener('paste',e=>{const tx=(e.clipboardData||window.clipboardData).getData('text/plain');e.preventDefault();document.execCommand('insertText',false,tx);});
     const cr=h('div','banner cdate');cr.id='tBanner';cr.textContent=tInfo(n);
     if(n.type==='photo'||n.type==='voice'){$('#edBody').append(cr,mediaPanel(n),ta);renderMedia();}else $('#edBody').append(cr,ta);
-    $('#edFmtBar').hidden=LS.get('nm-fbar')==='0';$('#fbSize').value='15';$('#fbBlock').value='div';$('#fbFont').value='';fmtSync();if(fresh&&n.type!=='voice')ta.focus();if(fresh&&n.type==='voice')setTimeout(vcStart,0);
+    $('#edFmtBar').hidden=LS.get('nm-fbar')==='0';$('#fbSize').value='15';$('#fbBlock').value='div';$('#fbFont').value='';fmtSync();if(fresh&&n.type!=='voice')ta.focus();
   }else{
     const a=h('div',null);a.id='actList';const add=h('button','add');add.type='button';add.innerHTML=ico('plus')+'<span>항목 추가</span>';
     add.addEventListener('click',()=>{const m=cur(),it=addItem(m,'',0);save();renderItems({id:it.id});});
@@ -1511,7 +1515,7 @@ function init(){
   $('#qx').addEventListener('click',()=>{$('#q').value='';V.q='';render();});
   bindEd();bindMedia();bindSet();render();gUi();
   addEventListener('pagehide',persist);
-  document.addEventListener('visibilitychange',()=>{if(document.hidden){persist();}else if(gOn())setTimeout(autoSync,600);});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&VC.on&&navigator.wakeLock)navigator.wakeLock.request('screen').then(l=>{VC.wl=l;}).catch(()=>{});if(document.hidden){persist();}else if(gOn())setTimeout(autoSync,600);});
   addEventListener('online',()=>{if(gOn())setTimeout(autoSync,1200);});
   setInterval(()=>{if(!document.hidden&&gOn())autoSync();},120000);
   if(gOn())setTimeout(autoSync,1500);
