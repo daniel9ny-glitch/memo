@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#202124">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -15,14 +15,14 @@
 :root{
   color-scheme:dark;
   --bg:#202124;--fg:#e8eaed;--fg2:#9aa0a6;--line:#5f6368;--line2:#3c4043;--hover:rgba(255,255,255,.08);
-  --accent:#4fc2a8;--accent-fg:#06211b;--danger:#f28b82;--shadow:0 2px 6px rgba(0,0,0,.5);
+  --dock:#17181b;--dockline:rgba(255,255,255,.07);--accent:#4fc2a8;--accent-fg:#06211b;--danger:#f28b82;--shadow:0 2px 6px rgba(0,0,0,.5);
   --c-red:#5c2b29;--c-orange:#614a19;--c-yellow:#635d19;--c-green:#345920;--c-teal:#16504b;--c-sky:#2d555e;
   --c-blue:#1e3a5f;--c-purple:#42275e;--c-pink:#5b2245;--c-brown:#442f19;--c-gray:#3c3f43;
 }
 :root[data-theme=light]{
   color-scheme:light;
   --bg:#ffffff;--fg:#202124;--fg2:#5f6368;--line:#dadce0;--line2:#e8eaed;--hover:rgba(0,0,0,.06);
-  --accent:#0e8a74;--accent-fg:#ffffff;--danger:#c5221f;--shadow:0 1px 4px rgba(60,64,67,.3);
+  --dock:#ffffff;--dockline:rgba(0,0,0,.08);--accent:#0e8a74;--accent-fg:#ffffff;--danger:#c5221f;--shadow:0 1px 4px rgba(60,64,67,.3);
   --c-red:#faafa8;--c-orange:#f39f76;--c-yellow:#fff8b8;--c-green:#e2f6d3;--c-teal:#b4ddd3;--c-sky:#d4e4ed;
   --c-blue:#aeccdc;--c-purple:#d3bfdb;--c-pink:#f6e2dd;--c-brown:#e9e3d4;--c-gray:#efeff1;
 }
@@ -162,23 +162,36 @@ dialog#ed[open]{display:flex;flex-direction:column}
 .lchips{display:flex;gap:6px;flex-wrap:wrap;max-width:600px;margin:-8px auto 16px}
 .lc{height:28px;padding:0 12px;border-radius:14px;border:1px solid var(--line);font-size:12.5px;color:var(--fg2)}
 .lc.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
-.lin{height:30px;border:1px solid var(--line);border-radius:15px;padding:0 12px;background:none;color:var(--fg);outline:none;min-width:150px}
-.fbar{display:flex;align-items:center;gap:4px;padding:8px 12px;border-top:1px solid color-mix(in srgb,var(--fg2) 22%,transparent);overflow-x:auto;white-space:nowrap;flex:none;scrollbar-width:thin}
-.fbar button,.fbar select{height:32px;padding:0 9px;border-radius:8px;border:1px solid var(--line);font-size:13px;flex:none;color:var(--fg);background:transparent}
-.fbar select{max-width:96px;background:var(--bg)}
+.lin{height:32px;border:1px solid var(--line2);border-radius:15px;padding:0 12px;background:none;color:var(--fg);outline:none;min-width:150px}
+.dock{flex:none;background:var(--dock);color:var(--fg);border-top:1px solid var(--dockline);box-shadow:0 -8px 20px rgba(0,0,0,.16);border-radius:18px 18px 0 0;position:relative;padding-bottom:env(safe-area-inset-bottom)}
+@media(min-width:641px){.dock{border-radius:0 0 12px 12px}}
+.dock .pal,.dock .fpop,.dock .menu,.dock .fbar,.dock .ef{border:0;background:transparent}
+.dock .pal,.dock .fpop{padding:10px 14px 2px}
+.dock .menu{padding:6px 6px 0}
+.dock>*+*:not([hidden]){margin:0}
+.fbar{display:flex;align-items:center;gap:2px;padding:8px 10px 2px;overflow-x:auto;white-space:nowrap;flex:none;scrollbar-width:none}
+.fbar::-webkit-scrollbar{display:none}
+.fbar button,.fbar select{height:34px;border:0;border-radius:10px;font-size:13.5px;flex:none;color:var(--fg);background:transparent}
+.fbar button{min-width:34px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center}
+.fbar select{max-width:104px;padding:0 24px 0 10px;background-color:var(--hover);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%239aa0a6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center}
+.fbar select:focus{outline:2px solid var(--accent);outline-offset:-2px}
 .fbar button:hover{background:var(--hover)}
-.fbar button.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
-.fbar .sep{width:1px;height:20px;background:var(--line);flex:none;margin:0 2px}
-.fbar svg{width:16px;height:16px;display:block}
+.fbar button.on{background:color-mix(in srgb,var(--accent) 24%,transparent);color:var(--accent)}
+.fbar .sep{width:1px;height:18px;background:var(--line2);flex:none;margin:0 5px}
+.fbar svg{width:18px;height:18px;display:block}
+.fbar button b,.fbar button i,.fbar button u,.fbar button s{font-size:15px}
+.fbar .car{font-size:9px;font-style:normal;margin-left:2px;opacity:.7}
+.dock .ef{padding:4px 8px 8px;gap:2px}
+.dock .ef .ib{width:42px;height:42px;border-radius:12px;color:var(--fg2)}
+.dock .ef .ib.on,.dock .ef .ib:active{color:var(--accent)}
+.dock .ef .btn{height:38px;border:0;border-radius:19px;padding:0 20px;font-weight:700;background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}
 .fc{font-weight:700;border-bottom:3px solid #d93025;line-height:1.1;display:inline-block}.fc.hl{border-bottom-color:#f9ab00}
 .fpop{display:flex;flex-wrap:wrap;gap:8px;padding:8px 14px;border-top:1px solid color-mix(in srgb,var(--fg2) 22%,transparent)}
-.fpop .sw{width:26px;height:26px;color:var(--fg2);font-size:12px}
-.fpop.al{gap:6px}.fpop .ab{width:40px;height:34px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;color:var(--fg)}.fpop .ab.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.fpop .ab svg{width:18px;height:18px}
-.fbar .car{font-size:9px;font-style:normal;margin-left:3px;opacity:.8}
-.fbar button[data-i],.fbar button[data-f=align]{display:inline-flex;align-items:center;justify-content:center;min-width:34px;padding:0 7px}
-.menu{display:flex;flex-direction:column;padding:6px 0;border-top:1px solid color-mix(in srgb,var(--fg2) 22%,transparent)}
+.fpop .sw{width:28px;height:28px;color:var(--fg2);font-size:12px;background:var(--dock)}
+.fpop.al{gap:6px}.fpop .ab{width:42px;height:36px;border-radius:10px;border:0;background:var(--hover);display:grid;place-items:center;color:var(--fg)}.fpop .ab.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.fpop .ab svg{width:18px;height:18px}
+.menu{display:flex;flex-direction:column}
 .menu[hidden],.fbar[hidden],.pal[hidden],.fpop[hidden]{display:none}
-.menu button{height:42px;padding:0 20px;text-align:left;font-weight:500}
+.menu button{height:44px;padding:0 16px;text-align:left;font-weight:500;border-radius:10px}
 .menu button:hover{background:var(--hover)}
 .etx{white-space:pre-wrap;word-break:break-word;overflow:auto}
 .etx:empty::before{content:attr(data-ph);color:var(--fg2)}
@@ -263,37 +276,39 @@ dialog#set,dialog#dlgSync{width:min(460px,calc(100vw - 24px));border-radius:14px
 <dialog id="ed" aria-label="메모 편집">
   <div class="eh"><input id="edTitle" placeholder="제목" maxlength="120" autocomplete="off"><button class="ib" id="edPin" type="button" title="고정" aria-label="고정"></button></div>
   <div class="eb" id="edBody"></div>
-  <div class="pal" id="edPal" hidden></div>
-  <div class="fbar" id="edFmtBar" hidden role="toolbar" aria-label="글 서식">
-    <select id="fbBlock" title="문단 모양 (Ctrl+Alt+1 제목1 · Ctrl+Alt+2 제목2 · Ctrl+Alt+3 제목3 · Ctrl+0 본문)"><option value="div">본문</option><option value="h2">제목 1</option><option value="h3">제목 2</option><option value="h4">제목 3</option></select>
-    <select id="fbFont" title="글꼴"><option value="">기본 글꼴</option><option value="serif">명조</option><option value="sans-serif">고딕</option><option value="monospace">고정폭</option><option value="cursive">필기체</option></select>
-    <select id="fbSize" title="글자 크기 (Ctrl+Shift+. 키우기 · Ctrl+Shift+, 줄이기)"><option value="10">10</option><option value="12">12</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="18">18</option><option value="20">20</option><option value="24">24</option><option value="28">28</option><option value="32">32</option><option value="40">40</option><option value="48">48</option></select>
-    <i class="sep"></i>
-    <button type="button" data-f="bold" title="굵게 (Ctrl+B)"><b>B</b></button><button type="button" data-f="italic" title="기울임 (Ctrl+I)"><i>I</i></button><button type="button" data-f="underline" title="밑줄 (Ctrl+U)"><u>U</u></button><button type="button" data-f="strikeThrough" title="취소선 (Ctrl+Shift+X)"><s>S</s></button>
-    <button type="button" data-f="fore" title="글자 색"><span class="fc">가</span></button><button type="button" data-f="back" title="배경 색 (형광펜)"><span class="fc hl">가</span></button>
-    <i class="sep"></i>
-    <button type="button" data-f="align" title="정렬"></button>
-    <button type="button" data-f="insertUnorderedList" title="글머리 기호 (Ctrl+1)" data-i="ul"></button><button type="button" data-f="insertOrderedList" title="번호 목록 (Ctrl+2)" data-i="ol"></button>
-    <button type="button" data-f="outdent" title="내어쓰기 (Ctrl+[)" data-i="outd"></button><button type="button" data-f="indent" title="들여쓰기 (Ctrl+])" data-i="ind"></button>
-    <i class="sep"></i>
-    <button type="button" data-f="clr" title="서식 지우기 (Ctrl+\)" data-i="clr"></button>
-  </div>
-  <div class="fpop" id="fbPop" hidden></div>
-  <div class="pal" id="edLbl" hidden></div>
-  <div class="menu" id="edMenu" hidden>
-    <button type="button" data-m="label">라벨 추가</button>
-    <button type="button" data-m="chk"></button>
-    <button type="button" data-m="copy">사본 만들기</button>
-    <button type="button" data-m="del">휴지통으로</button>
-  </div>
-  <div class="ef">
-    <button class="ib" id="edFmt" type="button" title="서식" aria-label="서식"></button>
-    <button class="ib" id="edColor" type="button" title="색" aria-label="색"></button>
-    <button class="ib" id="edMore" type="button" title="더보기" aria-label="더보기"></button>
-    <button class="ib" id="edUndo" type="button" title="실행취소" aria-label="실행취소"></button>
-    <button class="ib" id="edRedo" type="button" title="다시실행" aria-label="다시실행"></button>
-    <span class="grow"></span>
-    <button class="btn" id="edClose" type="button">닫기</button>
+  <div class="dock" id="edDock">
+    <div class="pal" id="edPal" hidden></div>
+    <div class="pal" id="edLbl" hidden></div>
+    <div class="menu" id="edMenu" hidden>
+      <button type="button" data-m="label">라벨 추가</button>
+      <button type="button" data-m="chk"></button>
+      <button type="button" data-m="copy">사본 만들기</button>
+      <button type="button" data-m="del">휴지통으로</button>
+    </div>
+    <div class="fpop" id="fbPop" hidden></div>
+    <div class="fbar" id="edFmtBar" hidden role="toolbar" aria-label="글 서식">
+      <select id="fbBlock" title="문단 모양 (Ctrl+Alt+1 제목1 · Ctrl+Alt+2 제목2 · Ctrl+Alt+3 제목3 · Ctrl+0 본문)"><option value="div">본문</option><option value="h2">제목 1</option><option value="h3">제목 2</option><option value="h4">제목 3</option></select>
+      <select id="fbFont" title="글꼴"><option value="">기본 글꼴</option><option value="serif">명조</option><option value="sans-serif">고딕</option><option value="monospace">고정폭</option><option value="cursive">필기체</option></select>
+      <select id="fbSize" title="글자 크기 (Ctrl+Shift+. 키우기 · Ctrl+Shift+, 줄이기)"><option value="10">10</option><option value="12">12</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="18">18</option><option value="20">20</option><option value="24">24</option><option value="28">28</option><option value="32">32</option><option value="40">40</option><option value="48">48</option></select>
+      <i class="sep"></i>
+      <button type="button" data-f="bold" title="굵게 (Ctrl+B)"><b>B</b></button><button type="button" data-f="italic" title="기울임 (Ctrl+I)"><i>I</i></button><button type="button" data-f="underline" title="밑줄 (Ctrl+U)"><u>U</u></button><button type="button" data-f="strikeThrough" title="취소선 (Ctrl+Shift+X)"><s>S</s></button>
+      <button type="button" data-f="fore" title="글자 색"><span class="fc">가</span></button><button type="button" data-f="back" title="배경 색 (형광펜)"><span class="fc hl">가</span></button>
+      <i class="sep"></i>
+      <button type="button" data-f="align" title="정렬"></button>
+      <button type="button" data-f="insertUnorderedList" title="글머리 기호 (Ctrl+1)" data-i="ul"></button><button type="button" data-f="insertOrderedList" title="번호 목록 (Ctrl+2)" data-i="ol"></button>
+      <button type="button" data-f="outdent" title="내어쓰기 (Ctrl+[)" data-i="outd"></button><button type="button" data-f="indent" title="들여쓰기 (Ctrl+])" data-i="ind"></button>
+      <i class="sep"></i>
+      <button type="button" data-f="clr" title="서식 지우기 (Ctrl+\)" data-i="clr"></button>
+    </div>
+    <div class="ef">
+      <button class="ib" id="edFmt" type="button" title="서식" aria-label="서식"></button>
+      <button class="ib" id="edColor" type="button" title="색" aria-label="색"></button>
+      <button class="ib" id="edMore" type="button" title="더보기" aria-label="더보기"></button>
+      <button class="ib" id="edUndo" type="button" title="실행취소" aria-label="실행취소"></button>
+      <button class="ib" id="edRedo" type="button" title="다시실행" aria-label="다시실행"></button>
+      <span class="grow"></span>
+      <button class="btn" id="edClose" type="button">닫기</button>
+    </div>
   </div>
 </dialog>
 
@@ -724,7 +739,7 @@ function openEd(id,fresh){
   const pal=$('#edPal');if(!pal.children.length){for(const [c,nm] of COLORS){const s=h('button','sw c-'+(c||'none'));s.type='button';s.dataset.c=c;s.title=nm;s.setAttribute('aria-label',nm);pal.appendChild(s);}}
   pal.hidden=true;$('#edMenu').hidden=true;$('#edLbl').hidden=true;$('#edFmtBar').hidden=true;$('#fbPop').hidden=true;
   $('#edBody').replaceChildren();edMeta();
-  if(!$('#ed').open)$('#ed').showModal();
+  if(!$('#ed').open)$('#ed').showModal();vvFit();requestAnimationFrame(vvFit);
   if(n.type==='text'){
     const ta=h('div','etx');ta.contentEditable='true';ta.dataset.ph='메모 작성…';ta.setAttribute('role','textbox');ta.setAttribute('aria-multiline','true');
     ta.innerHTML=n.rich?cleanHtml(n.rich):textToHtml(n.text);if(!(n.text||'').trim())ta.innerHTML='';
@@ -738,7 +753,7 @@ function openEd(id,fresh){
       e.preventDefault();FB.sel=g.rangeCount?g.getRangeAt(0).cloneRange():FB.sel;fmtExec(e.shiftKey?'outdent':'indent');});
     ta.addEventListener('paste',e=>{const tx=(e.clipboardData||window.clipboardData).getData('text/plain');e.preventDefault();document.execCommand('insertText',false,tx);});
     const cr=h('div','banner cdate');cr.id='tBanner';cr.textContent=tInfo(n);
-    $('#edBody').append(cr,ta);$('#edFmtBar').hidden=LS.get('nm-fbar')==='0';fmtSync();if(fresh)ta.focus();
+    $('#edBody').append(cr,ta);$('#edFmtBar').hidden=LS.get('nm-fbar')==='0';$('#fbSize').value='15';$('#fbBlock').value='div';$('#fbFont').value='';fmtSync();if(fresh)ta.focus();
   }else{
     const a=h('div',null);a.id='actList';const add=h('button','add');add.type='button';add.innerHTML=ico('plus')+'<span>항목 추가</span>';
     add.addEventListener('click',()=>{const m=cur(),it=addItem(m,'',0);save();renderItems({id:it.id});});
@@ -877,7 +892,15 @@ function renderLblPanel(){
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing&&e.keyCode!==229){e.preventDefault();const v=inp.value.trim();if(!v)return;const set=new Set(n.labels||[]);set.add(v);n.labels=[...set];touchMeta(n);renderLblPanel();}});
   p.appendChild(inp);
 }
+function vvFit(){   /* 키보드가 올라오면 편집창을 보이는 화면 높이에 맞춰 도구줄이 키보드 바로 위에 뜨게 한다 */
+  const d=$('#ed'),v=window.visualViewport;if(!d)return;
+  if(!v||!d.open||innerWidth>640){d.style.removeProperty('height');d.style.removeProperty('top');d.style.removeProperty('bottom');return;}
+  d.style.height=Math.round(v.height)+'px';d.style.top=Math.round(v.offsetTop)+'px';d.style.bottom='auto';
+}
 function bindEd(){
+  if(window.visualViewport){visualViewport.addEventListener('resize',vvFit);visualViewport.addEventListener('scroll',vvFit);}
+  addEventListener('resize',vvFit);
+  $('#edDock').addEventListener('mousedown',e=>{if(!e.target.closest('select,input,textarea'))e.preventDefault();});  /* 도구를 눌러도 키보드가 내려가지 않게 */
   const d=$('#ed');
   $('#edTitle').addEventListener('input',e=>{const n=cur();if(!n)return;n.title=e.target.value;touchMeta(n);});
   $('#edTitle').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing&&e.keyCode!==229){e.preventDefault();const n=cur();if(!n)return;if(n.type==='list'){const a=active(n);if(a.length)focusItem(a[0].id);else{const it=addItem(n,'',0);save();renderItems({id:it.id});}}else{const t=$('#edBody textarea');if(t)t.focus();}}});
