@@ -113,7 +113,11 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 dialog#ed{width:min(620px,100vw);max-height:min(90dvh,860px);border-radius:12px;background:var(--nc,var(--bg));box-shadow:var(--shadow)}
 dialog#ed[open]{display:flex;flex-direction:column}
 .etop{display:flex;align-items:center;gap:2px;padding:max(6px,env(safe-area-inset-top)) 6px 0 6px;flex:none}.etop .sp{flex:1}
-.etop .ib{width:44px;height:44px}
+.etop .ib{width:46px;height:46px;border-radius:14px}
+.etop #edBack{border-radius:50%}
+.etop #edPin,.etop #edDone{background:color-mix(in srgb,var(--fg) 10%,transparent);margin-left:8px;color:var(--fg)}
+.etop #edPin.on{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent)}
+.etop #edDone.on{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent)}
 .eh{display:flex;align-items:center;padding:4px 18px 2px 18px;gap:4px;flex:none}
 .eh input{flex:1;min-width:0;border:0;background:none;outline:none;font-size:22px;font-weight:700;padding:6px 0}
 .eh input::placeholder{color:var(--fg2);font-weight:500}
@@ -479,7 +483,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.13';
+const VER='1.14';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1112,7 +1116,7 @@ function edMeta(){
   const n=cur(),d=$('#ed');if(!n)return;
   d.className=colorOf(n);
   $('#edDone').classList.toggle('on',!!n.dn);$('#edDone').title=n.dn?'완료 취소 (다시 진행 중으로)':'완료로 처리';$('#edDone').setAttribute('aria-label',$('#edDone').title);
-  $('#edPin').classList.toggle('on',!!n.pin);$('#edPin').title=n.pin?'고정 해제':'고정';
+  $('#edPin').classList.toggle('on',!!n.pin);$('#edPin').innerHTML=mi(n.pin?'pinF':'pinO');$('#edDone').innerHTML=mi(n.dn?'doneF':'doneO');$('#edPin').title=n.pin?'고정 해제':'고정';
   $$('#edPal .sw').forEach(s=>s.classList.toggle('on',s.dataset.c===(n.color||'')));
   $('#edFmt').hidden=!isTxt(n);
 }
@@ -1428,6 +1432,13 @@ function vvFit(){   /* 키보드가 올라오면 편집창을 보이는 화면 �
   if(!v||!d.open||innerWidth>640){d.style.removeProperty('height');d.style.removeProperty('top');d.style.removeProperty('bottom');return;}
   d.style.height=Math.round(v.height)+'px';d.style.top=Math.round(v.offsetTop)+'px';d.style.bottom='auto';
 }
+const MI={
+ back:'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z',
+ pinO:'M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3zM10 4h4v5c0 1.1.35 2.14 1 3H9c.65-.86 1-1.9 1-3V4z',
+ pinF:'M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z',
+ doneO:'M16.59 7.58 10 14.17l-3.59-3.58L5 12l5 5 8-8zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z',
+ doneF:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'};
+const mi=k=>'<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="'+MI[k]+'"/></svg>';
 function bindEd(){
   if(window.visualViewport){visualViewport.addEventListener('resize',vvFit);visualViewport.addEventListener('scroll',vvFit);}
   addEventListener('resize',vvFit);
@@ -1439,16 +1450,15 @@ function bindEd(){
   $('#edColor').addEventListener('click',()=>{const p=$('#edPal');p.hidden=!p.hidden;});
   $('#edPal').addEventListener('click',e=>{const s=e.target.closest('.sw');if(!s)return;const n=cur();if(!n)return;n.color=s.dataset.c;touchMeta(n);edMeta();});
   $('#edClose').addEventListener('click',closeEd);
-  $('#edBack').innerHTML=ico('back');$('#edBack').addEventListener('click',closeEd);
+  $('#edBack').innerHTML=mi('back');$('#edBack').addEventListener('click',closeEd);
   $('#edBody').addEventListener('click',e=>{if(e.target!==$('#edBody'))return;const t=$('#edBody .etx');if(t){t.focus();const g=getSelection(),r=document.createRange();r.selectNodeContents(t);r.collapse(false);g.removeAllRanges();g.addRange(r);}});
   d.addEventListener('click',e=>{if(e.target===d)closeEd();});
   d.addEventListener('close',()=>{edCleanup();render();});
-  $('#edColor').innerHTML=ico('pal');$('#edPin').innerHTML=ico('pin');
+  $('#edColor').innerHTML=ico('pal');
   $('#edFmt').innerHTML=ico('fmt');$('#edMore').innerHTML=ico('more');$('#edUndo').innerHTML=ico('undo');$('#edRedo').innerHTML=ico('redo');
   const keepFocus=e=>e.preventDefault();
   for(const id of ['#edUndo','#edRedo','#edFmt'])$(id).addEventListener('mousedown',keepFocus);
   $('#edFmtBar').addEventListener('mousedown',e=>{if(!e.target.closest('select'))e.preventDefault();});
-  $('#edDone').innerHTML=ico('done');
   $('#edDone').addEventListener('click',()=>{const n=cur();if(!n)return;
     if(n.dn){completeNote(n,false);edMeta();const tb=$('#tBanner');if(tb)tb.textContent=tInfo(n);toast('진행 중인 메모로 되돌렸습니다');}
     else{completeNote(n,true);closeEd();toast(DONE_MSG);}});
