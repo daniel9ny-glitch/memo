@@ -173,6 +173,9 @@ dialog#ed[open]{display:flex;flex-direction:column}
 .fc{font-weight:700;border-bottom:3px solid #d93025;line-height:1.1;display:inline-block}.fc.hl{border-bottom-color:#f9ab00}
 .fpop{display:flex;flex-wrap:wrap;gap:8px;padding:8px 14px;border-top:1px solid color-mix(in srgb,var(--fg2) 22%,transparent)}
 .fpop .sw{width:26px;height:26px;color:var(--fg2);font-size:12px}
+.fpop.al{gap:6px}.fpop .ab{width:40px;height:34px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;color:var(--fg)}.fpop .ab.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.fpop .ab svg{width:18px;height:18px}
+.fbar .car{font-size:9px;font-style:normal;margin-left:3px;opacity:.8}
+.fbar button[data-i],.fbar button[data-f=align]{display:inline-flex;align-items:center;justify-content:center;min-width:34px;padding:0 7px}
 .menu{display:flex;flex-direction:column;padding:6px 0;border-top:1px solid color-mix(in srgb,var(--fg2) 22%,transparent)}
 .menu[hidden],.fbar[hidden],.pal[hidden],.fpop[hidden]{display:none}
 .menu button{height:42px;padding:0 20px;text-align:left;font-weight:500}
@@ -180,7 +183,34 @@ dialog#ed[open]{display:flex;flex-direction:column}
 .etx{white-space:pre-wrap;word-break:break-word;overflow:auto}
 .etx:empty::before{content:attr(data-ph);color:var(--fg2)}
 .etx h2{font-size:21px;margin:.3em 0}.etx h3{font-size:17px;margin:.3em 0}.etx h4{font-size:15px;font-weight:700;margin:.3em 0}
-.etx ul,.etx ol{margin:.2em 0;padding-left:1.5em}.etx blockquote{margin:0;padding:0;border:0}
+.etx ul,.etx ol{margin:.2em 0;padding-left:1.9em}
+/* 공문서 항목 기호: 1. → 가. → 1) → 가) → (1) → (가) → ① → ㉮ / 글머리: ● → ▪ → ▸ → • (들여쓰기 깊이마다 바뀜) */
+@counter-style kr-d1{system:extends decimal;suffix:'. '}
+@counter-style kr-ga{system:alphabetic;symbols:'가' '나' '다' '라' '마' '바' '사' '아' '자' '차' '카' '타' '파' '하';suffix:'. '}
+@counter-style kr-d2{system:extends decimal;suffix:') '}
+@counter-style kr-ga2{system:alphabetic;symbols:'가' '나' '다' '라' '마' '바' '사' '아' '자' '차' '카' '타' '파' '하';suffix:') '}
+@counter-style kr-d3{system:extends decimal;prefix:'(';suffix:') '}
+@counter-style kr-ga3{system:alphabetic;symbols:'가' '나' '다' '라' '마' '바' '사' '아' '자' '차' '카' '타' '파' '하';prefix:'(';suffix:') '}
+@counter-style kr-c1{system:fixed;symbols:'①' '②' '③' '④' '⑤' '⑥' '⑦' '⑧' '⑨' '⑩' '⑪' '⑫' '⑬' '⑭' '⑮' '⑯' '⑰' '⑱' '⑲' '⑳';suffix:' ';fallback:kr-d2}
+@counter-style kr-c2{system:fixed;symbols:'㉮' '㉯' '㉰' '㉱' '㉲' '㉳' '㉴' '㉵' '㉶' '㉷' '㉸' '㉹' '㉺' '㉻';suffix:' ';fallback:kr-d2}
+.etx ol{list-style-type:kr-d1}
+.etx ul{list-style-type:"● "}
+.etx :is(ol,ul) ol{list-style-type:kr-ga}
+.etx :is(ol,ul) ul{list-style-type:"▪ "}
+.etx :is(ol,ul) :is(ol,ul) ol{list-style-type:kr-d2}
+.etx :is(ol,ul) :is(ol,ul) ul{list-style-type:"▸ "}
+.etx :is(ol,ul) :is(ol,ul) :is(ol,ul) ol{list-style-type:kr-ga2}
+.etx :is(ol,ul) :is(ol,ul) :is(ol,ul) ul{list-style-type:"• "}
+.etx :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) ol{list-style-type:kr-d3}
+.etx :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) ul{list-style-type:"● "}
+.etx :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) ol{list-style-type:kr-ga3}
+.etx :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) ul{list-style-type:"▪ "}
+.etx :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) ol{list-style-type:kr-c1}
+.etx :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) ul{list-style-type:"▸ "}
+.etx :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) ol{list-style-type:kr-c2}
+.etx :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) :is(ol,ul) ul{list-style-type:"• "}
+.etx :is(ol,ul) :is(ol,ul) ul>li::marker{color:#e8710a}
+.etx blockquote{margin:0;padding:0;border:0}
 .etx div,.etx p{margin:0}
 /* 설정 */
 dialog#set{width:min(460px,calc(100vw - 24px));border-radius:14px;background:var(--bg)}
@@ -221,18 +251,18 @@ dialog#set{width:min(460px,calc(100vw - 24px));border-radius:14px;background:var
   <div class="eb" id="edBody"></div>
   <div class="pal" id="edPal" hidden></div>
   <div class="fbar" id="edFmtBar" hidden role="toolbar" aria-label="글 서식">
-    <select id="fbBlock" title="문단 모양 (Ctrl+1 제목1 · Ctrl+2 제목2 · Ctrl+3 제목3 · Ctrl+0 본문)"><option value="div">본문</option><option value="h2">제목 1</option><option value="h3">제목 2</option><option value="h4">제목 3</option></select>
+    <select id="fbBlock" title="문단 모양 (Ctrl+Alt+1 제목1 · Ctrl+Alt+2 제목2 · Ctrl+Alt+3 제목3 · Ctrl+0 본문)"><option value="div">본문</option><option value="h2">제목 1</option><option value="h3">제목 2</option><option value="h4">제목 3</option></select>
     <select id="fbFont" title="글꼴"><option value="">기본 글꼴</option><option value="serif">명조</option><option value="sans-serif">고딕</option><option value="monospace">고정폭</option><option value="cursive">필기체</option></select>
     <select id="fbSize" title="글자 크기 (Ctrl+Shift+. 키우기 · Ctrl+Shift+, 줄이기)"><option value="10">10</option><option value="12">12</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="18">18</option><option value="20">20</option><option value="24">24</option><option value="28">28</option><option value="32">32</option><option value="40">40</option><option value="48">48</option></select>
     <i class="sep"></i>
     <button type="button" data-f="bold" title="굵게 (Ctrl+B)"><b>B</b></button><button type="button" data-f="italic" title="기울임 (Ctrl+I)"><i>I</i></button><button type="button" data-f="underline" title="밑줄 (Ctrl+U)"><u>U</u></button><button type="button" data-f="strikeThrough" title="취소선 (Ctrl+Shift+X)"><s>S</s></button>
     <button type="button" data-f="fore" title="글자 색"><span class="fc">가</span></button><button type="button" data-f="back" title="배경 색 (형광펜)"><span class="fc hl">가</span></button>
     <i class="sep"></i>
-    <button type="button" data-f="justifyLeft" title="왼쪽 정렬 (Ctrl+L)" data-i="al"></button><button type="button" data-f="justifyCenter" title="가운데 정렬 (Ctrl+E)" data-i="ac"></button><button type="button" data-f="justifyRight" title="오른쪽 정렬 (Ctrl+R)" data-i="ar"></button><button type="button" data-f="justifyFull" title="양쪽 정렬 (Ctrl+J)" data-i="aj"></button>
+    <button type="button" data-f="align" title="정렬"></button>
+    <button type="button" data-f="insertUnorderedList" title="글머리 기호 (Ctrl+1)" data-i="ul"></button><button type="button" data-f="insertOrderedList" title="번호 목록 (Ctrl+2)" data-i="ol"></button>
+    <button type="button" data-f="outdent" title="내어쓰기 (Ctrl+[)" data-i="outd"></button><button type="button" data-f="indent" title="들여쓰기 (Ctrl+])" data-i="ind"></button>
     <i class="sep"></i>
-    <button type="button" data-f="insertUnorderedList" title="글머리 기호 (Ctrl+Shift+8)">• 목록</button><button type="button" data-f="insertOrderedList" title="번호 목록 (Ctrl+Shift+7)">1. 번호</button><button type="button" data-f="outdent" title="내어쓰기 (Ctrl+[)">내어쓰기</button><button type="button" data-f="indent" title="들여쓰기 (Ctrl+])">들여쓰기</button>
-    <i class="sep"></i>
-    <button type="button" data-f="clr" title="서식 지우기 (Ctrl+\)">서식 지우기</button>
+    <button type="button" data-f="clr" title="서식 지우기 (Ctrl+\)" data-i="clr"></button>
   </div>
   <div class="fpop" id="fbPop" hidden></div>
   <div class="pal" id="edLbl" hidden></div>
@@ -304,6 +334,11 @@ const IC={
  ac:'<path d="M4 6h16M7 10h10M4 14h16M7 18h10"/>',
  ar:'<path d="M4 6h16M10 10h10M4 14h16M10 18h10"/>',
  aj:'<path d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',
+ ul:'<circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="12" r="1.3"/><circle cx="5" cy="17" r="1.3"/><path d="M10 7h10M10 12h10M10 17h10"/>',
+ ol:'<path d="M10 7h10M10 17h10"/><path d="M4.5 6l1.5-1v5"/><path d="M4.2 14.2a1.6 1.6 0 0 1 3.1.4c0 1.2-3.1 2-3.1 3.2h3.2"/>',
+ outd:'<path d="M3 6h18M11 12h10M3 18h18"/><path d="m7 9-3 3 3 3"/>',
+ ind:'<path d="M3 6h18M11 12h10M3 18h18"/><path d="m3 9 3 3-3 3"/>',
+ clr:'<path d="M5 5h11M10.5 5 8 17"/><path d="m14 14 6 6M20 14l-6 6"/>',
  tag:'<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.2"/>'
 };
 const ico=n=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${IC[n]||''}</svg>`;
@@ -513,7 +548,7 @@ function edMeta(){
 }
 const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const OKTAG=new Set(['B','STRONG','I','EM','U','S','STRIKE','DEL','H2','H3','H4','DIV','P','BR','UL','OL','LI','SPAN','BLOCKQUOTE']);
-const OKCSS=new Set(['text-align','font-size','font-family','font-weight','font-style','text-decoration','text-decoration-line','color','background-color','margin','margin-left','padding','padding-left']);
+const OKCSS=new Set(['text-align','font-size','font-family','font-weight','font-style','text-decoration','text-decoration-line','color','background-color','margin','margin-left','padding','padding-left','list-style','list-style-type']);
 function cleanStyle(st){const out=[];for(const d of (st||'').split(';')){const i=d.indexOf(':');if(i<0)continue;const k=d.slice(0,i).trim().toLowerCase(),v=d.slice(i+1).trim();
   if(OKCSS.has(k)&&/^[\w\s#.,%()\-'"]+$/.test(v)&&!/url|expression|javascript|import/i.test(v))out.push(k+':'+v);}return out.join(';');}
 function cleanHtml(src){
@@ -530,15 +565,23 @@ function cleanHtml(src){
   }};
   walk(t.content);return t.innerHTML;
 }
+const KRGA='가나다라마바사아자차카타파하';
+const OLM=[n=>n+'. ',n=>KRGA[(n-1)%14]+'. ',n=>n+') ',n=>KRGA[(n-1)%14]+') ',n=>'('+n+') ',n=>'('+KRGA[(n-1)%14]+') ',
+  n=>n<=20?String.fromCharCode(0x2460+n-1)+' ':n+') ',n=>n<=14?String.fromCharCode(0x326E+n-1)+' ':n+') '];
+const ULM=['● ','▪ ','▸ ','• ','● ','▪ ','▸ ','• '];
 function plainOf(el){
   let out='';const blk=/^(DIV|P|H2|H3|H4|LI|UL|OL|BLOCKQUOTE)$/;
+  const isList=x=>x&&/^(UL|OL)$/.test(x.tagName);
+  const wrap=li=>[...li.childNodes].every(c=>isList(c)||(c.nodeType===3&&!c.nodeValue.trim()));
+  const depth=nd=>{let d=0;for(let x=nd.parentNode;x&&x!==el;x=x.parentNode)if(isList(x))d++;return d;};
   const walk=nd=>{for(const c of nd.childNodes){
     if(c.nodeType===3){out+=c.nodeValue;}
     else if(c.nodeType===1){
       if(c.tagName==='BR'){out+='\n';continue;}
       const b=blk.test(c.tagName);
       if(b&&out&&!out.endsWith('\n'))out+='\n';
-      if(c.tagName==='LI'){const k=[...c.parentNode.children].indexOf(c)+1;out+=c.parentNode.tagName==='OL'?k+'. ':'• ';}
+      if(c.tagName==='LI'&&!wrap(c)){const d=Math.max(0,depth(c)-1)%8,sib=[...c.parentNode.children].filter(x=>x.tagName==='LI'&&!wrap(x)),k=sib.indexOf(c)+1;
+        out+='  '.repeat(Math.min(d,3))+(c.parentNode.tagName==='OL'?OLM[d](k):ULM[d]);}
       walk(c);
       if(b&&!out.endsWith('\n'))out+='\n';
     }}};
@@ -599,6 +642,12 @@ const FCOL=['#d93025','#e8710a','#f9ab00','#188038','#12b5cb','#1a73e8','#9334e6
 function fmtPop(kind){
   const pop=$('#fbPop');if(!pop.hidden&&pop.dataset.k===kind){pop.hidden=true;return;}
   pop.replaceChildren();pop.dataset.k=kind;pop.hidden=false;
+  if(kind==='align'){pop.classList.add('al');const cur=fmtAlign();
+    for(const [c,ic,t] of [['justifyLeft','al','왼쪽 정렬 (Ctrl+L)'],['justifyCenter','ac','가운데 정렬 (Ctrl+E)'],['justifyRight','ar','오른쪽 정렬 (Ctrl+R)'],['justifyFull','aj','양쪽 정렬 (Ctrl+J)']]){
+      const b=h('button','ab'+(c===cur?' on':''));b.type='button';b.title=t;b.innerHTML=ico(ic);b.addEventListener('mousedown',e=>e.preventDefault());
+      b.addEventListener('click',()=>{pop.hidden=true;fmtExec(c);});pop.appendChild(b);}
+    return;}
+  pop.classList.remove('al');
   const mk=(c,label)=>{const b=h('button','sw');b.type='button';b.title=label||c;b.style.background=c||'transparent';if(!c)b.textContent='✕';
     b.addEventListener('mousedown',e=>e.preventDefault());
     b.addEventListener('click',()=>{pop.hidden=true;
@@ -606,11 +655,15 @@ function fmtPop(kind){
       else fmtExec('hiliteColor',c||'transparent');});pop.appendChild(b);};
   mk('',kind==='fore'?'기본 색':'배경 없음');for(const c of FCOL)mk(c);
 }
+const ALMAP={justifyLeft:'al',justifyCenter:'ac',justifyRight:'ar',justifyFull:'aj'};
+function fmtAlign(){for(const c of Object.keys(ALMAP)){try{if(document.queryCommandState(c))return c;}catch(e){}}return 'justifyLeft';}
+function fmtAlignIcon(c){const b=$('#edFmtBar [data-f=align]');if(b)b.innerHTML=ico(ALMAP[c]||'al')+'<i class="car">▾</i>';}
 function fmtSync(){
   const ed=edT();if(!ed)return;const g=getSelection();if(!g||!g.rangeCount||!ed.contains(g.anchorNode))return;
   const q=c=>{try{return document.queryCommandState(c);}catch(e){return false;}};
-  $$('#edFmtBar [data-f]').forEach(b=>{const f=b.dataset.f;if(f!=='fore'&&f!=='back'&&f!=='clr'&&f!=='outdent'&&f!=='indent')b.classList.toggle('on',q(f));});
+  $$('#edFmtBar [data-f]').forEach(b=>{const f=b.dataset.f;if(f!=='fore'&&f!=='back'&&f!=='clr'&&f!=='outdent'&&f!=='indent'&&f!=='align')b.classList.toggle('on',q(f));});
   let nd=g.anchorNode;nd=nd.nodeType===3?nd.parentElement:nd;if(!nd)return;
+  fmtAlignIcon(fmtAlign());
   const blk=nd.closest('h2,h3,h4');$('#fbBlock').value=blk?blk.tagName.toLowerCase():'div';
   const px=Math.round(parseFloat(getComputedStyle(nd).fontSize));const sz=$('#fbSize');if([...sz.options].some(o=>+o.value===px))sz.value=String(px);
   let fam='';for(let x=nd;x&&x!==ed;x=x.parentElement){if(x.style&&x.style.fontFamily){fam=x.style.fontFamily.replace(/['"]/g,'');break;}}
@@ -619,7 +672,10 @@ function fmtSync(){
 function fmtKeys(e){
   if(!(e.ctrlKey||e.metaKey)||e.isComposing)return;
   const c=e.code,sh=e.shiftKey,al=e.altKey;let go=null;
-  if(!sh&&/^Digit[0-3]$/.test(c)){const t={Digit0:'div',Digit1:'h2',Digit2:'h3',Digit3:'h4'}[c];go=()=>t==='div'?fmtExec('formatBlock','DIV'):fmtBlock(t);}
+  if(!sh&&!al&&c==='Digit1')go=()=>fmtExec('insertUnorderedList');
+  else if(!sh&&!al&&c==='Digit2')go=()=>fmtExec('insertOrderedList');
+  else if(!sh&&c==='Digit0')go=()=>fmtExec('formatBlock','DIV');
+  else if(!sh&&al&&/^Digit[1-3]$/.test(c)){const t={Digit1:'h2',Digit2:'h3',Digit3:'h4'}[c];go=()=>fmtBlock(t);}
   else if(sh&&!al&&c==='Digit7')go=()=>fmtExec('insertOrderedList');
   else if(sh&&!al&&c==='Digit8')go=()=>fmtExec('insertUnorderedList');
   else if(!sh&&!al&&c==='KeyL')go=()=>fmtExec('justifyLeft');
@@ -652,6 +708,11 @@ function openEd(id,fresh){
     ta.addEventListener('input',()=>{const m=cur();if(!m)return;if(!ta.textContent.trim()&&!ta.querySelector('h2,h3,h4,li,blockquote'))ta.innerHTML='';
       m.rich=cleanHtml(ta.innerHTML);m.text=plainOf(ta);touchText(m);const tb=$('#tBanner');if(tb)tb.textContent=tInfo(m);});
     ta.addEventListener('keydown',fmtKeys);
+    ta.addEventListener('keydown',e=>{   /* 목록 줄에서 Tab = 한 단계 들여쓰기(기호가 다음 단계로), Shift+Tab = 내어쓰기 */
+      if(e.key!=='Tab'||e.ctrlKey||e.metaKey||e.altKey||e.isComposing)return;
+      const g=getSelection();let nd=g&&g.anchorNode;nd=nd&&nd.nodeType===3?nd.parentElement:nd;
+      if(!nd||!nd.closest||!nd.closest('li')||!ta.contains(nd))return;
+      e.preventDefault();FB.sel=g.rangeCount?g.getRangeAt(0).cloneRange():FB.sel;fmtExec(e.shiftKey?'outdent':'indent');});
     ta.addEventListener('paste',e=>{const tx=(e.clipboardData||window.clipboardData).getData('text/plain');e.preventDefault();document.execCommand('insertText',false,tx);});
     const cr=h('div','banner cdate');cr.id='tBanner';cr.textContent=tInfo(n);
     $('#edBody').append(cr,ta);$('#edFmtBar').hidden=LS.get('nm-fbar')==='0';fmtSync();if(fresh)ta.focus();
@@ -811,9 +872,9 @@ function bindEd(){
   $('#edUndo').addEventListener('click',()=>{document.execCommand('undo');});
   $('#edRedo').addEventListener('click',()=>{document.execCommand('redo');});
   $('#edFmt').addEventListener('click',()=>{const f=$('#edFmtBar');f.hidden=!f.hidden;LS.set('nm-fbar',f.hidden?'0':'1');$('#fbPop').hidden=true;$('#edMenu').hidden=true;});
-  $$('#edFmtBar [data-i]').forEach(b=>b.innerHTML=ico(b.dataset.i));
+  $$('#edFmtBar [data-i]').forEach(b=>b.innerHTML=ico(b.dataset.i));fmtAlignIcon('justifyLeft');
   $('#edFmtBar').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const f=b.dataset.f;if(!f)return;
-    if(f==='fore'||f==='back'){fmtPop(f);return;}$('#fbPop').hidden=true;
+    if(f==='fore'||f==='back'||f==='align'){fmtPop(f);return;}$('#fbPop').hidden=true;
     if(f==='clr')fmtClear();else fmtExec(f);});
   $('#fbBlock').addEventListener('change',e=>{const v=e.target.value;if(v==='div')fmtExec('formatBlock','DIV');else{const ed=fmtRestore();if(!ed)return;try{document.execCommand('formatBlock',false,v.toUpperCase());}catch(_){}fmtDone(ed);}});
   $('#fbFont').addEventListener('change',e=>{const v=e.target.value;if(v)fmtExec('fontName',v);else{const ed=fmtRestore();if(!ed)return;fmtDone(ed);}});
