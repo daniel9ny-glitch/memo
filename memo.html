@@ -213,7 +213,21 @@ dialog#ed[open]{display:flex;flex-direction:column}
 .etx blockquote{margin:0;padding:0;border:0}
 .etx div,.etx p{margin:0}
 /* 설정 */
-dialog#set{width:min(460px,calc(100vw - 24px));border-radius:14px;background:var(--bg)}
+dialog#set,dialog#dlgSync{width:min(460px,calc(100vw - 24px));border-radius:14px;background:var(--bg)}
+.gs-card{display:flex;align-items:center;gap:13px;padding:14px;border-radius:14px;background:var(--hover);border:1px solid var(--line)}
+.gs-ico{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--bg);color:var(--fg2);border:2px solid var(--line)}
+.gs-ico svg{width:22px;height:22px}
+.gs-card[data-s=ok] .gs-ico{color:#2e9e72;border-color:#2e9e72}
+.gs-card[data-s=warn] .gs-ico{color:#d98324;border-color:#d98324}
+.gs-card[data-s=busy] .gs-ico{color:var(--accent);border-color:var(--line);border-top-color:var(--accent);animation:gsspin 1s linear infinite}
+.gs-card[data-s=busy] .gs-ico svg{animation:gsspin 1s linear infinite reverse}
+@keyframes gsspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.gs-card[data-s=busy] .gs-ico,.gs-card[data-s=busy] .gs-ico svg,#bSync.busy svg{animation:none}}
+.gs-txt{min-width:0}.gs-txt b{font-size:16px}.gs-txt div{font-size:13px;color:var(--fg2);margin-top:2px;line-height:1.45}
+.gs-main{height:44px;font-size:15px;font-weight:600}.gs-note{margin:0;color:var(--fg2);font-size:12.5px;line-height:1.55}
+.gs-act{display:flex;flex-direction:column;align-items:flex-start;gap:2px;height:auto;padding:10px 12px;text-align:left}.gs-act small{color:var(--fg2);font-size:12px;font-weight:400}
+.gs-link{align-self:flex-start;color:var(--danger);font-size:13px;text-decoration:underline;padding:6px 2px}
+#bSync.busy{color:var(--accent)}#bSync.busy svg{animation:gsspin 1.1s linear infinite}
 .sd{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
 .sd h3{margin:0;font-size:18px;display:flex;justify-content:space-between;align-items:center}
 .sg{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--line2);border-radius:12px}
@@ -283,16 +297,25 @@ dialog#set{width:min(460px,calc(100vw - 24px));border-radius:14px;background:var
   </div>
 </dialog>
 
+<dialog id="dlgSync" aria-label="구글 드라이브 동기화">
+  <div class="sd">
+    <h3>구글 드라이브 동기화 <button class="ib" id="syncX" type="button" aria-label="닫기"></button></h3>
+    <div class="gs-card" id="gsCard" data-s="off"><span class="gs-ico" id="gsIco"></span><div class="gs-txt"><b id="gsState"></b><div id="gsLast"></div></div></div>
+    <div class="msg" id="gsMsg" role="status"></div>
+    <button class="btn pri gs-main" id="gsNow" type="button">구글 로그인하고 시작</button>
+    <p class="gs-note">폰·패드·PC가 같은 메모를 자동으로 공유합니다. 항목 단위로 합쳐서, 두 기기에서 다른 항목을 고쳐도 서로 지워지지 않습니다. 파일은 드라이브의 앱 전용 숨김 폴더에 저장되고, 변경하면 몇 초 뒤 자동으로 올라갑니다.</p>
+    <div class="sg gs-fix" id="gsFix" hidden><b>동기화가 이상할 때</b>
+      <button type="button" class="btn gs-act" id="gsResetPull"><b>① 드라이브 기준으로 다시 맞추기</b><small>이 기기의 동기화 기록을 지우고 드라이브 내용을 기준으로 맞춥니다</small></button>
+      <button type="button" class="btn gs-act" id="gsResetPush"><b>② 이 기기 기준으로 드라이브 초기화</b><small>드라이브의 늘메모 파일을 모두 지우고 이 기기 메모로 다시 올립니다</small></button>
+      <button type="button" class="gs-link" id="gsOff">연결 해제 (이 기기의 로그인 정보 삭제)</button>
+    </div>
+  </div>
+</dialog>
+
 <dialog id="set">
   <div class="sd">
     <h3>설정 <button class="ib" id="setX" type="button" aria-label="닫기"></button></h3>
     <div class="sg"><b>화면 테마</b><div class="seg" id="segTheme"><button data-t="auto">시스템</button><button data-t="light">라이트</button><button data-t="dark">다크</button></div></div>
-    <div class="sg"><b>구글 드라이브 동기화</b>
-      <p id="gsInfo"></p>
-      <div class="msg" id="gsMsg"></div>
-      <div class="srow"><button class="btn pri" id="gsNow" type="button">구글 로그인하고 시작</button><button class="btn dng" id="gsOff" type="button" hidden>연결 해제</button></div>
-      <p>패드·PC·폰이 같은 메모를 자동으로 공유합니다. 항목 단위로 합쳐서, 두 기기에서 다른 항목을 고쳐도 서로 지워지지 않습니다. 파일은 드라이브의 앱 전용 숨김 폴더에 저장됩니다.</p>
-    </div>
     <div class="sg"><b>가져오기 · 백업</b>
       <p>구글 킵은 <u>takeout.google.com</u>에서 Keep만 선택해 내려받은 뒤, 압축을 풀어 나온 .json 파일들을 고르세요. 완료한 항목의 날짜는 킵에 기록이 없어 그 메모의 마지막 수정일로 들어갑니다.</p>
       <div class="srow"><button class="btn" id="imKeep" type="button">Keep 가져오기 (.json)</button><button class="btn" id="exAll" type="button">백업 내보내기</button><button class="btn" id="imAll" type="button">백업 불러오기</button></div>
@@ -978,19 +1001,58 @@ async function syncRun(tok){
 function gMsg(m,k){const e=$('#gsMsg');if(e){e.textContent=m||'';e.className='msg'+(k?' '+k:'');}}
 const gAgo=t=>{const d=now()-t;if(d<45e3)return '방금 전';if(d<36e5)return Math.round(d/6e4)+'분 전';return dfull(t)+' '+tlabel(t);};
 function gUi(){
-  const b=$('#bSync');b.classList.toggle('on',gOn()&&!gErr);b.classList.toggle('warn',gOn()&&!!gErr);
-  const t=+LS.get(GK.time)||0,busy=gBusy;
-  $('#gsInfo').textContent=!gOn()?'연결되지 않음':busy?'동기화하는 중…':gErr?'확인이 필요합니다':'연결됨'+(t?' · 마지막 '+gAgo(t):'');
-  const nb=$('#gsNow');nb.disabled=busy;nb.textContent=busy?'동기화하는 중…':gOn()?'지금 동기화':'구글 로그인하고 시작';
-  $('#gsOff').hidden=!gOn();
-  const need=gOn()&&gErr&&/로그인/.test(gErr)&&!/스크립트/.test(gErr)&&!gIn();$('#relogin').hidden=!need;
+  const on=gOn(),t=+LS.get(GK.time)||0,busy=gBusy,err=on&&!!gErr&&!busy;
+  const st=busy?'busy':!on?'off':err?'warn':'ok';
+  const b=$('#bSync');b.classList.toggle('on',on&&!gErr&&!busy);b.classList.toggle('warn',err);b.classList.toggle('busy',busy);
+  b.title=busy?'동기화하는 중…':!on?'구글 드라이브 동기화 (연결되지 않음)':err?'동기화 확인이 필요합니다':'동기화됨'+(t?' · '+gAgo(t):'');
+  const c=$('#gsCard');if(c){c.dataset.s=st;
+    $('#gsState').textContent=busy?'동기화하는 중…':!on?'연결되지 않음':err?'확인이 필요합니다':'연결됨';
+    $('#gsLast').textContent=!on?'구글 계정으로 로그인하면 이 기기의 메모가 드라이브에 보관되고, 다른 기기와 자동으로 맞춰집니다.'
+      :(t?'마지막 동기화: '+gAgo(t):'아직 동기화한 적이 없습니다')+(on&&!busy&&!err&&!gIn()?' · 다음 동기화 때 다시 로그인이 필요할 수 있습니다':'');
+    $('#gsFix').hidden=!on;
+    if(err&&!$('#gsMsg').textContent)gMsg(gFriendly(gErr),'err');}
+  const nb=$('#gsNow');nb.disabled=busy;nb.textContent=busy?'동기화하는 중…':on?'지금 동기화':'구글 로그인하고 시작';
+  const need=on&&gErr&&/로그인/.test(gErr)&&!/스크립트/.test(gErr)&&!gIn();$('#relogin').hidden=!need;
+}
+function gFriendly(m){m=String(m||'');
+  if(/Failed to fetch|NetworkError|Load failed|network/i.test(m))return '구글 드라이브에 연결하지 못했습니다. 인터넷 연결을 확인한 뒤 「지금 동기화」를 눌러 주세요.';
+  if(/\(403\)/.test(m))return '드라이브 접근이 거부되었습니다 (403). 로그인한 계정과 권한을 확인해 주세요.';
+  if(/\(429\)/.test(m))return '요청이 너무 많았습니다. 잠시 뒤에 다시 시도해 주세요.';
+  if(/\(5\d\d\)/.test(m))return '구글 서버가 잠시 응답하지 않습니다. 잠시 뒤에 다시 시도해 주세요.';
+  if(/로그인/.test(m)&&!/스크립트/.test(m))return m+(/다시/.test(m)?'':' 「지금 동기화」를 눌러 다시 로그인해 주세요.');
+  return m;}
+async function gReset(mode){
+  const msg=mode==='push'
+    ?'드라이브에 저장된 늘메모 파일을 모두 지우고, 이 기기의 메모를 기준으로 다시 올립니다.\n\n· 이 기기의 메모는 그대로 유지됩니다\n· 다른 기기에만 있던 메모는 그 기기가 동기화할 때 다시 올라옵니다\n\n계속할까요?'
+    :'이 기기의 동기화 기록을 지우고 드라이브 내용을 기준으로 다시 맞춥니다.\n\n· 이 기기의 메모는 지워지지 않습니다\n· 같은 메모가 양쪽에 있으면 드라이브 쪽 내용으로 바뀝니다\n· 이 기기에만 있는 메모는 드라이브에 올립니다\n\n계속할까요?';
+  if(!confirm(msg))return;
+  if(gBusy&&now()-gBusyAt<180000)return;gBusy=true;gBusyAt=now();gUi();
+  try{
+    gMsg('구글 로그인 확인 중…');const tok=await gGetToken(true);LS.set(GK.on,'1');
+    const {map,dups}=await gList(tok);
+    if(mode==='push'){
+      const ids=[...[...map.values()].map(f=>f.id),...dups];let k=0;
+      for(const id of ids){k++;gMsg('드라이브 비우는 중… '+k+'/'+ids.length);await gDel(tok,id);}
+      META={};
+    }else{
+      META={};const rn=[...map].filter(([n])=>/^nm_n_/.test(n));let k=0;
+      for(const [name,f] of rn){k++;gMsg('드라이브에서 받는 중… '+k+'/'+rn.length);const id=name.replace(/^nm_n_|\.json$/g,'');
+        const r=await gGet(tok,f.id);if(!r||!Array.isArray(r.items))continue;const i=S.notes.findIndex(n=>n.id===id);
+        if(i>=0)S.notes[i]=r;else if(!S.tomb[id])S.notes.push(r);META[id]={rts:f.ts,lm:r.mod};}
+      persist();
+    }
+    gMsg('동기화 중…');const r=await syncRun(tok);
+    LS.set(GK.time,String(now()));gErr='';gSilent=0;
+    gMsg(`초기화 후 동기화 완료 ✓ (받음 ${r.pulled} · 올림 ${r.pushed})`,'ok');
+  }catch(e){gErr=e.message||'오류';gMsg(gFriendly(e.message)||'초기화 중 오류가 발생했습니다','err');}
+  finally{gBusy=false;gUi();}
 }
 async function syncNow(){
   if(gBusy&&now()-gBusyAt<180000)return;gBusy=true;gBusyAt=now();gUi();gMsg('구글 로그인 확인 중…');
   try{const tok=await gGetToken(true);LS.set(GK.on,'1');gMsg('동기화 중…');const r=await syncRun(tok);
     if(r.failed.length){gErr=r.failed.length+'개 메모 실패';gMsg(`일부만 동기화됨 (받음 ${r.pulled} · 올림 ${r.pushed}) — 실패 ${r.failed.length}개는 다음에 다시 시도합니다`,'err');}
     else{LS.set(GK.time,String(now()));gErr='';gMsg(`동기화 완료 ✓ (받음 ${r.pulled} · 올림 ${r.pushed}) 앞으로 자동으로 동기화됩니다`,'ok');}
-  }catch(e){gErr=e.message||'오류';gMsg(e.message||'동기화 중 오류가 발생했습니다','err');}
+  }catch(e){gErr=e.message||'오류';gMsg(gFriendly(e.message)||'동기화 중 오류가 발생했습니다','err');}
   finally{gBusy=false;gUi();}
 }
 async function autoSync(){
@@ -1043,7 +1105,10 @@ function bindSet(){
   $('#bSet').addEventListener('click',()=>{for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());gMsg('');gUi();d.showModal();});
   $('#setX').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d)d.close();});
   $('#segTheme').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-theme',b.dataset.t);applyTheme();for(const x of $$('#segTheme button'))x.classList.toggle('on',x===b);});
-  $('#bSync').addEventListener('click',()=>{if(gOn())autoSync();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());gMsg('');gUi();d.showModal();});
+  const ds=$('#dlgSync');
+  $('#bSync').addEventListener('click',()=>{gMsg('');gUi();ds.showModal();if(gOn())autoSync();});
+  $('#syncX').addEventListener('click',()=>ds.close());ds.addEventListener('click',e=>{if(e.target===ds)ds.close();});
+  $('#gsResetPull').addEventListener('click',()=>gReset('pull'));$('#gsResetPush').addEventListener('click',()=>gReset('push'));
   $('#gsNow').addEventListener('click',syncNow);$('#reGo').addEventListener('click',syncNow);
   $('#gsOff').addEventListener('click',()=>{if(!confirm('동기화를 끄고 이 기기의 로그인 정보를 지웁니다. 드라이브에 저장된 메모는 그대로 남습니다.'))return;LS.set(GK.on,'0');
     if(gTok&&gTok.access_token&&window.google&&google.accounts&&google.accounts.oauth2){try{google.accounts.oauth2.revoke(gTok.access_token,()=>{});}catch(e){}}
@@ -1057,7 +1122,7 @@ function bindSet(){
 }
 function init(){
   applyTheme();load();autoPurge();gRestore();
-  $('#logo').innerHTML=ico('check');$('#icSearch').innerHTML=ico('search');$('#qx').innerHTML=ico('x');$('#bSync').innerHTML=ico('cloud');$('#bSet').innerHTML=ico('gear');$('#setX').innerHTML=ico('x');
+  $('#logo').innerHTML=ico('check');$('#icSearch').innerHTML=ico('search');$('#qx').innerHTML=ico('x');$('#bSync').innerHTML=ico('cloud');$('#gsIco').innerHTML=ico('cloud');$('#syncX').innerHTML=ico('x');$('#bSet').innerHTML=ico('gear');$('#setX').innerHTML=ico('x');
   $$('.tab').forEach(t=>t.addEventListener('click',()=>{V.view=t.dataset.v;render();}));
   $('#q').addEventListener('input',e=>{V.q=e.target.value.trim();render();});
   $('#qx').addEventListener('click',()=>{$('#q').value='';V.q='';render();});
