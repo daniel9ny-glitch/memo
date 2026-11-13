@@ -294,7 +294,7 @@ dialog#set,dialog#dlgSync,dialog#dlgSc{width:min(460px,calc(100vw - 24px));borde
 .seg button.on{background:var(--bg);color:var(--fg);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .srow{display:flex;gap:8px;flex-wrap:wrap}
 .rtr{border:1px solid var(--line2);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}
-.row.rt textarea{color:var(--accent)}.row.rt .cd{color:var(--accent);opacity:.85}.row.rtp textarea{font-style:italic}
+.row.rt textarea{color:var(--accent)}.row.rt .cd{color:var(--accent);opacity:.85}.row.rtw{opacity:.55}.row.rt textarea[readonly]{cursor:pointer}
 .row.rt.od textarea,.row.rt.od .cd{color:var(--danger)}.row.rt.od textarea{font-weight:700}
 .rts{padding:10px 16px 22px;display:flex;flex-direction:column;gap:12px}
 .rth{display:flex;align-items:center;justify-content:space-between}.rth b{font-size:17px}
@@ -546,7 +546,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.24';
+const VER='1.25';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -673,6 +673,7 @@ function setDone(n,it,on){
     const act=active(n),idx=act.indexOf(it),grp=[it];
     if(it.i===0)for(let k=idx+1;k<act.length&&act[k].i>0;k++)grp.push(act[k]);
     const d=now();for(const x of grp){x.d=d;x.u=stamp(n);}
+    if(it.rt)rtAdvance(n,it);
   }else{
     const d0=it.d,grp=[it];
     if(it.i===0){const all=n.items.filter(x=>!x.x).sort(byO),idx=all.indexOf(it);
@@ -1426,7 +1427,8 @@ function actRow(n,it){
   });
   bindDrag(g,r,id);
   const col=h('div','col');col.appendChild(ta);
-  if(it.rt){r.classList.add('rt','rtp');col.appendChild(h('small','cd rcap','🔁 '+rtLabel(it.rt)));}
+  if(it.rt){r.classList.add('rt');const at=it.rt.at||0;if(at&&at<now())r.classList.add('od');else if(at&&at-(it.rt.lead|0)*864e5>now())r.classList.add('rtw');
+    ta.readOnly=true;ta.addEventListener('click',()=>{const m=cur(),i=get();if(m&&i)rtOpen(m,i);});col.appendChild(h('small','cd rcap','🔁 '+rtLabel(it.rt)));}
   else if(it.r){r.classList.add('rt');if((it.o||0)*60000<now())r.classList.add('od');col.appendChild(h('small','cd','🔁 루틴'));}
   else{const c0=itC(n,it);if(c0)col.appendChild(h('small','cd','작성 '+fdt(c0)));}
   if(it.r)r.append(g,cb,col,x);else r.append(g,cb,col,rb,x);return r;
@@ -1590,24 +1592,30 @@ function bindEd(){
 const rtWhen=r=>{const h=r.h,ap=h<12?'오전':'오후',h12=h%12===0?12:h%12;return ap+' '+h12+'시'+(r.m?' '+r.m+'분':'');};
 const rtLabel=r=>(r.k==='d'?'매일':r.k==='w'?'매주 '+r.days.slice().sort().map(d=>WD[d]).join('·'):'매달 '+r.dom+'일')+' '+rtWhen(r)+' · '+(r.lead?r.lead+'일 전부터':'당일');
 const rtHit=(r,d)=>r.k==='d'||(r.k==='w'&&r.days.includes(d.getDay()))||(r.k==='m'&&d.getDate()===Math.min(r.dom,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));
-function rtGen(n){
-  if(!n||n.type!=='list'||n.trash)return 0;
-  let ch=0;const t0=now(),td=new Date();td.setHours(0,0,0,0);
-  for(const tp of n.items.filter(x=>x.rt&&!x.x)){
-    const r=tp.rt;if(!(tp.t||'').trim())continue;
-    for(let k=0;k<=Math.max(0,r.lead|0);k++){
-      const d=new Date(td.getFullYear(),td.getMonth(),td.getDate()+k,r.h||0,r.m||0);
-      if(!rtHit(r,d))continue;
-      const id='r'+calHash(tp.id+'|'+d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate());
-      if(n.items.some(x=>x.id===id))continue;   /* 지운 항목도 남아 있어서 되살아나지 않음 */
-      const t=(d.getMonth()+1)+'/'+d.getDate()+'('+WD[d.getDay()]+') '+rtWhen(r)+': '+tp.t;
-      const it={id,t,d:0,i:0,o:Math.floor(d.getTime()/60000),u:0,c:t0,r:tp.id};it.u=stamp(n);n.items.push(it);ch++;
-    }
+const rtFmt=(at,r,t)=>{const d=new Date(at);return (d.getMonth()+1)+'/'+d.getDate()+'('+WD[d.getDay()]+') '+rtWhen(r)+': '+t;};
+/* from(날짜 0시) 이후(포함) 첫 해당 날짜의 시각 */
+function rtNext(r,from){for(let k=0;k<800;k++){const d=new Date(from.getFullYear(),from.getMonth(),from.getDate()+k,r.h||0,r.m||0);if(rtHit(r,d))return d.getTime();}return 0;}
+const rtToday=()=>{const t=new Date();return new Date(t.getFullYear(),t.getMonth(),t.getDate());};
+/* 루틴 항목 한 줄이 곧 「다음 차례」: 체크하면 그 회차를 완료 기록에 남기고 같은 줄이 다음 차례로 넘어간다 */
+function rtAdvance(n,it){
+  const r=it.rt;if(!r)return;
+  if(it.d&&r.at){
+    const hid='r'+calHash(it.id+'|'+r.at);
+    if(!n.items.some(x=>x.id===hid)){const hx={id:hid,t:it.t,d:it.d,i:0,o:it.o,u:0,c:it.c||now(),r:it.id,h:1};hx.u=stamp(n);n.items.push(hx);}
   }
-  if(ch){n.tm=n.tx=now();stamp(n);}
-  return ch;
+  const ad=r.at?new Date(r.at):null,from=rtToday();
+  if(ad){const nd=new Date(ad.getFullYear(),ad.getMonth(),ad.getDate()+1);if(nd>from)from.setTime(nd.getTime());}
+  r.at=rtNext(r,from);it.t=rtFmt(r.at,r,r.s||'');it.d=0;it.u=stamp(n);n.tm=n.tx=now();
 }
-function rtAll(){let c=0;for(const n of S.notes)c+=rtGen(n);if(c){save();render();const o=$('#ed');if(o&&o.open&&cur()&&cur().type==='list')renderItems();}return c;}
+function rtAll(){
+  let c=0;
+  for(const n of S.notes){if(n.type!=='list'||n.trash)continue;
+    for(const it of n.items){if(it.x||!it.rt)continue;
+      if(!it.rt.s)it.rt.s=it.t;
+      if(it.d||!it.rt.at){if(!it.rt.at&&!it.d){it.rt.at=rtNext(it.rt,rtToday());it.t=rtFmt(it.rt.at,it.rt,it.rt.s);it.u=stamp(n);n.tm=n.tx=now();}else rtAdvance(n,it);c++;}}}
+  if(c){save();render();const o=$('#ed');if(o&&o.open&&cur()&&cur().type==='list')renderItems();}
+  return c;
+}
 let RT={nid:'',iid:'',k:'w',days:[]};
 function rtLead(){return Math.min(30,Math.max(0,parseInt($('#rtLead').value,10)||0));}
 function rtDomV(){return Math.min(31,Math.max(1,parseInt($('#rtDom').value,10)||1));}
@@ -1631,7 +1639,7 @@ function rtDays(){
 function rtOpen(n,it){
   if(n.type!=='list')return;RT.nid=n.id;RT.iid=it?it.id:'';
   const r=it&&it.rt;RT.k=r?r.k:'w';RT.days=r?r.days.slice():[];
-  $('#rtText').value=it?(it.t||''):'';$('#rtTime').value=r?String(r.h).padStart(2,'0')+':'+String(r.m).padStart(2,'0'):'16:00';
+  $('#rtText').value=it?(r?(r.s||''):(it.t||'')):'';$('#rtTime').value=r?String(r.h).padStart(2,'0')+':'+String(r.m).padStart(2,'0'):'16:00';
   $('#rtLead').value=r?r.lead:3;$('#rtDom').value=r?r.dom:1;$('#rtOff').hidden=!r;
   rtDays();$('#dlgRt').showModal();
 }
@@ -1642,15 +1650,15 @@ function rtOpen(n,it){
   d.querySelector('#rtMinus').addEventListener('click',()=>{$('#rtLead').value=Math.max(0,rtLead()-1);rtPrev();});
   d.querySelector('#rtPlus').addEventListener('click',()=>{$('#rtLead').value=Math.min(30,rtLead()+1);rtPrev();});
   const fin=()=>{save();render();if($('#ed').open&&cur()&&cur().id===RT.nid)renderItems();};
-  d.querySelector('#rtOff').addEventListener('click',()=>{const n=noteById(RT.nid),it=n&&n.items.find(x=>x.id===RT.iid);if(!it)return;delete it.rt;it.u=stamp(n);d.close();fin();toast('루틴을 해제했습니다 · 일반 항목으로 돌아왔습니다');});
+  d.querySelector('#rtOff').addEventListener('click',()=>{const n=noteById(RT.nid),it=n&&n.items.find(x=>x.id===RT.iid);if(!it)return;it.t=(it.rt&&it.rt.s)||it.t;delete it.rt;it.u=stamp(n);d.close();fin();toast('루틴을 해제했습니다 · 일반 항목으로 돌아왔습니다');});
   d.querySelector('#rtSave').addEventListener('click',()=>{
     const n=noteById(RT.nid);if(!n)return;const t=$('#rtText').value.trim(),tm=/^(\d\d):(\d\d)$/.exec($('#rtTime').value||'');
     if(!t){toast('할 일을 입력하세요','err');return;}if(RT.k==='w'&&!RT.days.length){toast('요일을 하나 이상 고르세요','err');return;}if(!tm){toast('시각을 입력하세요','err');return;}
     const rt={k:RT.k,days:RT.k==='w'?RT.days.slice().sort():[],dom:Math.min(31,Math.max(1,parseInt($('#rtDom').value,10)||1)),h:+tm[1],m:+tm[2],lead:Math.min(30,Math.max(0,parseInt($('#rtLead').value,10)||0))};
     let it=RT.iid&&n.items.find(x=>x.id===RT.iid&&!x.x);
     if(!it){it=addItem(n,t,0);}
-    it.t=t;it.rt=rt;if(it.d){it.d=0;}it.u=stamp(n);
-    rtGen(n);d.close();fin();toast('루틴을 저장했습니다');});})();
+    rt.s=t;rt.at=rtNext(rt,rtToday());it.rt=rt;it.t=rtFmt(rt.at,rt,t);if(it.d){it.d=0;}it.u=stamp(n);n.tm=n.tx=now();
+    d.close();fin();toast('루틴을 저장했습니다');});})();
 
 /* 메모 하나를 홈 화면 바로가기로: 메모 주소(?open=id)를 브라우저의 「홈 화면에 추가」로 등록 */
 let scUrl='';
@@ -1983,7 +1991,7 @@ function init(){
   setTimeout(()=>calSync(false),2500);
   setTimeout(rtAll,800);setInterval(()=>{if(!document.hidden)rtAll();},3600000);
   if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{}));}
-  window.__nm={S,BIN,addPhotos,mActive,vcStart,vcStop,renderMedia,blobSync,get notes(){return S.notes;},createNote,setDone,addItem,active,doneOf,mergeNote,ser,openEd,render,V,moveBlock,rtGen,rtAll,rtOpen,calSync,calBuild,CK};
+  window.__nm={S,BIN,addPhotos,mActive,vcStart,vcStop,renderMedia,blobSync,get notes(){return S.notes;},createNote,setDone,addItem,active,doneOf,mergeNote,ser,openEd,render,V,moveBlock,rtAll,rtAdvance,rtOpen,calSync,calBuild,CK};
 }
 init();
 })();
