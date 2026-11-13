@@ -294,7 +294,9 @@ dialog#set,dialog#dlgSync,dialog#dlgSc{width:min(460px,calc(100vw - 24px));borde
 .seg button.on{background:var(--bg);color:var(--fg);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .srow{display:flex;gap:8px;flex-wrap:wrap}
 .rtr{border:1px solid var(--line2);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}
-.row.rt textarea{color:var(--accent)}.row.rt .cd{color:var(--accent);opacity:.85}.row.rtw{opacity:.55}.row.rt textarea[readonly]{cursor:pointer}
+.row.rt textarea{color:var(--accent)}.row.rt .cd{color:var(--accent);opacity:.85}.row.cg0 textarea{color:var(--danger);font-weight:700}.row.cg1 textarea{color:#f5a03a;font-weight:600}.row.cg2 textarea{color:var(--accent)}
+:root[data-theme=light] .row.cg1 textarea{color:#c4670a}
+.row.rtw{opacity:.55}.row.rt textarea[readonly]{cursor:pointer}
 .row.rt.od textarea,.row.rt.od .cd{color:var(--danger)}.row.rt.od textarea{font-weight:700}
 .rts{padding:10px 16px 22px;display:flex;flex-direction:column;gap:12px}
 .rth{display:flex;align-items:center;justify-content:space-between}.rth b{font-size:17px}
@@ -546,7 +548,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.25';
+const VER='1.27';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1429,6 +1431,8 @@ function actRow(n,it){
   const col=h('div','col');col.appendChild(ta);
   if(it.rt){r.classList.add('rt');const at=it.rt.at||0;if(at&&at<now())r.classList.add('od');else if(at&&at-(it.rt.lead|0)*864e5>now())r.classList.add('rtw');
     ta.readOnly=true;ta.addEventListener('click',()=>{const m=cur(),i=get();if(m&&i)rtOpen(m,i);});col.appendChild(h('small','cd rcap','🔁 '+rtLabel(it.rt)));}
+  else if(it.g&&it.gs){const t=new Date(),dd=Math.round((new Date(new Date(it.gs).getFullYear(),new Date(it.gs).getMonth(),new Date(it.gs).getDate())-new Date(t.getFullYear(),t.getMonth(),t.getDate()))/864e5);
+    r.classList.add(dd<=0?'cg0':dd===1?'cg1':dd<=7?'cg2':'cg3');}
   else if(it.r){r.classList.add('rt');if((it.o||0)*60000<now())r.classList.add('od');col.appendChild(h('small','cd','🔁 루틴'));}
   else{const c0=itC(n,it);if(c0)col.appendChild(h('small','cd','작성 '+fdt(c0)));}
   if(it.r)r.append(g,cb,col,x);else r.append(g,cb,col,rb,x);return r;
@@ -1610,6 +1614,8 @@ function rtAdvance(n,it){
 function rtAll(){
   let c=0;
   for(const n of S.notes){if(n.type!=='list'||n.trash)continue;
+    /* v1.21~1.24 에서 따로 생성되던 옛 항목: 원본이 한 줄로 합쳐졌으므로 미완료분은 정리 */
+    for(const it of n.items){if(it.x||!it.r||it.h||it.d)continue;const tp=n.items.find(z=>z.id===it.r);if(tp&&!tp.x&&tp.rt){it.x=1;it.t='';it.u=stamp(n);n.tm=n.tx=now();c++;}}
     for(const it of n.items){if(it.x||!it.rt)continue;
       if(!it.rt.s)it.rt.s=it.t;
       if(it.d||!it.rt.at){if(!it.rt.at&&!it.d){it.rt.at=rtNext(it.rt,rtToday());it.t=rtFmt(it.rt.at,it.rt,it.rt.s);it.u=stamp(n);n.tm=n.tx=now();}else rtAdvance(n,it);c++;}}}
