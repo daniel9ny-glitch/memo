@@ -491,7 +491,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.17';
+const VER='1.18';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1557,8 +1557,8 @@ function calFmt(ev){
   if(sd.dateTime){const d=new Date(sd.dateTime);return{ms:d.getTime(),t:md(d)+'('+WD[d.getDay()]+') '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+': '+title};}
   const p=v=>{const m=/^(\d+)-(\d+)-(\d+)/.exec(v||'');return m?new Date(+m[1],+m[2]-1,+m[3]):null;};
   const d=p(sd.date);if(!d)return null;let e=p(ed.date);if(e)e=new Date(e.getFullYear(),e.getMonth(),e.getDate()-1);
-  const rng=e&&e>d?md(d)+'~'+md(e):md(d);
-  return{ms:d.getTime(),t:rng+'('+WD[d.getDay()]+') 종일: '+title};
+  const dw=x=>md(x)+'('+WD[x.getDay()]+')';
+  return{ms:d.getTime(),t:(e&&e>d?dw(d)+'~'+dw(e):dw(d))+' 종일: '+title};
 }
 /* events: [{calId, ev}] → 메모에 반영. 반환: 바뀐 항목 수 */
 function calBuild(events,winStart,winEnd){
