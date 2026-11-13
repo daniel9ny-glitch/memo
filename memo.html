@@ -411,6 +411,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
       <button type="button" data-m="chk"></button>
       <button type="button" data-m="cal">일정 새로고침</button>
       <button type="button" data-m="wg"></button>
+      <button type="button" data-m="sc">홈 화면 바로가기</button>
       <button type="button" data-m="copy">사본 만들기</button>
       <button type="button" data-m="del">휴지통으로</button>
     </div>
@@ -487,11 +488,21 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
     <p class="msg" id="verTag"></p>
   </div>
 </dialog>
+<dialog id="dlgSc">
+  <div class="sd">
+    <h3>홈 화면 바로가기 <button class="ib" id="scX" type="button" aria-label="닫기"></button></h3>
+    <div class="sg"><b id="scTitle"></b>
+      <p>웹 앱은 홈 화면에 바로가기를 스스로 만들 수 없어서, 브라우저의 「홈 화면에 추가」를 한 번 거쳐야 합니다.</p>
+      <p>① 아래 「이 메모 주소로 열기」를 누릅니다.<br>② 열린 화면에서 크롬 메뉴(⋮) → 「홈 화면에 추가」(또는 「앱 설치」)를 고릅니다.<br>③ 이름을 정하고 추가하면, 홈 화면 아이콘이 이 메모를 바로 엽니다.</p>
+      <div class="srow"><button class="btn" id="scGo" type="button">이 메모 주소로 열기</button><button class="btn" id="scCopy" type="button">주소 복사</button></div>
+    </div>
+  </div>
+</dialog>
 <div id="toasts" aria-live="polite"></div>
 
 <script>
 (()=>{'use strict';
-const VER='1.18';
+const VER='1.19';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1516,6 +1527,7 @@ function bindEd(){
       else{toList(n);save();openEd(n.id);toast('체크리스트로 바꿨습니다');}
     }
     else if(k==='cal'){calSync(true);}
+    else if(k==='sc'){scOpen(n);}
     else if(k==='wg'){n.wg=!n.wg;n.wgt=n.wg?now():0;touchMeta(n);$('#edMenu').hidden=true;edMeta();snapSoon();toast(n.wg?'위젯으로 설정했습니다 · 윈도우 위젯 보드에서 「늘메모 포스트잇」을 추가하면 나타납니다':'위젯에서 뺐습니다');}
     else if(k==='copy'){const c=JSON.parse(JSON.stringify(n));c.wg=false;c.wgt=0;c.id=uid();c.title=(n.title?n.title+' ':'')+'(사본)';c.pin=false;c.trash=0;const t=now();c.cr=c.tm=c.tx=c.mod=t;
       c.items=c.items.filter(i=>!i.x).map(i=>({...i,id:uid(),u:t}));S.notes.push(c);save();closeEd();toast('사본을 만들었습니다');}
@@ -1523,6 +1535,14 @@ function bindEd(){
   });
   d.addEventListener('click',e=>{if(!e.target.closest('#edMenu,#edMore,#edLbl,#edFmtBar,#edFmt')){$('#edMenu').hidden=true;}});
 }
+
+/* 메모 하나를 홈 화면 바로가기로: 메모 주소(?open=id)를 브라우저의 「홈 화면에 추가」로 등록 */
+let scUrl='';
+function scOpen(n){scUrl=location.origin+location.pathname+'?open='+encodeURIComponent(n.id);$('#scTitle').textContent=titleOf(n)||'(제목 없음)';$('#dlgSc').showModal();}
+(()=>{const d=document.querySelector('#dlgSc');if(!d)return;
+  d.querySelector('#scX').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d)d.close();});
+  d.querySelector('#scGo').addEventListener('click',()=>{location.href=scUrl;});
+  d.querySelector('#scCopy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(scUrl);toast('주소를 복사했습니다');}catch(e){prompt('이 주소를 복사하세요',scUrl);}});})();
 
 /* ---------- 구글 캘린더 일정 → 체크리스트 (읽기 전용) ---------- */
 const CK={on:'nm-cal',tok:'nm-ctoken',time:'nm-ctime'};
