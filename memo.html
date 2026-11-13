@@ -322,7 +322,23 @@ dialog#dlgAsk{width:min(300px,calc(100vw - 48px));border:0;border-radius:20px;ba
 dialog#dlgAsk[open]{animation:askin .14s ease-out}@keyframes askin{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
 .rpi{display:inline-flex;vertical-align:-2px;margin-right:4px}.rpi svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 dialog#dlgRt{width:min(460px,100vw);margin:auto auto 0;border-radius:24px 24px 0 0;background:var(--bg);max-height:94dvh}
-dialog#set,dialog#dlgSync,dialog#dlgSc{width:min(460px,calc(100vw - 24px));border-radius:14px;background:var(--bg)}
+dialog#set{width:min(460px,100vw);max-height:94dvh;margin:auto;border-radius:20px;background:var(--bg)}
+.st{padding:6px 16px 22px;display:flex;flex-direction:column;gap:18px}
+.sth{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);padding:14px 0 4px;z-index:1}.sth h3{margin:0;font-size:20px}
+.ss h4{margin:0 0 8px 6px;font-size:12.5px;font-weight:600;color:var(--fg2);letter-spacing:.02em}
+.grp{background:var(--hover);border-radius:16px;overflow:hidden}
+.rw{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:10px 16px;width:100%;text-align:left;color:var(--fg)}
+.rw+.rw{border-top:1px solid var(--line2)}
+.rb:active{background:var(--hover)}
+.rl{display:flex;flex-direction:column;gap:2px;min-width:0;font-size:15px}
+.rl small{font-size:12.5px;color:var(--fg2);line-height:1.35;font-weight:400}.rl small.msg{margin:0}.rl small.ok{color:var(--accent)}.rl small.err{color:var(--danger)}
+.rw .seg{flex:none;width:auto;background:var(--bg)}.rw .seg button{height:30px;padding:0 10px;font-size:13px;flex:none}
+.tg{flex:none;width:48px;height:28px;border-radius:14px;background:var(--line);position:relative;transition:background .15s}
+.tg::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}
+.tg[aria-checked=true]{background:var(--accent)}.tg[aria-checked=true]::after{transform:translateX(20px)}
+.chv{flex:none;width:8px;height:8px;border-right:2px solid var(--fg2);border-top:2px solid var(--fg2);transform:rotate(45deg);margin-right:4px}
+#verTag{text-align:center;margin:0;font-size:12px;color:var(--fg2)}
+dialog#dlgSync,dialog#dlgSc{width:min(460px,calc(100vw - 24px));border-radius:14px;background:var(--bg)}
 .gs-card{display:flex;align-items:center;gap:13px;padding:14px;border-radius:14px;background:var(--hover);border:1px solid var(--line)}
 .gs-ico{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--bg);color:var(--fg2);border:2px solid var(--line)}
 .gs-ico svg{width:22px;height:22px}
@@ -365,6 +381,8 @@ dialog#set,dialog#dlgSync,dialog#dlgSc{width:min(460px,calc(100vw - 24px));borde
 .rtrow{display:flex;align-items:center;justify-content:space-between;font-size:15px}
 .rtstep{display:flex;align-items:center;gap:10px}.rtstep button{width:36px;height:36px;border-radius:50%;background:var(--bg);font-size:20px;color:var(--fg)}.rtstep b{min-width:56px;text-align:center;color:var(--accent)}
 .rtcard input[type=text]{height:42px;border:0;border-radius:10px;background:var(--bg);color:var(--fg);padding:0 12px;font:inherit}
+.rtchips{display:flex;gap:6px}.rtchips button{flex:1;height:34px;border-radius:17px;background:var(--bg);color:var(--fg2);font-size:13px;font-weight:600}.rtchips button.on{background:var(--accent);color:var(--accent-fg)}.rtchips.off{opacity:.4;pointer-events:none}
+.rtrow span{display:flex;flex-direction:column;gap:2px}.rts2{font-size:12px;color:var(--fg2);font-weight:400}
 .rtoff{height:44px;color:var(--danger);font-weight:600}
 .rtbox{display:flex;flex-direction:column;gap:6px;padding:4px 20px 12px;align-items:flex-start}.rtbox .rtr{width:100%;text-align:left;background:none;color:var(--fg)}
 .rtr .rtt{font-weight:600;word-break:break-word}.rtr small{color:var(--fg2)}
@@ -553,24 +571,31 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 </dialog>
 
 <dialog id="set">
-  <div class="sd">
-    <h3>설정 <button class="ib" id="setX" type="button" aria-label="닫기"></button></h3>
-    <div class="sg"><b>화면 테마</b><div class="seg" id="segTheme"><button data-t="auto">시스템</button><button data-t="light">라이트</button><button data-t="dark">다크</button></div></div>
-    <div class="sg"><b>가져오기 · 백업</b>
-      <p>구글 킵은 <u>takeout.google.com</u>에서 Keep만 선택해 내려받은 뒤, 압축을 풀어 나온 .json 파일들을 고르세요. 완료한 항목의 날짜는 킵에 기록이 없어 그 메모의 마지막 수정일로 들어갑니다.</p>
-      <div class="srow"><button class="btn" id="imKeep" type="button">Keep 가져오기 (.json)</button><button class="btn" id="exAll" type="button">백업 내보내기</button><button class="btn" id="imAll" type="button">백업 불러오기</button></div>
-      <input type="file" id="fKeep" accept=".json,application/json" multiple hidden>
-      <input type="file" id="fBak" accept=".json,application/json" hidden>
-    </div>
-    <div class="sg"><b>체크리스트</b>
-      <div class="srow"><button class="btn" id="askTog" type="button"></button></div>
-      <p>항목을 체크할 때 「완료로 체크할까요?」 확인창을 띄웁니다. 실수로 눌러 완료되는 것을 막아 줍니다.</p>
-    </div>
-    <div class="sg"><b>구글 캘린더 일정</b>
-      <p>구글 캘린더에서 체크(표시)해 둔 모든 캘린더의 앞으로 21일 일정을 「📅 다가오는 일정」 체크리스트로 보여줍니다. 읽기 전용이라 캘린더는 바뀌지 않습니다.</p>
-      <div class="srow"><button class="btn" id="calTog" type="button"></button><button class="btn" id="calNow" type="button">지금 일정 가져오기</button></div>
-      <p class="msg" id="calMsg"></p>
-    </div>
+  <div class="st">
+    <div class="sth"><h3>설정</h3><button class="ib" id="setX" type="button" aria-label="닫기"></button></div>
+
+    <div class="ss"><h4>화면</h4><div class="grp">
+      <div class="rw"><span class="rl">테마</span><div class="seg" id="segTheme"><button data-t="auto">시스템</button><button data-t="light">라이트</button><button data-t="dark">다크</button></div></div>
+    </div></div>
+
+    <div class="ss"><h4>체크리스트</h4><div class="grp">
+      <div class="rw"><span class="rl">완료 체크 시 확인<small>실수로 눌러 완료되는 것을 막아 줍니다</small></span><button type="button" class="tg" id="askTog" role="switch" aria-label="완료 체크 시 확인"></button></div>
+    </div></div>
+
+    <div class="ss"><h4>구글 계정</h4><div class="grp">
+      <button type="button" class="rw rb" id="setSync"><span class="rl">드라이브 동기화<small id="stSync"></small></span><span class="chv" id="chvSync"></span></button>
+      <div class="rw"><span class="rl">캘린더 일정 가져오기<small>체크해 둔 모든 캘린더의 앞으로 21일 · 읽기 전용</small></span><button type="button" class="tg" id="calTog" role="switch" aria-label="캘린더 일정 가져오기"></button></div>
+      <button type="button" class="rw rb" id="alNow"><span class="rl">루틴 알림 지금 보내기<small id="alMsg">루틴에서 「캘린더 알림」을 켠 것만 전용 캘린더로 보냅니다</small></span><span class="chv"></span></button>
+      <button type="button" class="rw rb" id="calNow"><span class="rl">지금 일정 가져오기<small id="calMsg"></small></span><span class="chv" id="chvCal"></span></button>
+    </div></div>
+
+    <div class="ss"><h4>데이터</h4><div class="grp">
+      <button type="button" class="rw rb" id="imKeep"><span class="rl">구글 킵 가져오기<small>Takeout으로 받은 Keep .json 파일</small></span><span class="chv"></span></button>
+      <button type="button" class="rw rb" id="exAll"><span class="rl">백업 내보내기</span><span class="chv"></span></button>
+      <button type="button" class="rw rb" id="imAll"><span class="rl">백업 불러오기</span><span class="chv"></span></button>
+    </div></div>
+    <input type="file" id="fKeep" accept=".json,application/json" multiple hidden>
+    <input type="file" id="fBak" accept=".json,application/json" hidden>
     <p class="msg" id="verTag"></p>
   </div>
 </dialog>
@@ -585,6 +610,10 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
       <div class="rtd rtdc" id="rtDays"></div>
       <div class="rtdom" id="rtDomG"></div>
       <input type="hidden" id="rtDom" value="1">
+    </div>
+    <div class="rtcard">
+      <div class="rtrow"><span>캘린더 알림<small class="rts2">구글 캘린더 「늘메모 루틴」으로 잠금화면 알림</small></span><button type="button" class="tg" id="rtAl" role="switch" aria-label="캘린더 알림"></button></div>
+      <div class="rtchips" id="rtRm"><button type="button" data-m="0">정시</button><button type="button" data-m="10">10분 전</button><button type="button" data-m="30">30분 전</button><button type="button" data-m="60">1시간 전</button></div>
     </div>
     <div class="rtcard"><div class="rtrow"><span>할 일</span></div><input type="text" id="rtText" placeholder="예: 블레싱예배당 기도문자 전송" maxlength="120"></div>
     <button type="button" class="rtoff" id="rtOff">루틴 해제</button>
@@ -604,7 +633,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.37';
+const VER='1.40';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -754,7 +783,7 @@ function addItem(n,text,ind,afterId){
   else o=all.length?all[all.length-1].o+1000:1000;
   const it={id:uid(),t:text||'',d:0,i:ind||0,o,u:0,c:now()};it.u=stamp(n);n.items.push(it);return it;
 }
-function removeItem(n,it){it.x=1;it.t='';it.u=stamp(n);}
+function removeItem(n,it){if(it.rt&&it.rt.ev&&typeof alPendAdd==='function')alPendAdd(it.rt.ev);it.x=1;it.t='';it.u=stamp(n);if(typeof calAlertSoon==='function')calAlertSoon();}
 function setDone(n,it,on){
   if(on){
     const act=active(n),idx=act.indexOf(it),grp=[it];
@@ -1693,7 +1722,7 @@ function rtAdvance(n,it){
   }
   const ad=r.at?new Date(r.at):null,from=rtToday();
   if(ad){const nd=new Date(ad.getFullYear(),ad.getMonth(),ad.getDate()+1);if(nd>from)from.setTime(nd.getTime());}
-  r.at=rtNext(r,from);it.t=rtFmt(r.at,r,r.s||'');it.d=0;it.u=stamp(n);n.tm=n.tx=now();
+  r.at=rtNext(r,from);it.t=rtFmt(r.at,r,r.s||'');it.d=0;it.u=stamp(n);n.tm=n.tx=now();if(r.ev)calAlertSoon();
 }
 function rtAll(){
   let c=0;
@@ -1706,7 +1735,7 @@ function rtAll(){
   if(c){save();render();const o=$('#ed');if(o&&o.open&&cur()&&cur().type==='list')renderItems();}
   return c;
 }
-let RT={nid:'',iid:'',k:'w',days:[]};
+let RT={nid:'',iid:'',k:'w',days:[],al:false,rm:10};
 const rtLead=()=>0;
 function rtDomV(){return Math.min(31,Math.max(1,parseInt($('#rtDom').value,10)||1));}
 function rtPrev(){const e=$('#rtPrev');if(!e)return;const tm=/^(\d\d):(\d\d)$/.exec($('#rtTime').value||'');
@@ -1717,6 +1746,7 @@ function rtPrev(){const e=$('#rtPrev');if(!e)return;const tm=/^(\d\d):(\d\d)$/.e
     e.textContent='다음 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+WD[d.getDay()]+') '+rtWhen(r)+' · '+(c?c+'일 후':'오늘');return;}
   e.textContent='';
 }
+function rtAlUi(){$('#rtAl').setAttribute('aria-checked',RT.al?'true':'false');$('#rtRm').classList.toggle('off',!RT.al);for(const b of $$('#rtRm button'))b.classList.toggle('on',+b.dataset.m===RT.rm);}
 function rtDays(){
   for(const b of $$('#rtKind button'))b.classList.toggle('on',b.dataset.k===RT.k);
   $('#rtDays').hidden=RT.k!=='w';$('#rtDomG').hidden=RT.k!=='m';
@@ -1730,22 +1760,26 @@ function rtOpen(n,it){
   const r=it&&it.rt;RT.k=r?r.k:'w';RT.days=r?r.days.slice():[];
   $('#rtText').value=it?(r?(r.s||''):(it.t||'')):'';$('#rtTime').value=r?String(r.h).padStart(2,'0')+':'+String(r.m).padStart(2,'0'):'16:00';
   $('#rtDom').value=r?r.dom:1;$('#rtOff').hidden=!r;
+  RT.al=!!(r&&r.al);RT.rm=r&&r.rm!=null?r.rm:10;rtAlUi();
   rtDays();$('#dlgRt').showModal();
 }
 (()=>{const d=document.querySelector('#dlgRt');if(!d)return;
   d.querySelector('#rtX').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d)d.close();});
+  d.querySelector('#rtAl').addEventListener('click',()=>{RT.al=!RT.al;rtAlUi();});
+  d.querySelector('#rtRm').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;RT.rm=+b.dataset.m;rtAlUi();});
   d.querySelector('#rtKind').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;RT.k=b.dataset.k;rtDays();});
   d.querySelector('#rtTime').addEventListener('input',rtPrev);
   const fin=()=>{save();render();if($('#ed').open&&cur()&&cur().id===RT.nid)renderItems();};
-  d.querySelector('#rtOff').addEventListener('click',()=>{const n=noteById(RT.nid),it=n&&n.items.find(x=>x.id===RT.iid);if(!it)return;it.t=(it.rt&&it.rt.s)||it.t;delete it.rt;it.u=stamp(n);d.close();fin();toast('루틴을 해제했습니다 · 일반 항목으로 돌아왔습니다');});
+  d.querySelector('#rtOff').addEventListener('click',()=>{const n=noteById(RT.nid),it=n&&n.items.find(x=>x.id===RT.iid);if(!it)return;if(it.rt&&it.rt.ev)alPendAdd(it.rt.ev);it.t=(it.rt&&it.rt.s)||it.t;delete it.rt;calAlertSoon();it.u=stamp(n);d.close();fin();toast('루틴을 해제했습니다 · 일반 항목으로 돌아왔습니다');});
   d.querySelector('#rtSave').addEventListener('click',()=>{
     const n=noteById(RT.nid);if(!n)return;const t=$('#rtText').value.trim(),tm=/^(\d\d):(\d\d)$/.exec($('#rtTime').value||'');
     if(!t){toast('할 일을 입력하세요','err');return;}if(RT.k==='w'&&!RT.days.length){toast('요일을 하나 이상 고르세요','err');return;}if(!tm){toast('시각을 입력하세요','err');return;}
     const rt={k:RT.k,days:RT.k==='w'?RT.days.slice().sort():[],dom:Math.min(31,Math.max(1,parseInt($('#rtDom').value,10)||1)),h:+tm[1],m:+tm[2],lead:0};
     let it=RT.iid&&n.items.find(x=>x.id===RT.iid&&!x.x);
     if(!it){it=addItem(n,t,0);}
+    const old=it&&it.rt||{};rt.al=RT.al;rt.rm=RT.rm;for(const k of ['ev','evAt','evS','evRm'])if(old[k]!=null)rt[k]=old[k];
     rt.s=t;rt.at=rtNext(rt,rtToday());it.rt=rt;it.t=rtFmt(rt.at,rt,t);if(it.d){it.d=0;}it.u=stamp(n);n.tm=n.tx=now();
-    d.close();fin();toast('루틴을 저장했습니다');});})();
+    d.close();fin();toast('루틴을 저장했습니다');if(RT.al||rt.ev)calAlertSync(true);});})();
 
 /* 메모 하나를 홈 화면 바로가기로: 메모 주소(?open=id)를 브라우저의 「홈 화면에 추가」로 등록 */
 let scUrl='';
@@ -1756,13 +1790,13 @@ function scOpen(n){scUrl=location.origin+location.pathname+'?open='+encodeURICom
   d.querySelector('#scCopy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(scUrl);toast('주소를 복사했습니다');}catch(e){prompt('이 주소를 복사하세요',scUrl);}});})();
 
 /* ---------- 구글 캘린더 일정 → 체크리스트 (읽기 전용) ---------- */
-const CK={on:'nm-cal',tok:'nm-ctoken',time:'nm-ctime'};
-const C_SCOPE='https://www.googleapis.com/auth/calendar.readonly',CAL_DAYS=21,CAL_ID='gcal-notes',CAL_SUF=' ⚠취소·변경됨';
-let cTok=null,cClient=null,cWait=[],cBusy=false;
+const CK={on:'nm-cal',tok:'nm-ctoken2',time:'nm-ctime',cal:'nm-calid',pend:'nm-calpend'};
+const C_SCOPE='https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.app.created',AL_NAME='늘메모 루틴',CAL_DAYS=21,CAL_ID='gcal-notes',CAL_SUF=' ⚠취소·변경됨';
+let cTok=null,cClient=null,cWait=[],cBusy=false,cNeed=false,cSilent=0,gNeed=false;
 const calOn=()=>LS.get(CK.on)==='1';
 try{const t=JSON.parse(LS.get(CK.tok)||'null');if(t&&t.access_token&&now()<t.expires_at)cTok=t;}catch(e){}
 function calMsg(m,k){const e=$('#calMsg');if(e){e.textContent=m||'';e.className='msg'+(k?' '+k:'');}}
-function calUi(){const b=$('#calTog');if(!b)return;b.textContent=calOn()?'일정 가져오기 끄기':'일정 가져오기 켜기';const t=+LS.get(CK.time)||0;calMsg(calOn()?(t?'마지막 가져온 시각: '+new Date(t).toLocaleString('ko-KR'):'켜져 있습니다'):'꺼져 있습니다');}
+function calUi(){const b=$('#calTog');if(!b)return;b.setAttribute('aria-checked',calOn()?'true':'false');const t=+LS.get(CK.time)||0;calMsg(calOn()?(t?'마지막 '+new Date(t).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}):'켜져 있습니다'):'꺼져 있습니다');}
 function calToken(interactive){return new Promise(async(res,rej)=>{
   if(cTok&&now()<cTok.expires_at){res(cTok.access_token);return;}
   try{await gLoadScript();}catch(e){rej(e);return;}
@@ -1779,6 +1813,14 @@ async function calGet(url,tok){
   if(r.status===403){let m='';try{m=((await r.json()).error||{}).message||'';}catch(e){}throw new Error('캘린더 접근이 거부되었습니다 (Google Cloud에서 Calendar API 사용 설정과 권한 범위 추가가 필요할 수 있습니다) '+m);}
   if(!r.ok)throw new Error('캘린더 요청 실패 ('+r.status+')');
   return r.json();
+}
+async function calReq(method,url,tok,body){
+  const r=await fetch(url,{method,headers:Object.assign({Authorization:'Bearer '+tok},body?{'Content-Type':'application/json'}:{}),body:body?JSON.stringify(body):undefined});
+  if(r.status===401){cTok=null;LS.del(CK.tok);throw new Error('로그인이 만료되었습니다. 다시 시도해 주세요');}
+  if(r.status===204)return {status:204};
+  let j=null;try{j=await r.json();}catch(e){}
+  if(r.status===403)throw new Error('캘린더 쓰기 권한이 없습니다. 설정에서 캘린더 권한을 다시 허용해 주세요 '+(((j||{}).error||{}).message||''));
+  return {status:r.status,json:j};
 }
 const calHash=k=>{let a=5381,b=52711;for(let i=0;i<k.length;i++){const c=k.charCodeAt(i);a=((a<<5)+a^c)>>>0;b=((b<<5)+b^c)>>>0;}return 'g'+a.toString(36)+b.toString(36);};
 const WD=['일','월','화','수','목','금','토'];
@@ -1819,8 +1861,52 @@ function calBuild(events,winStart,winEnd){
   if(changed){n.tm=n.tx=now();stamp(n);}
   return changed;
 }
+
+/* ---------- 루틴 알림: 전용 캘린더(「늘메모 루틴」)에 다음 차례 일정 하나만 유지 → 구글 캘린더 앱이 잠금화면 알림 ---------- */
+const alId=itemId=>{let a=5381,b=52711;for(let i=0;i<itemId.length;i++){const c=itemId.charCodeAt(i);a=((a<<5)+a^c)>>>0;b=((b<<5)+b^c)>>>0;}return 'nmr'+a.toString(16).padStart(8,'0')+b.toString(16).padStart(8,'0');};   /* 구글 일정 번호 규칙: 0-9, a-v */
+const alPend=()=>{try{return JSON.parse(LS.get(CK.pend)||'[]');}catch(e){return [];}};
+const alPendAdd=id=>{if(!id)return;const l=alPend();if(!l.includes(id)){l.push(id);LS.set(CK.pend,JSON.stringify(l));}};
+let aBusy=false,aTimer=0;
+function alWant(){const out=[];for(const n of S.notes){if(n.trash||n.type!=='list')continue;for(const it of n.items){if(it.x||!it.rt)continue;const r=it.rt;
+  if(r.al&&r.at)out.push({n,it,act:(r.ev&&r.evAt===r.at&&r.evS===r.s&&r.evRm===(r.rm|0))?'':'put'});
+  else if(!r.al&&r.ev)out.push({n,it,act:'del'});}}return out;}
+async function alCal(tok){
+  const base='https://www.googleapis.com/calendar/v3';let id=LS.get(CK.cal);
+  if(id){const g=await calReq('GET',base+'/calendars/'+encodeURIComponent(id),tok);if(g.status===200)return id;LS.del(CK.cal);}
+  const l=await calReq('GET',base+'/users/me/calendarList?minAccessRole=owner&maxResults=250',tok);
+  const f=((l.json||{}).items||[]).find(c=>c.summary===AL_NAME);
+  if(f){LS.set(CK.cal,f.id);return f.id;}
+  const c=await calReq('POST',base+'/calendars',tok,{summary:AL_NAME,description:'늘메모 앱의 루틴 알림 (자동 생성·관리)',timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||'Asia/Seoul'});
+  if(c.status!==200||!c.json||!c.json.id)throw new Error('전용 캘린더를 만들지 못했습니다 ('+c.status+')');
+  LS.set(CK.cal,c.json.id);return c.json.id;
+}
+async function calAlertSync(manual){
+  if(aBusy)return 0;
+  const want=alWant(),pend=alPend();if(!want.length&&!pend.length){if(manual)alMsg('보낼 알림이 없습니다. 루틴 설정에서 「캘린더 알림」을 켜 보세요','');return 0;}
+  aBusy=true;let ch=0;
+  try{
+    const tok=await calToken(manual),cid=await alCal(tok),base='https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(cid)+'/events/';
+    const left=[];for(const id of pend){const r=await calReq('DELETE',base+id,tok);if(!(r.status===204||r.status===404||r.status===410))left.push(id);}
+    LS.set(CK.pend,JSON.stringify(left));
+    for(const w of want){const r=w.it.rt,eid=alId(w.it.id);
+      if(w.act==='del'){await calReq('DELETE',base+eid,tok);delete r.ev;delete r.evAt;delete r.evS;delete r.evRm;w.it.u=stamp(w.n);ch++;continue;}
+      if(w.act!=='put')continue;
+      const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'Asia/Seoul';
+      const body={summary:r.s||w.it.t,description:'늘메모 루틴 (자동 생성)',start:{dateTime:new Date(r.at).toISOString(),timeZone:tz},end:{dateTime:new Date(r.at+30*60000).toISOString(),timeZone:tz},status:'confirmed',reminders:{useDefault:false,overrides:[{method:'popup',minutes:r.rm|0}]}};
+      let x=await calReq('PUT',base+eid,tok,body);   /* 있으면 수정(취소된 번호도 되살림) */
+      if(x.status===404)x=await calReq('POST',base.slice(0,-1),tok,Object.assign({id:eid},body));
+      if(!(x.status>=200&&x.status<300))throw new Error('알림 일정을 저장하지 못했습니다 ('+x.status+')');
+      r.ev=eid;r.evAt=r.at;r.evS=r.s;r.evRm=r.rm|0;w.it.u=stamp(w.n);ch++;}
+    if(ch){save();}
+    cNeed=false;if(manual)alMsg('알림 일정 '+ch+'개를 맞췄습니다 · 「'+AL_NAME+'」 캘린더','ok');
+  }catch(e){if(!manual){cNeed=true;}alMsg(e.message||'알림 일정을 보내지 못했습니다','err');if(manual)toast(e.message||'알림 일정을 보내지 못했습니다','err');}
+  aBusy=false;return ch;
+}
+function calAlertSoon(){clearTimeout(aTimer);aTimer=setTimeout(()=>{if(alWant().length||alPend().length)calAlertSync(false);},3500);}
+function alMsg(m,k){const e=$('#alMsg');if(e){e.textContent=m||'';e.className='msg'+(k?' '+k:'');}}
+
 async function calSync(manual){
-  if(cBusy)return;if(!manual&&!calOn())return;
+  if(cBusy)return;if(!manual&&(!calOn()||now()<cSilent||!navigator.onLine))return;
   if(!manual){const t=+LS.get(CK.time)||0;if(now()-t<30*60000)return;}
   cBusy=true;
   try{
@@ -1830,7 +1916,7 @@ async function calSync(manual){
     const base='https://www.googleapis.com/calendar/v3';
     let cals=[],pt='';
     do{const j=await calGet(base+'/users/me/calendarList?minAccessRole=reader&maxResults=250'+(pt?'&pageToken='+encodeURIComponent(pt):''),tok);cals=cals.concat(j.items||[]);pt=j.nextPageToken||'';}while(pt);
-    cals=cals.filter(c=>c.selected===true);
+    cals=cals.filter(c=>c.selected===true&&c.id!==LS.get(CK.cal)&&c.summary!==AL_NAME);   /* 루틴 알림용 전용 캘린더는 다시 가져오지 않음 */
     const evs=[];
     for(const c of cals){pt='';
       do{const q='?singleEvents=true&orderBy=startTime&maxResults=250&timeMin='+encodeURIComponent(ws.toISOString())+'&timeMax='+encodeURIComponent(we.toISOString())+(pt?'&pageToken='+encodeURIComponent(pt):'');
@@ -1838,11 +1924,11 @@ async function calSync(manual){
         for(const ev of j.items||[])evs.push({calId:c.id,ev});pt=j.nextPageToken||'';}while(pt);}
     const ex=noteById(CAL_ID);if(ex&&ex.trash){if(manual){ex.trash=0;ex.tm=now();stamp(ex);}else{cBusy=false;return;}}
     const ch=calBuild(evs,ws.getTime(),we.getTime());
-    LS.set(CK.time,String(now()));
+    LS.set(CK.time,String(now()));cNeed=false;cSilent=0;
     if(ch){save();render();const o=$('#ed');if(o&&o.open&&cur()&&cur().id===CAL_ID)openEd(CAL_ID);}
     calUi();
     if(manual){calMsg('캘린더 '+cals.length+'개 · 일정 '+evs.length+'개를 확인했습니다 (바뀐 항목 '+ch+'개)','ok');toast('일정을 가져왔습니다');}
-  }catch(e){if(manual){calMsg(e.message||'일정을 가져오지 못했습니다','err');toast(e.message||'일정을 가져오지 못했습니다','err');}}
+  }catch(e){if(!manual){cNeed=true;cSilent=now()+3*60e3;}if(manual){calMsg(e.message||'일정을 가져오지 못했습니다','err');toast(e.message||'일정을 가져오지 못했습니다','err');}}
   cBusy=false;
 }
 
@@ -1996,8 +2082,8 @@ async function autoSync(){
   if(!gOn()||(gBusy&&now()-gBusyAt<180000)||!navigator.onLine||now()<gSilent)return;
   gBusy=true;gBusyAt=now();gUi();
   try{const tok=await gGetToken(false),r=await syncRun(tok);
-    if(r.failed.length){gErr=r.failed.length+'개 메모 실패';gSilent=now()+3*60e3;}else{LS.set(GK.time,String(now()));gErr='';gSilent=0;}
-  }catch(e){gErr=e.message||'오류';gSilent=now()+3*60e3;}
+    if(r.failed.length){gErr=r.failed.length+'개 메모 실패';gSilent=now()+3*60e3;}else{LS.set(GK.time,String(now()));gErr='';gSilent=0;gNeed=false;}
+  }catch(e){gErr=e.message||'오류';gSilent=now()+3*60e3;gNeed=true;}
   finally{gBusy=false;gUi();}
 }
 function schedSync(){if(!gOn())return;clearTimeout(gTimer);gTimer=setTimeout(autoSync,4000);}
@@ -2039,11 +2125,14 @@ async function importAll(f){
 /* ---------- 설정 · 시작 ---------- */
 function bindSet(){
   const d=$('#set');
-  const askUi=()=>{$('#askTog').textContent=LS.get('nm-askchk')==='0'?'체크 확인창 켜기':'체크 확인창 끄기';};askUi();
-  $('#askTog').addEventListener('click',()=>{LS.set('nm-askchk',LS.get('nm-askchk')==='0'?'1':'0');askUi();toast(LS.get('nm-askchk')==='0'?'체크 확인창을 껐습니다':'체크 확인창을 켰습니다');});
+  const askUi=()=>{$('#askTog').setAttribute('aria-checked',LS.get('nm-askchk')==='0'?'false':'true');};askUi();
+  $('#askTog').addEventListener('click',()=>{LS.set('nm-askchk',LS.get('nm-askchk')==='0'?'1':'0');askUi();});
   $('#calTog').addEventListener('click',()=>{if(calOn()){LS.set(CK.on,'0');calUi();}else{LS.set(CK.on,'1');calUi();calSync(true);}});
+  $('#alNow').addEventListener('click',()=>calAlertSync(true));
   $('#calNow').addEventListener('click',()=>{if(!calOn())LS.set(CK.on,'1');calUi();calSync(true);});
-  $('#bSet').addEventListener('click',()=>{calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());gMsg('');gUi();d.showModal();});
+  const syUi=()=>{const t=+LS.get(GK.time)||0;$('#stSync').textContent=gOn()?(gErr?'확인이 필요합니다':'켜짐 · 자동 동기화'+(t?' · 마지막 '+gAgo(t):'')):'꺼짐 · 구글 로그인으로 켭니다';};
+  $('#setSync').addEventListener('click',()=>{d.close();$('#bSync').click();});
+  $('#bSet').addEventListener('click',()=>{syUi();calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());gMsg('');gUi();d.showModal();});
   $('#setX').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d)d.close();});
   $('#segTheme').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-theme',b.dataset.t);applyTheme();for(const x of $$('#segTheme button'))x.classList.toggle('on',x===b);});
   const ds=$('#dlgSync');
@@ -2078,9 +2167,15 @@ function init(){
   setInterval(()=>{if(!document.hidden&&gOn())autoSync();},120000);
   if(gOn())setTimeout(autoSync,1500);
   setTimeout(()=>calSync(false),2500);
+  /* 조용한 자동 로그인이 막힌 경우(구글 토큰 1시간 만료 등): 다음에 화면을 한 번 건드릴 때 로그인 확인을 이어서 자동으로 처리 */
+  let kick=0;document.addEventListener('pointerup',()=>{if(kick||(!gNeed&&!cNeed))return;kick=1;(async()=>{
+    try{if(gNeed&&gOn()){gNeed=false;await gGetToken(true);gSilent=0;autoSync();}}catch(e){}
+    try{if(cNeed&&(calOn()||alWant().length)){cNeed=false;await calToken(true);cSilent=0;calSync(false);calAlertSoon();}}catch(e){}
+    kick=0;})();},{passive:true});
+  setInterval(()=>{if(!document.hidden){calSync(false);calAlertSoon();}},10*60e3);setTimeout(calAlertSoon,3000);
   setTimeout(rtAll,800);setInterval(()=>{if(!document.hidden)rtAll();},3600000);
   if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{}));}
-  window.__nm={S,BIN,addPhotos,mActive,vcStart,vcStop,renderMedia,blobSync,get notes(){return S.notes;},createNote,setDone,addItem,active,doneOf,mergeNote,ser,openEd,render,V,moveBlock,rtAll,rtAdvance,rtOpen,calSync,calBuild,CK};
+  window.__nm={S,BIN,addPhotos,mActive,vcStart,vcStop,renderMedia,blobSync,get notes(){return S.notes;},createNote,setDone,addItem,active,doneOf,mergeNote,ser,openEd,render,V,moveBlock,rtAll,rtAdvance,alWant,calAlertSync,calAlertSoon,rtOpen,calSync,calBuild,CK};
 }
 init();
 })();
