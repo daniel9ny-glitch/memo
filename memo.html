@@ -133,7 +133,8 @@ dialog#ed[open]{display:flex;flex-direction:column}
 .row .x:hover{background:var(--hover)}
 .row .rbt{width:36px;height:36px;display:grid;place-items:center;color:var(--fg);opacity:.45;border-radius:50%;flex:none}.row .rbt svg{width:20px;height:20px}.row .rbt:hover{background:var(--hover)}
 .row .rbt.on{color:var(--accent);opacity:1}
-.row.rt.od .rbt.on{color:var(--danger)}
+.row.cg0 .rbt.on{color:var(--danger)}.row.cg1 .rbt.on{color:#f5a03a}
+
 .row.drag{background:var(--hover)}
 .row{border-left:4px solid transparent;border-radius:8px;margin:2px 6px 2px 0;transition:background .12s}
 .row textarea{caret-color:var(--accent);caret-width:3px}
@@ -294,11 +295,13 @@ dialog#set,dialog#dlgSync,dialog#dlgSc{width:min(460px,calc(100vw - 24px));borde
 .seg button.on{background:var(--bg);color:var(--fg);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .srow{display:flex;gap:8px;flex-wrap:wrap}
 .rtr{border:1px solid var(--line2);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}
-.row.rt textarea{color:var(--accent)}.row.rt .cd{color:var(--accent);opacity:.85}.row.cg0 textarea,.ci.cg0 .t,.ppv.cg0{color:var(--danger);font-weight:700}.row.cg1 textarea,.ci.cg1 .t,.ppv.cg1{color:#f5a03a;font-weight:600}.row.cg2 textarea,.ci.cg2 .t,.ppv.cg2{color:var(--accent)}
+.row.cg0 textarea,.ci.cg0 .t,.ppv.cg0{color:var(--danger);font-weight:700}.row.cg1 textarea,.ci.cg1 .t,.ppv.cg1{color:#f5a03a;font-weight:600}.row.cg2 textarea,.ci.cg2 .t,.ppv.cg2{color:var(--accent)}
 :root[data-theme=light] .row.cg1 textarea,:root[data-theme=light] .ci.cg1 .t,:root[data-theme=light] .ppv.cg1{color:#c4670a}
-.ci.rt .t,.ppv.rt{color:var(--accent)}.ci.rt.od .t,.ppv.rt.od{color:var(--danger);font-weight:700}.ci.rtw{opacity:.55}
-.row.rtw{opacity:.55}.row.rt textarea[readonly]{cursor:pointer}
-.row.rt.od textarea,.row.rt.od .cd{color:var(--danger)}.row.rt.od textarea{font-weight:700}
+
+.row textarea[readonly]{cursor:pointer}
+@keyframes nmblink{0%,100%{opacity:1}50%{opacity:.2}}
+.row.od textarea,.ci.od .t,.ppv.od{animation:nmblink 1.2s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.row.od textarea,.ci.od .t,.ppv.od{animation:none;text-decoration:underline wavy}}
 .rts{padding:10px 16px 22px;display:flex;flex-direction:column;gap:12px}
 .rth{display:flex;align-items:center;justify-content:space-between}.rth b{font-size:17px}
 .rtl{height:40px;padding:0 10px;border-radius:20px;color:var(--fg2);font-weight:600;font-size:15px}.rtl.rtp{color:var(--accent)}
@@ -549,7 +552,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.29';
+const VER='1.31';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -661,11 +664,12 @@ const doneSort=(a,b)=>b.d-a.d||a.o-b.o;
 const itC=(n,it)=>{if(it.c)return it.c;if(/^k\d/.test(n.id))return n.cr||0;const t=parseInt(String(it.id||'').slice(0,-5),36);return t>1.5e12&&t<Date.now()+864e5?t:0;};
 /* 메모 전체 완료: 항목이 있고 남은 항목이 없을 때, 마지막으로 체크한 시각 */
 /* 항목의 색 구분 클래스: 캘린더 일정(임박도)·루틴(기한초과/대기) — 편집기와 메모 목록 모두에서 사용 */
+const dayTone=ms=>{const t=new Date(),g=new Date(ms),dd=Math.round((new Date(g.getFullYear(),g.getMonth(),g.getDate())-new Date(t.getFullYear(),t.getMonth(),t.getDate()))/864e5);return dd<=1?'cg0':dd<=3?'cg1':dd<=7?'cg2':'cg3';};
 function itTone(it){
   if(it.d||it.x)return '';
-  if(it.rt){const at=it.rt.at||0;return 'rt'+(at&&at<now()?' od':at&&at-(it.rt.lead|0)*864e5>now()?' rtw':'');}
-  if(it.g&&it.gs){const t=new Date(),g=new Date(it.gs),dd=Math.round((new Date(g.getFullYear(),g.getMonth(),g.getDate())-new Date(t.getFullYear(),t.getMonth(),t.getDate()))/864e5);return dd<=1?'cg0':dd<=3?'cg1':dd<=7?'cg2':'cg3';}
-  if(it.r)return 'rt'+((it.o||0)*60000<now()?' od':'');
+  if(it.rt&&it.rt.at)return dayTone(it.rt.at)+(it.rt.at<now()?' od':'');
+  if(it.g&&it.gs)return dayTone(it.gs)+(it.gs<now()&&!/종일: /.test(it.t||'')?' od':'');   /* 종일 일정은 0시 기준이라 깜박이지 않음 */
+  if(it.r)return dayTone((it.o||0)*60000)+((it.o||0)*60000<now()?' od':'');
   return '';
 }
 const noteDoneAt=n=>{if(n.type!=='list')return 0;const dn=doneOf(n);return dn.length&&!active(n).some(i=>(i.t||'').trim())?Math.max(...dn.map(i=>i.d)):0;};
@@ -1438,11 +1442,10 @@ function actRow(n,it){
   });
   bindDrag(g,r,id);
   const col=h('div','col');col.appendChild(ta);
-  if(it.rt){r.classList.add('rt');const at=it.rt.at||0;if(at&&at<now())r.classList.add('od');else if(at&&at-(it.rt.lead|0)*864e5>now())r.classList.add('rtw');
+  if(it.rt){const tn=itTone(it);if(tn)r.classList.add(...tn.split(' '));
     ta.readOnly=true;ta.addEventListener('click',()=>{const m=cur(),i=get();if(m&&i)rtOpen(m,i);});col.appendChild(h('small','cd rcap','🔁 '+rtLabel(it.rt)));}
-  else if(it.g&&it.gs){const t=new Date(),dd=Math.round((new Date(new Date(it.gs).getFullYear(),new Date(it.gs).getMonth(),new Date(it.gs).getDate())-new Date(t.getFullYear(),t.getMonth(),t.getDate()))/864e5);
-    r.classList.add(dd<=1?'cg0':dd<=3?'cg1':dd<=7?'cg2':'cg3');}
-  else if(it.r){r.classList.add('rt');if((it.o||0)*60000<now())r.classList.add('od');col.appendChild(h('small','cd','🔁 루틴'));}
+  else if(it.g&&it.gs){r.classList.add(...itTone(it).split(' '));}
+  else if(it.r){r.classList.add(...itTone(it).split(' '));col.appendChild(h('small','cd','🔁 루틴'));}
   else{const c0=itC(n,it);if(c0)col.appendChild(h('small','cd','작성 '+fdt(c0)));}
   if(it.r)r.append(g,cb,col,x);else r.append(g,cb,col,rb,x);return r;
 }
