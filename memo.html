@@ -85,6 +85,50 @@ main{max-width:1100px;margin:0 auto;padding:12px 14px 90px}
 .c-red{--nc:var(--c-red)}.c-orange{--nc:var(--c-orange)}.c-yellow{--nc:var(--c-yellow)}.c-green{--nc:var(--c-green)}.c-teal{--nc:var(--c-teal)}.c-sky{--nc:var(--c-sky)}
 .c-blue{--nc:var(--c-blue)}.c-purple{--nc:var(--c-purple)}.c-pink{--nc:var(--c-pink)}.c-brown{--nc:var(--c-brown)}.c-gray{--nc:var(--c-gray)}
 
+/* 메모지 색(배경)마다 글자 대비 4.5 이상이 되도록 미리 계산한 일정·루틴 색(--t0 빨강 / --t1 주황 / --t2 초록)과 보조 글자색 */
+:root{--t0:#f2685f;--t1:#fba856;--t2:#70e1a8}
+.c-red{--t0:#f59089;--t1:#fba856;--t2:#70e1a8}
+.c-orange{--t0:#f9b8b4;--t1:#fcbd7e;--t2:#70e1a8}
+.c-yellow{--t0:#fcd7d5;--t1:#fdd9b4;--t2:#abedcc}
+.c-green{--t0:#f9bdb8;--t1:#fcc288;--t2:#70e1a8}
+.c-teal{--t0:#f8afaa;--t1:#fbb065;--t2:#70e1a8}
+.c-sky{--t0:#f9bdb8;--t1:#fcbf83;--t2:#70e1a8}
+.c-blue{--t0:#f59089;--t1:#fba856;--t2:#70e1a8}
+.c-purple{--t0:#f58780;--t1:#fba856;--t2:#70e1a8}
+.c-pink{--t0:#f58c84;--t1:#fba856;--t2:#70e1a8}
+.c-brown{--t0:#f4837b;--t1:#fba856;--t2:#70e1a8}
+.c-gray{--t0:#f79e97;--t1:#fba856;--t2:#70e1a8}
+:root[data-theme=light]{--t0:#bd1b0f;--t1:#9f5204;--t2:#197647}
+:root[data-theme=light] .c-red{--t0:#84130b;--t1:#683603;--t2:#104c2e}
+:root[data-theme=light] .c-orange{--t0:#711009;--t1:#552b02;--t2:#0d3f26}
+:root[data-theme=light] .c-yellow{--t0:#bd1b0f;--t1:#9a4f04;--t2:#176d42}
+:root[data-theme=light] .c-green{--t0:#bd1b0f;--t1:#954c04;--t2:#176d42}
+:root[data-theme=light] .c-teal{--t0:#9c160d;--t1:#773d03;--t2:#135836}
+:root[data-theme=light] .c-sky{--t0:#aa180e;--t1:#864503;--t2:#15613b}
+:root[data-theme=light] .c-blue{--t0:#8e140b;--t1:#6d3803;--t2:#115030}
+:root[data-theme=light] .c-purple{--t0:#89130b;--t1:#6d3803;--t2:#115030}
+:root[data-theme=light] .c-pink{--t0:#af190e;--t1:#8b4704;--t2:#15653d}
+:root[data-theme=light] .c-brown{--t0:#af190e;--t1:#864503;--t2:#15653d}
+:root[data-theme=light] .c-gray{--t0:#b81a0f;--t1:#954c04;--t2:#176d42}
+.c-red{--fg2:#aaaaaa}
+.c-orange{--fg2:#c6c6c6}
+.c-yellow{--fg2:#dadada}
+.c-green{--fg2:#cacaca}
+.c-teal{--fg2:#bebebe}
+.c-sky{--fg2:#cacaca}
+.c-blue{--fg2:#aaaaaa}
+.c-purple{--fg2:#aaaaaa}
+.c-pink{--fg2:#aaaaaa}
+.c-brown{--fg2:#aaaaaa}
+.c-gray{--fg2:#b2b2b2}
+:root[data-theme=light] .c-red{--fg2:#494949}
+:root[data-theme=light] .c-orange{--fg2:#414141}
+:root[data-theme=light] .c-teal{--fg2:#555555}
+:root[data-theme=light] .c-sky{--fg2:#555555}
+:root[data-theme=light] .c-blue{--fg2:#4d4d4d}
+:root[data-theme=light] .c-purple{--fg2:#4d4d4d}
+:root[data-theme=light] .c-brown{--fg2:#555555}
+
 /* 체크박스 */
 .cb{width:36px;height:36px;display:grid;place-items:center;flex:none;color:var(--fg2)}
 .cb i{width:18px;height:18px;border:2px solid currentColor;border-radius:3px;display:grid;place-items:center}
@@ -133,12 +177,12 @@ dialog#ed[open]{display:flex;flex-direction:column}
 .row .x:hover{background:var(--hover)}
 .row .rbt{width:36px;height:36px;display:grid;place-items:center;color:var(--fg);opacity:.45;border-radius:50%;flex:none}.row .rbt svg{width:20px;height:20px}.row .rbt:hover{background:var(--hover)}
 .row .rbt.on{color:var(--accent);opacity:1}
-.row.cg0 .rbt.on{color:var(--danger)}.row.cg1 .rbt.on{color:#f5a03a}
+.row.cg0 .rbt.on{color:var(--t0)}.row.cg1 .rbt.on{color:var(--t1)}.row.cg2 .rbt.on{color:var(--t2)}
 
 .row.drag{background:var(--hover)}
 .row{border-left:4px solid transparent;border-radius:8px;margin:2px 6px 2px 0;transition:background .12s}
 .row textarea{caret-color:var(--accent);caret-width:3px}
-.row textarea::placeholder{color:var(--accent);opacity:.75;font-weight:600}
+.row textarea::placeholder{color:var(--t2);opacity:.9;font-weight:600}
 .row:focus-within{background:color-mix(in srgb,var(--accent) 16%,transparent);border-left-color:var(--accent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 60%,transparent)}
 .row:focus-within textarea{font-weight:600}
 .row.dropb{border-top-color:var(--accent)}
@@ -269,6 +313,14 @@ dialog#ed[open]{display:flex;flex-direction:column}
 .er.dnote{align-items:flex-start;padding-top:2px}.er.dnote .cb{margin-top:3px}
 .er.dnote .t{min-width:0}.er.dnote .tm{margin-top:6px}.er.dnote .t .pt{display:block}.er.dnote .ppv{font-size:12.5px;max-width:100%}
 /* 설정 */
+dialog#dlgAsk{width:min(300px,calc(100vw - 48px));border:0;border-radius:20px;background:var(--bg);box-shadow:0 12px 40px rgba(0,0,0,.45);padding:0}
+.ask{padding:22px 20px 14px;display:flex;flex-direction:column;gap:6px}
+.ask .aq{font-size:16px;font-weight:700;line-height:1.4;word-break:break-word}
+.ask .at{font-size:14px;color:var(--fg2);line-height:1.45;word-break:break-word}.ask .at:empty{display:none}
+.ask .ab{display:flex;gap:8px;margin-top:14px}.ask .ab button{flex:1;height:44px;border-radius:12px;font-weight:600;font-size:15px;background:var(--hover);color:var(--fg)}
+.ask .ab #askYes{background:var(--accent);color:var(--accent-fg)}.ask.danger .ab #askYes{background:var(--danger);color:#fff}
+dialog#dlgAsk[open]{animation:askin .14s ease-out}@keyframes askin{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+.rpi{display:inline-flex;vertical-align:-2px;margin-right:4px}.rpi svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 dialog#dlgRt{width:min(460px,100vw);margin:auto auto 0;border-radius:24px 24px 0 0;background:var(--bg);max-height:94dvh}
 dialog#set,dialog#dlgSync,dialog#dlgSc{width:min(460px,calc(100vw - 24px));border-radius:14px;background:var(--bg)}
 .gs-card{display:flex;align-items:center;gap:13px;padding:14px;border-radius:14px;background:var(--hover);border:1px solid var(--line)}
@@ -295,8 +347,7 @@ dialog#set,dialog#dlgSync,dialog#dlgSc{width:min(460px,calc(100vw - 24px));borde
 .seg button.on{background:var(--bg);color:var(--fg);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .srow{display:flex;gap:8px;flex-wrap:wrap}
 .rtr{border:1px solid var(--line2);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}
-.row.cg0 textarea,.ci.cg0 .t,.ppv.cg0{color:var(--danger);font-weight:700}.row.cg1 textarea,.ci.cg1 .t,.ppv.cg1{color:#f5a03a;font-weight:600}.row.cg2 textarea,.ci.cg2 .t,.ppv.cg2{color:var(--accent)}
-:root[data-theme=light] .row.cg1 textarea,:root[data-theme=light] .ci.cg1 .t,:root[data-theme=light] .ppv.cg1{color:#c4670a}
+.row.cg0 textarea,.ci.cg0 .t,.ppv.cg0{color:var(--t0);font-weight:700}.row.cg1 textarea,.ci.cg1 .t,.ppv.cg1{color:var(--t1);font-weight:600}.row.cg2 textarea,.ci.cg2 .t,.ppv.cg2{color:var(--t2);font-weight:600}
 
 .row textarea[readonly]{cursor:pointer}
 @keyframes nmblink{0%,100%{opacity:1}50%{opacity:.2}}
@@ -523,6 +574,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
     <p class="msg" id="verTag"></p>
   </div>
 </dialog>
+<dialog id="dlgAsk"><div class="ask"><div class="aq" id="askQ"></div><div class="at" id="askT"></div><div class="ab"><button type="button" id="askNo">취소</button><button type="button" id="askYes">확인</button></div></div></dialog>
 <dialog id="dlgRt">
   <div class="rts">
     <div class="rth"><button type="button" class="rtl" id="rtX">취소</button><b>루틴 설정</b><button type="button" class="rtl rtp" id="rtSave">저장</button></div>
@@ -552,7 +604,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.34';
+const VER='1.36';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -577,6 +629,7 @@ const IC={
  text:'<path d="M4 7V4h16v3M9 20h6M12 4v16"/>',
  pal:'<circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.2"/><circle cx="12" cy="7.5" r="1.2"/><circle cx="16" cy="10" r="1.2"/>',
  clock:'<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5.2l3.4 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+ repeat:'<path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
  grip:'<circle cx="9" cy="6" r="1.2"/><circle cx="15" cy="6" r="1.2"/><circle cx="9" cy="12" r="1.2"/><circle cx="15" cy="12" r="1.2"/><circle cx="9" cy="18" r="1.2"/><circle cx="15" cy="18" r="1.2"/>',
  chev:'<path d="m9 6 6 6-6 6"/>',
  undo:'<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>',
@@ -681,7 +734,16 @@ function itTone(it){
   return '';
 }
 /* 실수로 체크되는 것을 막는 확인창 (설정에서 끌 수 있음) */
-const askChk=it=>{if(LS.get('nm-askchk')==='0')return true;const t=((it&&it.t)||'').trim();return confirm((t?'「'+(t.length>40?t.slice(0,40)+'…':t)+'」\n':'')+'완료로 체크할까요?');};
+const itTxt=it=>{const t=((it&&it.t)||'').trim();return t.length>50?t.slice(0,50)+'…':t;};
+function ask(q,sub,okText,danger){return new Promise(res=>{
+  const d=$('#dlgAsk');$('#askQ').textContent=q;$('#askT').textContent=sub||'';$('#askYes').textContent=okText||'확인';d.firstElementChild.classList.toggle('danger',!!danger);
+  const fin=v=>{d.removeEventListener('close',onc);d.removeEventListener('click',bd);$('#askYes').onclick=$('#askNo').onclick=null;if(d.open)d.close();res(v);};
+  const onc=()=>fin(false),bd=e=>{if(e.target===d)fin(false);};
+  d.addEventListener('close',onc);d.addEventListener('click',bd);
+  $('#askYes').onclick=()=>fin(true);$('#askNo').onclick=()=>fin(false);
+  d.showModal();(danger?$('#askNo'):$('#askYes')).focus();});}
+const askChk=it=>LS.get('nm-askchk')==='0'?Promise.resolve(true):ask('완료로 체크할까요?',itTxt(it),'체크');
+const askDel=it=>(it&&(it.t||'').trim())?ask('이 항목을 삭제할까요?',itTxt(it),'삭제',true):Promise.resolve(true);
 const noteDoneAt=n=>{if(n.type!=='list')return 0;const dn=doneOf(n);return dn.length&&!active(n).some(i=>(i.t||'').trim())?Math.max(...dn.map(i=>i.d)):0;};
 function renumber(n){n.items.filter(x=>!x.x).sort(byO).forEach((x,k)=>{x.o=(k+1)*1000;x.u=stamp(n);});}
 function addItem(n,text,ind,afterId){
@@ -1084,13 +1146,13 @@ function card(n,q,trashMode){
     const act=active(n),dn=doneOf(n).sort(doneSort),max=q?0:8;
     for(const it of act.slice(0,max)){
       const r=h('div','ci'+(it.i>0?' sub':'')+' '+itTone(it)),cb=cbEl(false);
-      if(!trashMode)cb.addEventListener('click',e=>{e.stopPropagation();if(!askChk(it))return;setDone(n,it,true);render();});
+      if(!trashMode)cb.addEventListener('click',e=>{e.stopPropagation();askChk(it).then(ok=>{if(!ok)return;setDone(n,it,true);render();});});
       r.append(cb,h('div','t',it.t));c.appendChild(r);}
     if(!q&&act.length>max)c.appendChild(h('div','more','…외 '+(act.length-max)+'개'));
     if(q){
       const hit=[...act,...dn].filter(i=>(i.t||'').toLowerCase().includes(q)).slice(0,6);
       for(const it of hit){const r=h('div','ci'+(it.d?' dn':'')),cb=cbEl(!!it.d);
-        if(!trashMode)cb.addEventListener('click',e=>{e.stopPropagation();if(!it.d&&!askChk(it))return;setDone(n,it,!it.d);render();});
+        if(!trashMode)cb.addEventListener('click',e=>{e.stopPropagation();(it.d?Promise.resolve(true):askChk(it)).then(ok=>{if(!ok)return;setDone(n,it,!it.d);render();});});
         r.append(cb,h('div','t',it.t));if(it.d)r.appendChild(h('div','dd',fdt(it.d)));c.appendChild(r);}
     }
     const nd=noteDoneAt(n);
@@ -1417,12 +1479,12 @@ function actRow(n,it){
   const id=it.id,get=()=>{const m=cur();return m&&m.items.find(x=>x.id===id);};
   const r=h('div','row');r.dataset.id=id;r.style.paddingLeft=(2+it.i*28)+'px';
   const g=h('span','grip');g.innerHTML=ico('grip');g.title='끌어서 순서 바꾸기';
-  const cb=cbEl(false);cb.addEventListener('click',()=>{const m=cur(),x=get();if(!m||!x)return;if(!askChk(x))return;setDone(m,x,true);renderItems();});
+  const cb=cbEl(false);cb.addEventListener('click',()=>{const m=cur(),x=get();if(!m||!x)return;askChk(x).then(ok=>{if(!ok)return;const m2=cur(),x2=m2&&m2.items.find(q=>q.id===x.id);if(!m2||!x2)return;setDone(m2,x2,true);renderItems();});});
   const ta=h('textarea');ta.rows=1;ta.value=it.t;ta.spellcheck=false;ta.placeholder='여기에 새 항목 입력';ta.setAttribute('aria-label','항목');
   const rb=h('button','rbt'+(it.rt?' on':''));rb.type='button';rb.innerHTML=ico('clock');rb.title=it.rt?'루틴 설정됨 · '+rtLabel(it.rt):'루틴 설정';rb.setAttribute('aria-label','루틴 설정');
   rb.addEventListener('click',()=>{const m=cur(),i=get();if(m&&i)rtOpen(m,i);});
   const x=h('button','x');x.type='button';x.innerHTML=ico('x');x.title='항목 삭제';x.setAttribute('aria-label','항목 삭제');
-  x.addEventListener('click',()=>{const m=cur(),i=get();if(!m||!i)return;removeItem(m,i);save();renderItems();});
+  x.addEventListener('click',()=>{const m=cur(),i=get();if(!m||!i)return;askDel(i).then(ok=>{if(!ok)return;const m2=cur(),i2=get();if(!m2||!i2)return;removeItem(m2,i2);save();renderItems();});});
   ta.addEventListener('input',()=>{const m=cur(),i=get();if(!m||!i)return;i.t=ta.value;i.u=stamp(m);save();grow(ta);});
   ta.addEventListener('paste',e=>{
     const txt=(e.clipboardData||window.clipboardData).getData('text');if(!/\n/.test(txt))return;
@@ -1453,9 +1515,9 @@ function actRow(n,it){
   bindDrag(g,r,id);
   const col=h('div','col');col.appendChild(ta);
   if(it.rt){const tn=itTone(it);if(tn)r.classList.add(...tn.split(' '));
-    ta.readOnly=true;ta.addEventListener('click',()=>{const m=cur(),i=get();if(m&&i)rtOpen(m,i);});col.appendChild(h('small','cd rcap','🔁 '+rtLabel(it.rt)));}
+    ta.readOnly=true;ta.addEventListener('click',()=>{const m=cur(),i=get();if(m&&i)rtOpen(m,i);});{const sm=h('small','cd rcap');sm.innerHTML='<span class="rpi">'+ico('repeat')+'</span>';sm.append(rtLabel(it.rt));col.appendChild(sm);}}
   else if(it.g&&it.gs){r.classList.add(...itTone(it).split(' '));}
-  else if(it.r){r.classList.add(...itTone(it).split(' '));col.appendChild(h('small','cd','🔁 루틴'));}
+  else if(it.r){r.classList.add(...itTone(it).split(' '));{const sm=h('small','cd');sm.innerHTML='<span class="rpi">'+ico('repeat')+'</span>';sm.append('루틴');col.appendChild(sm);}}
   else{const c0=itC(n,it);if(c0)col.appendChild(h('small','cd','작성 '+fdt(c0)));}
   if(it.r)r.append(g,cb,col,x);else r.append(g,cb,col,rb,x);return r;
 }
@@ -1483,7 +1545,7 @@ function renderDoneSec(){
     const id=it.id,r=h('div','row done');r.style.paddingLeft=(24+it.i*28)+'px';
     const cb=cbEl(true);cb.title='체크 해제';cb.addEventListener('click',()=>{const m=cur(),x=m&&m.items.find(z=>z.id===id);if(!m||!x)return;setDone(m,x,false);renderItems();});
     const x=h('button','x');x.type='button';x.innerHTML=ico('x');x.title='완료 항목 삭제';x.setAttribute('aria-label','완료 항목 삭제');
-    x.addEventListener('click',()=>{const m=cur(),z=m&&m.items.find(q=>q.id===id);if(!m||!z)return;removeItem(m,z);save();renderDoneSec();});
+    x.addEventListener('click',()=>{const m=cur(),z=m&&m.items.find(q=>q.id===id);if(!m||!z)return;askDel(z).then(ok=>{if(!ok)return;const m2=cur(),z2=m2&&m2.items.find(q=>q.id===id);if(!m2||!z2)return;removeItem(m2,z2);save();renderDoneSec();});});
     const col=h('div','col');col.appendChild(h('div','t',it.t));
     col.appendChild(h('small','cd',(itC(n,it)?'작성 '+fdt(itC(n,it))+' · ':'')+'완료 '+fdt(it.d)));
     r.append(cb,col,x);dg.appendChild(r);}
