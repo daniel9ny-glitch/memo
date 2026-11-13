@@ -294,8 +294,9 @@ dialog#set,dialog#dlgSync,dialog#dlgSc{width:min(460px,calc(100vw - 24px));borde
 .seg button.on{background:var(--bg);color:var(--fg);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .srow{display:flex;gap:8px;flex-wrap:wrap}
 .rtr{border:1px solid var(--line2);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}
-.row.rt textarea{color:var(--accent)}.row.rt .cd{color:var(--accent);opacity:.85}.row.cg0 textarea{color:var(--danger);font-weight:700}.row.cg1 textarea{color:#f5a03a;font-weight:600}.row.cg2 textarea{color:var(--accent)}
-:root[data-theme=light] .row.cg1 textarea{color:#c4670a}
+.row.rt textarea{color:var(--accent)}.row.rt .cd{color:var(--accent);opacity:.85}.row.cg0 textarea,.ci.cg0 .t,.ppv.cg0{color:var(--danger);font-weight:700}.row.cg1 textarea,.ci.cg1 .t,.ppv.cg1{color:#f5a03a;font-weight:600}.row.cg2 textarea,.ci.cg2 .t,.ppv.cg2{color:var(--accent)}
+:root[data-theme=light] .row.cg1 textarea,:root[data-theme=light] .ci.cg1 .t,:root[data-theme=light] .ppv.cg1{color:#c4670a}
+.ci.rt .t,.ppv.rt{color:var(--accent)}.ci.rt.od .t,.ppv.rt.od{color:var(--danger);font-weight:700}.ci.rtw{opacity:.55}
 .row.rtw{opacity:.55}.row.rt textarea[readonly]{cursor:pointer}
 .row.rt.od textarea,.row.rt.od .cd{color:var(--danger)}.row.rt.od textarea{font-weight:700}
 .rts{padding:10px 16px 22px;display:flex;flex-direction:column;gap:12px}
@@ -548,7 +549,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.27';
+const VER='1.29';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -659,6 +660,14 @@ const doneSort=(a,b)=>b.d-a.d||a.o-b.o;
 /* 항목 작성 시각: 기록(c)이 없는 예전 항목은 항목 id에 들어 있는 생성 시각으로 알아낸다 (킵에서 가져온 메모는 메모 생성 시각) */
 const itC=(n,it)=>{if(it.c)return it.c;if(/^k\d/.test(n.id))return n.cr||0;const t=parseInt(String(it.id||'').slice(0,-5),36);return t>1.5e12&&t<Date.now()+864e5?t:0;};
 /* 메모 전체 완료: 항목이 있고 남은 항목이 없을 때, 마지막으로 체크한 시각 */
+/* 항목의 색 구분 클래스: 캘린더 일정(임박도)·루틴(기한초과/대기) — 편집기와 메모 목록 모두에서 사용 */
+function itTone(it){
+  if(it.d||it.x)return '';
+  if(it.rt){const at=it.rt.at||0;return 'rt'+(at&&at<now()?' od':at&&at-(it.rt.lead|0)*864e5>now()?' rtw':'');}
+  if(it.g&&it.gs){const t=new Date(),g=new Date(it.gs),dd=Math.round((new Date(g.getFullYear(),g.getMonth(),g.getDate())-new Date(t.getFullYear(),t.getMonth(),t.getDate()))/864e5);return dd<=1?'cg0':dd<=3?'cg1':dd<=7?'cg2':'cg3';}
+  if(it.r)return 'rt'+((it.o||0)*60000<now()?' od':'');
+  return '';
+}
 const noteDoneAt=n=>{if(n.type!=='list')return 0;const dn=doneOf(n);return dn.length&&!active(n).some(i=>(i.t||'').trim())?Math.max(...dn.map(i=>i.d)):0;};
 function renumber(n){n.items.filter(x=>!x.x).sort(byO).forEach((x,k)=>{x.o=(k+1)*1000;x.u=stamp(n);});}
 function addItem(n,text,ind,afterId){
@@ -1035,7 +1044,7 @@ function prow(n,q,mode){   /* 게시글 목록 / 제목만 보기 */
   const bd=h('div','pbd'),tt=h('div','ptt');tt.append(h('span','pt',titleOf(n)));
   if(n.pin){const pi=h('span','ppin');pi.innerHTML=ico('pin');tt.append(pi);}
   bd.append(tt);
-  if(mode!=='compact'){const pv=previewOf(n);if(pv&&pv!==titleOf(n))bd.append(h('div','ppv',pv));
+  if(mode!=='compact'){const pv=previewOf(n);if(pv&&pv!==titleOf(n)){const fi=n.type==='list'?active(n)[0]:null;bd.append(h('div','ppv '+(fi?itTone(fi):''),pv));}
     if((n.labels||[]).length){const lb=h('div','lbls');for(const l of n.labels)lb.append(h('span','lb',l));bd.append(lb);}}
   const mt=h('div','pmt');mt.append(h('span',null,mdate(n.mod||n.cr)));mt.title='작성 '+fdt(n.cr||n.mod||0);
   if(mode!=='compact'&&n.type==='list'){const a=active(n).length,d=doneOf(n).length;if(a+d)mt.append(h('small',null,d+'/'+(a+d)));}
@@ -1060,7 +1069,7 @@ function card(n,q,trashMode){
   else{
     const act=active(n),dn=doneOf(n).sort(doneSort),max=q?0:8;
     for(const it of act.slice(0,max)){
-      const r=h('div','ci'+(it.i>0?' sub':'')),cb=cbEl(false);
+      const r=h('div','ci'+(it.i>0?' sub':'')+' '+itTone(it)),cb=cbEl(false);
       if(!trashMode)cb.addEventListener('click',e=>{e.stopPropagation();setDone(n,it,true);render();});
       r.append(cb,h('div','t',it.t));c.appendChild(r);}
     if(!q&&act.length>max)c.appendChild(h('div','more','…외 '+(act.length-max)+'개'));
@@ -1432,7 +1441,7 @@ function actRow(n,it){
   if(it.rt){r.classList.add('rt');const at=it.rt.at||0;if(at&&at<now())r.classList.add('od');else if(at&&at-(it.rt.lead|0)*864e5>now())r.classList.add('rtw');
     ta.readOnly=true;ta.addEventListener('click',()=>{const m=cur(),i=get();if(m&&i)rtOpen(m,i);});col.appendChild(h('small','cd rcap','🔁 '+rtLabel(it.rt)));}
   else if(it.g&&it.gs){const t=new Date(),dd=Math.round((new Date(new Date(it.gs).getFullYear(),new Date(it.gs).getMonth(),new Date(it.gs).getDate())-new Date(t.getFullYear(),t.getMonth(),t.getDate()))/864e5);
-    r.classList.add(dd<=0?'cg0':dd===1?'cg1':dd<=7?'cg2':'cg3');}
+    r.classList.add(dd<=1?'cg0':dd<=3?'cg1':dd<=7?'cg2':'cg3');}
   else if(it.r){r.classList.add('rt');if((it.o||0)*60000<now())r.classList.add('od');col.appendChild(h('small','cd','🔁 루틴'));}
   else{const c0=itC(n,it);if(c0)col.appendChild(h('small','cd','작성 '+fdt(c0)));}
   if(it.r)r.append(g,cb,col,x);else r.append(g,cb,col,rb,x);return r;
