@@ -161,6 +161,7 @@ dialog#ed[open]{display:flex;flex-direction:column}
 
 /* 시각 표시·서식·라벨 */
 .row .col{flex:1;min-width:0;display:flex;flex-direction:column}
+.row .col textarea{flex:none;width:100%}
 .cd{font-size:11px;color:var(--fg2);padding:0 4px 6px;display:block}
 .row.done .col .t{flex:none;padding:8px 4px 0}
 .er .t .cd{padding:0}
@@ -490,7 +491,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.16';
+const VER='1.17';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1137,6 +1138,9 @@ const ED={id:null,doneOpen:LS.get('nm-doneopen')!=='0'};
 const cur=()=>noteById(ED.id);
 const COLORS=[['','기본'],['red','빨강'],['orange','주황'],['yellow','노랑'],['green','초록'],['teal','청록'],['sky','하늘'],['blue','파랑'],['purple','보라'],['pink','분홍'],['brown','갈색'],['gray','회색']];
 const grow=t=>{t.style.height='auto';t.style.height=Math.max(36,t.scrollHeight)+'px';};
+const growAll=()=>$$('#actList textarea').forEach(grow);
+try{if(window.ResizeObserver){let lw=0;new ResizeObserver(es=>{const w=Math.round(es[0].contentRect.width);if(w&&w!==lw){lw=w;growAll();}}).observe(document.querySelector('#edBody'));}}catch(e){}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>growAll());
 function edMeta(){
   const n=cur(),d=$('#ed');if(!n)return;
   d.className=colorOf(n);
@@ -1372,7 +1376,7 @@ function renderItems(focus){
   const n=cur();if(!n||n.type!=='list')return;
   const box=$('#edBody'),st=box.scrollTop,list=$('#actList');list.replaceChildren();
   for(const it of active(n))list.appendChild(actRow(n,it));
-  $$('#actList textarea').forEach(grow);
+  $$('#actList textarea').forEach(grow);requestAnimationFrame(growAll);setTimeout(growAll,250);
   renderDoneSec();updBanner(n);
   box.scrollTop=st;
   if(focus&&focus.id)focusItem(focus.id,focus.pos);
