@@ -511,6 +511,10 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
       <input type="file" id="fKeep" accept=".json,application/json" multiple hidden>
       <input type="file" id="fBak" accept=".json,application/json" hidden>
     </div>
+    <div class="sg"><b>체크리스트</b>
+      <div class="srow"><button class="btn" id="askTog" type="button"></button></div>
+      <p>항목을 체크할 때 「완료로 체크할까요?」 확인창을 띄웁니다. 실수로 눌러 완료되는 것을 막아 줍니다.</p>
+    </div>
     <div class="sg"><b>구글 캘린더 일정</b>
       <p>구글 캘린더에서 체크(표시)해 둔 모든 캘린더의 앞으로 21일 일정을 「📅 다가오는 일정」 체크리스트로 보여줍니다. 읽기 전용이라 캘린더는 바뀌지 않습니다.</p>
       <div class="srow"><button class="btn" id="calTog" type="button"></button><button class="btn" id="calNow" type="button">지금 일정 가져오기</button></div>
@@ -530,10 +534,6 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
       <div class="rtdom" id="rtDomG"></div>
       <input type="hidden" id="rtDom" value="1">
     </div>
-    <div class="rtcard">
-      <div class="rtrow"><span>미리 만들기</span><span class="rtstep"><button type="button" id="rtMinus" aria-label="하루 줄이기">−</button><b id="rtLeadT">3일 전</b><button type="button" id="rtPlus" aria-label="하루 늘이기">+</button></span></div>
-      <input type="hidden" id="rtLead" value="3">
-    </div>
     <div class="rtcard"><div class="rtrow"><span>할 일</span></div><input type="text" id="rtText" placeholder="예: 블레싱예배당 기도문자 전송" maxlength="120"></div>
     <button type="button" class="rtoff" id="rtOff">루틴 해제</button>
   </div>
@@ -552,7 +552,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.31';
+const VER='1.34';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -657,7 +657,15 @@ const isTxt=n=>n.type!=='list';
 const mActive=(n,k)=>(n[k]||[]).filter(x=>!x.x).sort((a,b)=>(a.c||0)-(b.c||0));
 const fmtDur=s=>{s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
 const noteById=id=>S.notes.find(n=>n.id===id);
-const active=n=>n.items.filter(x=>!x.x&&!x.d).sort(byO);
+/* 마감(루틴 다음 차례·캘린더 일정)이 정해진 항목은 임박순으로 맨 위에 자동 정렬, 나머지는 사용자가 정한 순서. 하위 항목은 부모를 따라간다 */
+const dueOf=it=>(it.rt&&it.rt.at)||(it.g&&it.gs)||(it.r&&(it.o||0)*60000)||0;
+function active(n){
+  const all=n.items.filter(x=>!x.x&&!x.d).sort(byO);
+  if(!all.some(dueOf))return all;
+  const gs=[];for(const it of all){if(it.i>0&&gs.length)gs[gs.length-1].push(it);else gs.push([it]);}
+  gs.sort((p,q)=>{const a=dueOf(p[0]),b=dueOf(q[0]);return a&&b?a-b||p[0].o-q[0].o:a?-1:b?1:p[0].o-q[0].o;});
+  return gs.flat();
+}
 const doneOf=n=>n.items.filter(x=>!x.x&&x.d);
 const doneSort=(a,b)=>b.d-a.d||a.o-b.o;
 /* 항목 작성 시각: 기록(c)이 없는 예전 항목은 항목 id에 들어 있는 생성 시각으로 알아낸다 (킵에서 가져온 메모는 메모 생성 시각) */
@@ -672,6 +680,8 @@ function itTone(it){
   if(it.r)return dayTone((it.o||0)*60000)+((it.o||0)*60000<now()?' od':'');
   return '';
 }
+/* 실수로 체크되는 것을 막는 확인창 (설정에서 끌 수 있음) */
+const askChk=it=>{if(LS.get('nm-askchk')==='0')return true;const t=((it&&it.t)||'').trim();return confirm((t?'「'+(t.length>40?t.slice(0,40)+'…':t)+'」\n':'')+'완료로 체크할까요?');};
 const noteDoneAt=n=>{if(n.type!=='list')return 0;const dn=doneOf(n);return dn.length&&!active(n).some(i=>(i.t||'').trim())?Math.max(...dn.map(i=>i.d)):0;};
 function renumber(n){n.items.filter(x=>!x.x).sort(byO).forEach((x,k)=>{x.o=(k+1)*1000;x.u=stamp(n);});}
 function addItem(n,text,ind,afterId){
@@ -1074,13 +1084,13 @@ function card(n,q,trashMode){
     const act=active(n),dn=doneOf(n).sort(doneSort),max=q?0:8;
     for(const it of act.slice(0,max)){
       const r=h('div','ci'+(it.i>0?' sub':'')+' '+itTone(it)),cb=cbEl(false);
-      if(!trashMode)cb.addEventListener('click',e=>{e.stopPropagation();setDone(n,it,true);render();});
+      if(!trashMode)cb.addEventListener('click',e=>{e.stopPropagation();if(!askChk(it))return;setDone(n,it,true);render();});
       r.append(cb,h('div','t',it.t));c.appendChild(r);}
     if(!q&&act.length>max)c.appendChild(h('div','more','…외 '+(act.length-max)+'개'));
     if(q){
       const hit=[...act,...dn].filter(i=>(i.t||'').toLowerCase().includes(q)).slice(0,6);
       for(const it of hit){const r=h('div','ci'+(it.d?' dn':'')),cb=cbEl(!!it.d);
-        if(!trashMode)cb.addEventListener('click',e=>{e.stopPropagation();setDone(n,it,!it.d);render();});
+        if(!trashMode)cb.addEventListener('click',e=>{e.stopPropagation();if(!it.d&&!askChk(it))return;setDone(n,it,!it.d);render();});
         r.append(cb,h('div','t',it.t));if(it.d)r.appendChild(h('div','dd',fdt(it.d)));c.appendChild(r);}
     }
     const nd=noteDoneAt(n);
@@ -1407,7 +1417,7 @@ function actRow(n,it){
   const id=it.id,get=()=>{const m=cur();return m&&m.items.find(x=>x.id===id);};
   const r=h('div','row');r.dataset.id=id;r.style.paddingLeft=(2+it.i*28)+'px';
   const g=h('span','grip');g.innerHTML=ico('grip');g.title='끌어서 순서 바꾸기';
-  const cb=cbEl(false);cb.addEventListener('click',()=>{const m=cur(),x=get();if(!m||!x)return;setDone(m,x,true);renderItems();});
+  const cb=cbEl(false);cb.addEventListener('click',()=>{const m=cur(),x=get();if(!m||!x)return;if(!askChk(x))return;setDone(m,x,true);renderItems();});
   const ta=h('textarea');ta.rows=1;ta.value=it.t;ta.spellcheck=false;ta.placeholder='여기에 새 항목 입력';ta.setAttribute('aria-label','항목');
   const rb=h('button','rbt'+(it.rt?' on':''));rb.type='button';rb.innerHTML=ico('clock');rb.title=it.rt?'루틴 설정됨 · '+rtLabel(it.rt):'루틴 설정';rb.setAttribute('aria-label','루틴 설정');
   rb.addEventListener('click',()=>{const m=cur(),i=get();if(m&&i)rtOpen(m,i);});
@@ -1604,9 +1614,9 @@ function bindEd(){
 }
 
 /* ---------- 루틴: 체크리스트 항목에 반복(매일/매주/매달)·시각·며칠 전 생성 속성을 부여 ---------- */
-/* 루틴 항목 it.rt={k:'d'|'w'|'m',days:[0-6],dom:1-31,h,m,lead}. 이 항목은 목록에 나오지 않고 「루틴」 구역에 보관되며, 해당 날짜의 항목이 자동 생성됩니다. */
+/* 루틴 항목 it.rt={k:'d'|'w'|'m',days:[0-6],dom:1-31,h,m,lead}. rt.at=다음 차례(ms), rt.s=원래 문구. 체크하면 완료 기록을 남기고 같은 줄이 다음 차례로 넘어갑니다. */
 const rtWhen=r=>{const h=r.h,ap=h<12?'오전':'오후',h12=h%12===0?12:h%12;return ap+' '+h12+'시'+(r.m?' '+r.m+'분':'');};
-const rtLabel=r=>(r.k==='d'?'매일':r.k==='w'?'매주 '+r.days.slice().sort().map(d=>WD[d]).join('·'):'매달 '+r.dom+'일')+' '+rtWhen(r)+' · '+(r.lead?r.lead+'일 전부터':'당일');
+const rtLabel=r=>(r.k==='d'?'매일':r.k==='w'?'매주 '+r.days.slice().sort().map(d=>WD[d]).join('·'):'매달 '+r.dom+'일')+' '+rtWhen(r);
 const rtHit=(r,d)=>r.k==='d'||(r.k==='w'&&r.days.includes(d.getDay()))||(r.k==='m'&&d.getDate()===Math.min(r.dom,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));
 const rtFmt=(at,r,t)=>{const d=new Date(at);return (d.getMonth()+1)+'/'+d.getDate()+'('+WD[d.getDay()]+') '+rtWhen(r)+': '+t;};
 /* from(날짜 0시) 이후(포함) 첫 해당 날짜의 시각 */
@@ -1635,10 +1645,9 @@ function rtAll(){
   return c;
 }
 let RT={nid:'',iid:'',k:'w',days:[]};
-function rtLead(){return Math.min(30,Math.max(0,parseInt($('#rtLead').value,10)||0));}
+const rtLead=()=>0;
 function rtDomV(){return Math.min(31,Math.max(1,parseInt($('#rtDom').value,10)||1));}
 function rtPrev(){const e=$('#rtPrev');if(!e)return;const tm=/^(\d\d):(\d\d)$/.exec($('#rtTime').value||'');
-  $('#rtLeadT').textContent=rtLead()?rtLead()+'일 전':'당일';
   if(!tm||(RT.k==='w'&&!RT.days.length)){e.textContent=RT.k==='w'&&!RT.days.length?'요일을 선택하세요':'';return;}
   const r={k:RT.k,days:RT.days,dom:rtDomV(),h:+tm[1],m:+tm[2],lead:rtLead()},n0=new Date();
   for(let k=0;k<400;k++){const d=new Date(n0.getFullYear(),n0.getMonth(),n0.getDate()+k,r.h,r.m);if(d<n0||!rtHit(r,d))continue;
@@ -1658,21 +1667,19 @@ function rtOpen(n,it){
   if(n.type!=='list')return;RT.nid=n.id;RT.iid=it?it.id:'';
   const r=it&&it.rt;RT.k=r?r.k:'w';RT.days=r?r.days.slice():[];
   $('#rtText').value=it?(r?(r.s||''):(it.t||'')):'';$('#rtTime').value=r?String(r.h).padStart(2,'0')+':'+String(r.m).padStart(2,'0'):'16:00';
-  $('#rtLead').value=r?r.lead:3;$('#rtDom').value=r?r.dom:1;$('#rtOff').hidden=!r;
+  $('#rtDom').value=r?r.dom:1;$('#rtOff').hidden=!r;
   rtDays();$('#dlgRt').showModal();
 }
 (()=>{const d=document.querySelector('#dlgRt');if(!d)return;
   d.querySelector('#rtX').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d)d.close();});
   d.querySelector('#rtKind').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;RT.k=b.dataset.k;rtDays();});
   d.querySelector('#rtTime').addEventListener('input',rtPrev);
-  d.querySelector('#rtMinus').addEventListener('click',()=>{$('#rtLead').value=Math.max(0,rtLead()-1);rtPrev();});
-  d.querySelector('#rtPlus').addEventListener('click',()=>{$('#rtLead').value=Math.min(30,rtLead()+1);rtPrev();});
   const fin=()=>{save();render();if($('#ed').open&&cur()&&cur().id===RT.nid)renderItems();};
   d.querySelector('#rtOff').addEventListener('click',()=>{const n=noteById(RT.nid),it=n&&n.items.find(x=>x.id===RT.iid);if(!it)return;it.t=(it.rt&&it.rt.s)||it.t;delete it.rt;it.u=stamp(n);d.close();fin();toast('루틴을 해제했습니다 · 일반 항목으로 돌아왔습니다');});
   d.querySelector('#rtSave').addEventListener('click',()=>{
     const n=noteById(RT.nid);if(!n)return;const t=$('#rtText').value.trim(),tm=/^(\d\d):(\d\d)$/.exec($('#rtTime').value||'');
     if(!t){toast('할 일을 입력하세요','err');return;}if(RT.k==='w'&&!RT.days.length){toast('요일을 하나 이상 고르세요','err');return;}if(!tm){toast('시각을 입력하세요','err');return;}
-    const rt={k:RT.k,days:RT.k==='w'?RT.days.slice().sort():[],dom:Math.min(31,Math.max(1,parseInt($('#rtDom').value,10)||1)),h:+tm[1],m:+tm[2],lead:Math.min(30,Math.max(0,parseInt($('#rtLead').value,10)||0))};
+    const rt={k:RT.k,days:RT.k==='w'?RT.days.slice().sort():[],dom:Math.min(31,Math.max(1,parseInt($('#rtDom').value,10)||1)),h:+tm[1],m:+tm[2],lead:0};
     let it=RT.iid&&n.items.find(x=>x.id===RT.iid&&!x.x);
     if(!it){it=addItem(n,t,0);}
     rt.s=t;rt.at=rtNext(rt,rtToday());it.rt=rt;it.t=rtFmt(rt.at,rt,t);if(it.d){it.d=0;}it.u=stamp(n);n.tm=n.tx=now();
@@ -1970,6 +1977,8 @@ async function importAll(f){
 /* ---------- 설정 · 시작 ---------- */
 function bindSet(){
   const d=$('#set');
+  const askUi=()=>{$('#askTog').textContent=LS.get('nm-askchk')==='0'?'체크 확인창 켜기':'체크 확인창 끄기';};askUi();
+  $('#askTog').addEventListener('click',()=>{LS.set('nm-askchk',LS.get('nm-askchk')==='0'?'1':'0');askUi();toast(LS.get('nm-askchk')==='0'?'체크 확인창을 껐습니다':'체크 확인창을 켰습니다');});
   $('#calTog').addEventListener('click',()=>{if(calOn()){LS.set(CK.on,'0');calUi();}else{LS.set(CK.on,'1');calUi();calSync(true);}});
   $('#calNow').addEventListener('click',()=>{if(!calOn())LS.set(CK.on,'1');calUi();calSync(true);});
   $('#bSet').addEventListener('click',()=>{calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());gMsg('');gUi();d.showModal();});
