@@ -167,6 +167,8 @@ dialog#ed[open]{display:flex;flex-direction:column}
 .eh{display:flex;align-items:center;padding:4px 18px 2px 18px;gap:4px;flex:none}
 .eh input{flex:1;min-width:0;border:0;background:none;outline:none;font-size:22px;font-weight:700;padding:6px 0}
 .eh input::placeholder{color:var(--fg2);font-weight:500}
+.eic{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}.eic:hover{background:color-mix(in srgb,var(--accent) 24%,transparent)}
+.card .pn.cl{right:66px;opacity:1;color:var(--accent)}.card.calc .ttl{padding-right:96px}
 .eb{flex:1;overflow:auto;padding:4px 0 6px}
 .row{display:flex;align-items:flex-start;gap:0;padding:0 8px 0 2px;border-top:1px solid transparent;border-bottom:1px solid transparent}
 .row .grip{width:22px;height:36px;display:grid;place-items:center;color:var(--fg2);cursor:grab;touch-action:none;opacity:.55;flex:none}
@@ -525,7 +527,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <dialog id="ed" aria-label="메모 편집">
   <div class="etop"><button class="ib" id="edBack" type="button" title="뒤로" aria-label="뒤로"></button><span class="sp"></span><button class="ib" id="edDone" type="button" title="완료로 처리" aria-label="완료로 처리"></button><button class="ib" id="edPin" type="button" title="고정" aria-label="고정"></button></div>
-  <div class="eh"><input id="edTitle" placeholder="제목" maxlength="120" autocomplete="off"></div>
+  <div class="eh"><button type="button" class="eic" id="edCal" hidden title="구글 캘린더 월별 보기" aria-label="구글 캘린더 월별 보기"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"/></svg></button><input id="edTitle" placeholder="제목" maxlength="120" autocomplete="off"></div>
   <div class="eb" id="edBody"></div>
   <div class="dock" id="edDock">
     <div class="pal" id="edPal" hidden></div>
@@ -685,13 +687,14 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.59';
+const VER='1.60';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
 function h(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
 const LS={get(k){try{return localStorage.getItem(k);}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,v);}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
 const IC={
+  cal:'<rect x="3.5" y="5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M8 3v4M16 3v4M3.5 10h17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
  search:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
  x:'<path d="M18 6 6 18M6 6l12 12"/>',
  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
@@ -1266,6 +1269,7 @@ function prow(n,q,mode){   /* 게시글 목록 / 제목만 보기 */
 }
 function card(n,q,trashMode){
   const c=h('div','card '+colorOf(n));c.dataset.id=n.id;
+  if(n.id===CAL_ID){c.classList.add('calc');const cb=h('button','pn cl');cb.type='button';cb.innerHTML=ico('cal');cb.title='구글 캘린더 월별 보기';cb.setAttribute('aria-label','구글 캘린더 월별 보기');cb.addEventListener('click',e=>{e.stopPropagation();calOpen();});c.appendChild(cb);}
   if(!trashMode){const pb=h('button','pn'+(n.pin?' on':''));pb.type='button';pb.innerHTML=ico('pin');pb.title=n.pin?'고정 해제':'고정';pb.setAttribute('aria-label',pb.title);
     pb.addEventListener('click',e=>{e.stopPropagation();n.pin=!n.pin;touchMeta(n);render();});c.appendChild(pb);
     const db=h('button','pn dn');db.type='button';db.innerHTML=ico('done');db.title='완료로 처리';db.setAttribute('aria-label','완료로 처리');
@@ -1406,7 +1410,11 @@ function renderTrash(box){
   if(!list.length){const e=h('div','empty');e.innerHTML='<b>휴지통이 비어 있습니다</b>';box.appendChild(e);return;}
   const g=h('div','grid');g.style.marginTop='12px';for(const n of list)g.appendChild(card(n,'',true));box.appendChild(g);
 }
+const CAL_URL='https://calendar.google.com/calendar/r/month';
+function calOpen(){const a=document.createElement('a');a.href=CAL_URL;a.target='_blank';a.rel='noopener noreferrer';a.style.display='none';document.body.appendChild(a);a.click();a.remove();}
+function calTitleFix(){const n=noteById(CAL_ID);if(n&&/^📅\s*/.test(n.title||'')){n.title=n.title.replace(/^📅\s*/,'');stamp(n);n.tm=now();save();}}
 function render(){
+  calTitleFix();
   const box=$('#view');SWOPEN=null;box.replaceChildren();
   if(SEL.on){if(V.view!=='memo')selExit();else{for(const i of [...SEL.ids])if(!S.notes.some(n=>n.id===i&&!n.trash&&!n.dn))SEL.ids.delete(i);if(!SEL.ids.size)SEL.on=false;}}
   $$('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===V.view));
@@ -1427,7 +1435,7 @@ try{if(window.ResizeObserver){let lw=0;new ResizeObserver(es=>{const w=Math.roun
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>growAll());
 function edMeta(){
   const n=cur(),d=$('#ed');if(!n)return;
-  d.className=colorOf(n);
+  d.className=colorOf(n);$('#edCal').hidden=n.id!==CAL_ID;
   $('#edDone').classList.toggle('on',!!n.dn);$('#edDone').title=n.dn?'완료 취소 (다시 진행 중으로)':'완료로 처리';$('#edDone').setAttribute('aria-label',$('#edDone').title);
   $('#edPin').classList.toggle('on',!!n.pin);$('#edPin').innerHTML=mi(n.pin?'pinF':'pinO');$('#edDone').innerHTML=mi(n.dn?'doneF':'doneO');$('#edPin').title=n.pin?'고정 해제':'고정';
   $$('#edPal .sw').forEach(s=>s.classList.toggle('on',s.dataset.c===(n.color||'')));
@@ -1520,7 +1528,7 @@ function parseKo(text,base){
 }
 const evDup=(ms,title)=>S.notes.some(n=>!n.trash&&n.type==='list'&&n.items.some(i=>!i.x&&i.g===2&&i.gs===ms&&i.gn===title));
 function nextHits(text,max){const out=[];for(const l of String(text||'').split(/\r?\n/)){const h0=parseKo(l);if(h0&&!h0.past&&!out.some(o=>o.ms===h0.ms&&o.title===h0.title)){out.push(h0);if(out.length>=(max||1))break;}}return out;}
-const calNoteEnsure=()=>{let n=noteById(CAL_ID);if(!n){n=newNote('list');n.id=CAL_ID;n.title='📅 다가오는 일정';n.cal=1;n.pin=true;S.notes.push(n);}else if(n.trash){n.trash=0;stamp(n);}return n;};
+const calNoteEnsure=()=>{let n=noteById(CAL_ID);if(!n){n=newNote('list');n.id=CAL_ID;n.title='다가오는 일정';n.cal=1;n.pin=true;S.notes.push(n);}else if(n.trash){n.trash=0;stamp(n);}return n;};
 const CHIP_IC='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17M12 13.5v4M10 15.5h4"/></svg>';
 function dateChip(hit,onClick){const b=h('button','dchip');b.type='button';b.innerHTML='<span class="dci">'+CHIP_IC+'</span>';b.append(hit.label+' 일정 추가');b.title=hit.title;b.addEventListener('click',e=>{e.preventDefault();onClick(hit);});return b;}
 const textToHtml=t=>(t||'').split('\n').map(l=>'<div>'+(esc(l)||'<br>')+'</div>').join('');
@@ -1821,6 +1829,7 @@ function bindEd(){
   const d=$('#ed');
   $('#edTitle').addEventListener('input',e=>{const n=cur();if(!n)return;n.title=e.target.value;touchMeta(n);});
   $('#edTitle').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing&&e.keyCode!==229){e.preventDefault();const n=cur();if(!n)return;if(n.type==='list'){const a=active(n);if(a.length)focusItem(a[0].id);else{const it=addItem(n,'',0);save();renderItems({id:it.id});}}else{const t=$('#edBody textarea');if(t)t.focus();}}});
+  $('#edCal').addEventListener('click',calOpen);
   $('#edPin').addEventListener('click',()=>{const n=cur();if(!n)return;n.pin=!n.pin;touchMeta(n);edMeta();});
   $('#edColor').addEventListener('click',()=>{const p=$('#edPal');p.hidden=!p.hidden;});
   $('#edPal').addEventListener('click',e=>{const s=e.target.closest('.sw');if(!s)return;const n=cur();if(!n)return;n.color=s.dataset.c;touchMeta(n);edMeta();});
@@ -2079,7 +2088,7 @@ function calFmt(ev){
 /* events: [{calId, ev}] → 메모에 반영. 반환: 바뀐 항목 수 */
 function calBuild(events,winStart,winEnd){
   let n=noteById(CAL_ID),changed=0;
-  if(!n){n=newNote('list');n.id=CAL_ID;n.title='📅 다가오는 일정';n.cal=1;n.pin=true;n.color='';S.notes.push(n);changed++;}
+  if(!n){n=newNote('list');n.id=CAL_ID;n.title='다가오는 일정';n.cal=1;n.pin=true;n.color='';S.notes.push(n);changed++;}
   n.cal=1;
   const seen=new Set(),t0=now();
   for(const {calId,ev} of events){
