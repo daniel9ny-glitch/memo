@@ -50,9 +50,10 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke
 .search input{flex:1;min-width:0;border:0;background:none;outline:none;color:var(--fg)}
 .search .ib{width:28px;height:28px}
 #bSync.on{color:var(--accent)} #bSync.warn{color:var(--danger)}
-.tabs{display:flex;width:fit-content;max-width:calc(100% - 28px);margin:10px 14px 0;padding:4px;gap:2px;border:1.5px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--fg) 4%,var(--bg))}
+.tabs{display:flex;width:calc(100% - 28px);margin:10px 14px 0;padding:4px;gap:2px;border:1.5px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--fg) 4%,var(--bg))}
+@media(min-width:601px){.tabs{width:fit-content;max-width:calc(100% - 28px)}.tab{flex:none}}
 @media(min-width:1130px){.tabs{margin:10px max(14px,calc((100% - 1100px)/2 + 14px)) 0}}
-.tab{flex:none;min-width:86px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:56px;padding:0 14px;border-radius:999px;color:var(--fg2);font-size:12.5px;font-weight:600;transition:background .15s,color .15s}
+.tab{flex:1;min-width:86px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:56px;padding:0 14px;border-radius:999px;color:var(--fg2);font-size:12.5px;font-weight:600;transition:background .15s,color .15s}
 .tab svg{display:block}
 .tab.on{background:color-mix(in srgb,var(--fg) 14%,transparent);color:var(--fg);font-weight:700}
 main{max-width:1100px;margin:0 auto;padding:9.5px 14px 90px}
@@ -635,7 +636,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.46';
+const VER='1.47';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
