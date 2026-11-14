@@ -397,6 +397,16 @@ dialog#dlgSync,dialog#dlgSc{width:min(460px,calc(100vw - 24px));border-radius:14
 .evd.td{box-shadow:inset 0 0 0 1.5px var(--accent);border-radius:999px}.evd.in{background:color-mix(in srgb,var(--accent) 20%,transparent)}
 .evd.st{border-radius:999px 0 0 999px}.evd.en{border-radius:0 999px 999px 0}.evd.st.en{border-radius:999px}
 .evd.st,.evd.en{background:var(--accent);color:var(--accent-fg);font-weight:700;box-shadow:none}
+.evdt{padding:2px 12px}.evdt .evrow{min-height:56px}.evdt .evrow+.evrow,
+.evdt .evrow{gap:4px}.evdb,.evtb{white-space:nowrap;font:inherit;font-size:15px;font-weight:500;color:var(--fg);background:none;padding:9px 6px;border-radius:8px;min-height:40px}.evtb{margin-left:auto}.evdb{margin-right:auto}
+.evdb:hover,.evtb:hover{background:var(--hover)}.evdb.on,.evtb.on{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+dialog#dlgPk{width:min(360px,calc(100vw - 32px));border:0;border-radius:28px;background:var(--bg);box-shadow:0 12px 40px rgba(0,0,0,.5);margin:auto}
+.pkbox{padding:22px 20px 14px}.pkt{font-size:13px;color:var(--fg2);padding:0 4px 18px}.pkbig{font-size:30px;font-weight:500;padding:0 4px 18px}
+.pkact{display:flex;justify-content:flex-end;gap:6px;padding-top:6px}.pkact button{font:inherit;font-size:15px;font-weight:600;color:var(--accent);background:none;padding:10px 16px;border-radius:999px}.pkact button:hover{background:var(--hover)}
+.ckhead{display:flex;align-items:center;justify-content:center;gap:2px;padding:4px 0 6px}.ckhead b{font-size:44px;font-weight:500;color:var(--fg2)}
+.ckhead>button{font:inherit;font-size:44px;font-weight:500;color:var(--fg2);background:none;border-radius:12px;padding:0 10px;min-width:84px;line-height:64px}.ckhead>button.on{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--fg)}
+.ckap{display:flex;flex-direction:column;margin-left:12px;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}.ckap button{font:inherit;font-size:14px;font-weight:600;color:var(--fg2);background:none;padding:9px 12px}.ckap button.on{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--fg)}
+#ckSvg{display:block;margin:4px auto;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
 .evrng{text-align:center;font-size:13px;color:var(--fg2);padding:8px 8px 0}
 .evtime{padding:6px 12px 4px}.evtime .rtclock input{font-size:44px}.evtl{font-size:13px;color:var(--fg2);text-align:center;padding-top:6px}.evend{border-top:1px solid var(--line2);margin-top:4px}
 .rttab{background:var(--hover)}.g1>*:not(#evG1){display:none}#evAlCard.off{opacity:.5}.rtpane{display:flex;flex-direction:column;gap:12px}
@@ -648,19 +658,10 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
     </div>
     <div class="rtpane" id="paneCal" hidden>
       <input type="text" id="evTitle" class="evtitle" placeholder="제목 추가" maxlength="120" autocomplete="off">
-      <div class="rtcard evcal">
-        <div class="evch"><b id="evMon"></b><span><button type="button" id="evPrevM" aria-label="이전 달">‹</button><button type="button" id="evNextM" aria-label="다음 달">›</button></span></div>
-        <div class="evwk"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
-        <div class="evgrid" id="evGrid"></div>
-        <div class="evrng" id="evRng"></div>
-      </div>
-      <div class="rtcard evtime">
-        <div id="evTimeBox">
-          <div class="evtl">시작 시각</div>
-          <div class="rtclock"><input type="time" id="evSt" value="09:00"></div>
-        </div>
-        <div class="evrow evend"><span class="evlb">종료</span><label class="pk pkd"><span id="evEdT"></span><input type="date" id="evEd"></label><label class="pk" id="evEtW"><span id="evEtT"></span><input type="time" id="evEt"></label></div>
-        <div class="evrow"><span class="evic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.4 2"/></svg></span><span class="evlb" style="color:var(--fg);font-size:15px">종일</span><button type="button" class="tg" id="evAll" role="switch" aria-label="종일"></button></div>
+      <div class="rtcard evdt" id="evDt">
+        <div class="evrow"><span class="evic"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.4 2"/></svg></span><span class="evlb">종일</span><button type="button" class="tg" id="evAll" role="switch" aria-label="종일"></button></div>
+        <div class="evrow evsel" id="evRS"><span class="evic"></span><button type="button" class="evdb" id="evSdB"></button><button type="button" class="evtb" id="evStB"></button></div>
+        <div class="evrow evsel" id="evRE"><span class="evic"></span><button type="button" class="evdb" id="evEdB"></button><button type="button" class="evtb" id="evEtB"></button></div>
       </div>
       <div class="rtnext" id="evG1" hidden>구글 캘린더에서 가져온 일정입니다.<br>수정·삭제는 구글 캘린더에서 하세요.</div>
       <div class="rtcard"><div class="rtrow"><span>구글 캘린더에 기록<small class="rts2">「늘메모 루틴」 캘린더에 일정으로 저장</small></span><button type="button" class="tg" id="evPush" role="switch" aria-label="구글 캘린더에 기록"></button></div></div>
@@ -673,6 +674,20 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
     </div>
   </div>
 </dialog>
+<dialog id="dlgPk"><div class="pkbox">
+  <div class="pkt" id="pkT"></div>
+  <div id="pkDate" hidden>
+    <div class="pkbig" id="pkBig"></div>
+    <div class="evch"><b id="evMon"></b><span><button type="button" id="evPrevM" aria-label="이전 달">‹</button><button type="button" id="evNextM" aria-label="다음 달">›</button></span></div>
+    <div class="evwk"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+    <div class="evgrid" id="evGrid"></div>
+  </div>
+  <div id="pkTime" hidden>
+    <div class="ckhead"><button type="button" id="ckH"></button><b>:</b><button type="button" id="ckM"></button><span class="ckap"><button type="button" id="ckAm">오전</button><button type="button" id="ckPm">오후</button></span></div>
+    <svg id="ckSvg" viewBox="-110 -110 220 220" width="260" height="260"></svg>
+  </div>
+  <div class="pkact"><button type="button" id="pkCancel">취소</button><button type="button" id="pkOk">확인</button></div>
+</div></dialog>
 <dialog id="dlgSc">
   <div class="sd">
     <h3>홈 화면 바로가기 <button class="ib" id="scX" type="button" aria-label="닫기"></button></h3>
@@ -687,7 +702,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.60';
+const VER='1.64';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1935,24 +1950,54 @@ const p2s=v=>String(v).padStart(2,'0'),dstr=d=>d.getFullYear()+'-'+p2s(d.getMont
 const dparse=(ds,ts)=>{const m=/^(\d+)-(\d+)-(\d+)$/.exec(ds||''),t=/^(\d\d):(\d\d)$/.exec(ts||'00:00');return m&&t?new Date(+m[1],+m[2]-1,+m[3],+t[1],+t[2]):null;};
 const dlab=d=>(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+WD[d.getDay()]+')';
 const tlab=d=>{const h=d.getHours(),m=d.getMinutes();return (h<12?'오전 ':'오후 ')+(h%12||12)+':'+p2s(m);};
+const dlong=d=>d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+WD[d.getDay()]+')';
 function evUi(){
   const s0=dparse(EV.sd,EV.st),e0=dparse(EV.ed,EV.et);
   $('#evAll').setAttribute('aria-checked',EV.all?'true':'false');$('#evPush').setAttribute('aria-checked',EV.push?'true':'false');$('#evAlCard').classList.toggle('off',!EV.push);$('#evAl').setAttribute('aria-checked',EV.push&&EV.al?'true':'false');$('#evRm').classList.toggle('off',!(EV.push&&EV.al));for(const b of $$('#evRm button'))b.classList.toggle('on',+b.dataset.m===EV.rm);
-  $('#evTimeBox').hidden=EV.all;$('#evEtW').hidden=EV.all;$('#evSt').value=EV.st;$('#evEt').value=EV.et;$('#evEd').value=EV.ed;
-  if(e0){$('#evEdT').textContent=dlab(e0);$('#evEtT').textContent=tlab(e0);}
-  const a=dparse(EV.sd,'00:00'),z=dparse(EV.ed,'00:00');
-  if(a&&z){const days=Math.round((z-a)/864e5)+1;$('#evRng').textContent=EV.sd===EV.ed?dlab(a)+(EV.pick?' · 종료일을 누르면 여러 날 일정':''):dlab(a)+' → '+dlab(z)+' ('+days+'일)';}
-  const bad=s0&&e0&&e0<s0;$('#evPrev').textContent=bad?'종료가 시작보다 빠릅니다':'';$('#evPrev').style.color=bad?'var(--danger)':'';
-  evCal();
+  if(s0){$('#evSdB').textContent=dlong(s0);$('#evStB').textContent=tlab(s0);}
+  if(e0){$('#evEdB').textContent=dlong(e0);$('#evEtB').textContent=tlab(e0);}
+  $('#evStB').hidden=$('#evEtB').hidden=EV.all;
+    const bad=s0&&e0&&e0<s0;$('#evPrev').textContent=bad?'종료가 시작보다 빠릅니다':'';$('#evPrev').style.color=bad?'var(--danger)':'';
 }
+/* 날짜·시간 고르기는 구글 캘린더처럼 가운데 팝업으로 */
+let DP={k:'',d:'',H:0,M:0,ck:'h',vm:{y:2026,m:0}};
 function evCal(){
-  const {y,m}=EV.vm,g=$('#evGrid');$('#evMon').textContent=y+'년 '+(m+1)+'월';g.replaceChildren();
+  const {y,m}=DP.vm,g=$('#evGrid');$('#evMon').textContent=y+'년 '+(m+1)+'월';g.replaceChildren();
   const first=new Date(y,m,1).getDay(),n=new Date(y,m+1,0).getDate(),td=dstr(new Date());
   for(let i=0;i<first;i++)g.appendChild(h('span','evx'));
   for(let d=1;d<=n;d++){const ds=y+'-'+p2s(m+1)+'-'+p2s(d),b=h('button','evd',String(d));b.type='button';b.dataset.d=ds;
     if(ds===td)b.classList.add('td');
-    if(ds>=EV.sd&&ds<=EV.ed){b.classList.add('in');if(ds===EV.sd)b.classList.add('st');if(ds===EV.ed)b.classList.add('en');}
+    if(ds===DP.d)b.classList.add('in','st','en');
     g.appendChild(b);}
+  const dt=dparse(DP.d,'00:00');$('#pkBig').textContent=dt?dt.getFullYear()+'년 '+(dt.getMonth()+1)+'월 '+dt.getDate()+'일':'';
+}
+function evClock(){
+  const H=DP.H,M=DP.M,h12=H%12||12,mode=DP.ck;
+  $('#ckH').textContent=String(h12);$('#ckM').textContent=p2s(M);
+  $('#ckH').classList.toggle('on',mode==='h');$('#ckM').classList.toggle('on',mode==='m');
+  $('#ckAm').classList.toggle('on',H<12);$('#ckPm').classList.toggle('on',H>=12);
+  const NS='http://www.w3.org/2000/svg',svg=$('#ckSvg');svg.replaceChildren();
+  const mk=(n,a)=>{const e=document.createElementNS(NS,n);for(const x in a)e.setAttribute(x,a[x]);return e;};
+  svg.append(mk('circle',{r:104,fill:'var(--hover)'}));
+  const val=mode==='h'?h12%12*30:M*6,rad=val*Math.PI/180,R=82,px=Math.sin(rad)*R,py=-Math.cos(rad)*R;
+  svg.append(mk('line',{x1:0,y1:0,x2:px,y2:py,stroke:'var(--accent)','stroke-width':2}));
+  svg.append(mk('circle',{r:3.5,fill:'var(--accent)'}));
+  svg.append(mk('circle',{cx:px,cy:py,r:19,fill:'var(--accent)'}));
+  if(mode==='m'&&M%5)svg.append(mk('circle',{cx:px,cy:py,r:3,fill:'var(--accent-fg)'}));
+  for(let i=1;i<=12;i++){const a=i*30*Math.PI/180,x=Math.sin(a)*R,y=-Math.cos(a)*R,sel=mode==='h'?i===h12:(i*5%60===M);
+    const tx=mk('text',{x,y:y+5.5,'text-anchor':'middle','font-size':16,fill:sel?'var(--accent-fg)':'var(--fg)','pointer-events':'none'});tx.textContent=mode==='h'?String(i):p2s(i*5%60);svg.append(tx);}
+}
+function evSetTime(k,H,M){
+  if(k==='st'){const o=dparse(EV.sd,EV.st),ne=dparse(EV.ed,EV.et),n2=dparse(EV.sd,p2s(H)+':'+p2s(M));if(o&&ne&&n2){const e2=new Date(n2.getTime()+(ne-o));EV.ed=dstr(e2);EV.et=tstr(e2);}EV.st=p2s(H)+':'+p2s(M);}
+  else{EV.et=p2s(H)+':'+p2s(M);const s0=dparse(EV.sd,EV.st),e0=dparse(EV.ed,EV.et);if(s0&&e0&&e0<s0&&EV.sd===EV.ed){const e2=new Date(s0.getTime()+36e5);EV.ed=dstr(e2);EV.et=tstr(e2);}}
+}
+function pkOpen(k){
+  DP.k=k;const isDate=k==='sd'||k==='ed';
+  $('#pkDate').hidden=!isDate;$('#pkTime').hidden=isDate;$('#pkT').textContent=isDate?'날짜 선택':'시간 선택';
+  if(isDate){DP.d=k==='sd'?EV.sd:EV.ed;const t=dparse(DP.d,'00:00');DP.vm={y:t.getFullYear(),m:t.getMonth()};}
+  else{const t=dparse(k==='st'?EV.sd:EV.ed,k==='st'?EV.st:EV.et);DP.H=t.getHours();DP.M=t.getMinutes();DP.ck='h';}
+  $('#dlgPk').showModal();
+  if(isDate)evCal();else evClock();
 }
 function evPane(p){
   EV.pane=p;$('#paneRt').hidden=p!=='r';$('#paneCal').hidden=p!=='c';$('#rtSave').dataset.p=p;
@@ -1971,10 +2016,10 @@ function rtOpen(n,it,pre){
   let s0,e0;
   if(isEv){s0=new Date(it.gs);e0=new Date(it.ge||it.gs);}
   else{s0=new Date();s0.setMinutes(0,0,0);s0.setHours(s0.getHours()+1);e0=new Date(s0.getTime()+36e5);}
-  EV={all:isEv?!!it.ga:false,vm:{y:s0.getFullYear(),m:s0.getMonth()},pick:0,sd:dstr(s0),st:tstr(s0),ed:dstr(e0),et:tstr(e0),pane:'r',push:ex?(ex.push!=null?!!ex.push:!!ex.al):(isEv?true:LS.get('nm-evpush')!=='0'),g1:!!(it&&it.g===1),al:ex?!!ex.al:LS.get('nm-eval')==='1',rm:ex&&ex.rm!=null?ex.rm:(+LS.get('nm-evrm')||10)};
+  EV={all:isEv?!!it.ga:false,sd:dstr(s0),st:tstr(s0),ed:dstr(e0),et:tstr(e0),pane:'r',push:ex?(ex.push!=null?!!ex.push:!!ex.al):(isEv?true:LS.get('nm-evpush')!=='0'),g1:!!(it&&it.g===1),al:ex?!!ex.al:LS.get('nm-eval')==='1',rm:ex&&ex.rm!=null?ex.rm:(+LS.get('nm-evrm')||10)};
   if(isEv&&it.ga){const e1=new Date(it.ge||it.gs);EV.ed=dstr(e1);EV.st='09:00';EV.et='10:00';}
   $('#evTitle').value=isEv?(it.gn||''):((it&&!it.g&&!r&&it.t)||'');$('#evOff').hidden=!isEv;
-  if(pre){const a=new Date(pre.ms);EV.all=!!pre.allday;EV.sd=dstr(a);EV.ed=dstr(a);EV.vm={y:a.getFullYear(),m:a.getMonth()};if(pre.allday){EV.st='09:00';EV.et='10:00';}else{EV.st=tstr(a);const b2=new Date(pre.ms+36e5);EV.et=tstr(b2);EV.ed=dstr(b2);}$('#evTitle').value=pre.title||'';}
+  if(pre){const a=new Date(pre.ms);EV.all=!!pre.allday;EV.sd=dstr(a);EV.ed=dstr(a);if(pre.allday){EV.st='09:00';EV.et='10:00';}else{EV.st=tstr(a);const b2=new Date(pre.ms+36e5);EV.et=tstr(b2);EV.ed=dstr(b2);}$('#evTitle').value=pre.title||'';}
   evUi();
   $('#rtTab').hidden=false;$('#paneCal').classList.toggle('g1',EV.g1);$('#evG1').hidden=!EV.g1;
   evPane(isEv||pre?'c':'r');
@@ -2021,14 +2066,30 @@ function rtOpen(n,it,pre){
   d.querySelector('#evAl').addEventListener('click',()=>{if(!EV.push)return;EV.al=!EV.al;evUi();});
   d.querySelector('#evRm').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!EV.al||!EV.push)return;EV.rm=+b.dataset.m;evUi();});
   const shift=(sd,st)=>{const o=dparse(EV.sd,EV.st),ne=dparse(EV.ed,EV.et),n2=dparse(sd,st);if(o&&ne&&n2){const ne2=new Date(n2.getTime()+(ne-o));EV.ed=dstr(ne2);EV.et=tstr(ne2);}EV.sd=sd;EV.st=st;};
-  d.querySelector('#evSt').addEventListener('input',e=>{if(e.target.value)shift(EV.sd,e.target.value);evUi();});
-  d.querySelector('#evEd').addEventListener('input',e=>{if(e.target.value){EV.ed=e.target.value;EV.pick=0;const dt=dparse(EV.ed,'00:00');if(dt)EV.vm=EV.vm;}evUi();});
-  d.querySelector('#evEt').addEventListener('input',e=>{if(e.target.value)EV.et=e.target.value;evUi();});
-  d.querySelector('#evGrid').addEventListener('click',e=>{const b=e.target.closest('.evd');if(!b)return;const v=b.dataset.d;
-    if(EV.pick&&v>EV.sd){EV.ed=v;EV.pick=0;}else{shift(v,EV.st);EV.pick=1;}evUi();});
-  d.querySelector('#evPrevM').addEventListener('click',()=>{const m=EV.vm.m-1;EV.vm=m<0?{y:EV.vm.y-1,m:11}:{y:EV.vm.y,m};evCal();});
-  d.querySelector('#evNextM').addEventListener('click',()=>{const m=EV.vm.m+1;EV.vm=m>11?{y:EV.vm.y+1,m:0}:{y:EV.vm.y,m};evCal();});
-  for(const i of d.querySelectorAll('.pk input'))i.addEventListener('click',()=>{try{i.showPicker&&i.showPicker();}catch(e){}});
+  d.querySelector('#evSdB').addEventListener('click',()=>pkOpen('sd'));d.querySelector('#evStB').addEventListener('click',()=>pkOpen('st'));
+  d.querySelector('#evEdB').addEventListener('click',()=>pkOpen('ed'));d.querySelector('#evEtB').addEventListener('click',()=>pkOpen('et'));
+  const pd=document.querySelector('#dlgPk');
+  pd.addEventListener('click',e=>{if(e.target===pd)pd.close();});
+  pd.querySelector('#pkCancel').addEventListener('click',()=>pd.close());
+  pd.querySelector('#evGrid').addEventListener('click',e=>{const b=e.target.closest('.evd');if(!b)return;DP.d=b.dataset.d;evCal();});
+  pd.querySelector('#evPrevM').addEventListener('click',()=>{const m=DP.vm.m-1;DP.vm=m<0?{y:DP.vm.y-1,m:11}:{y:DP.vm.y,m};evCal();});
+  pd.querySelector('#evNextM').addEventListener('click',()=>{const m=DP.vm.m+1;DP.vm=m>11?{y:DP.vm.y+1,m:0}:{y:DP.vm.y,m};evCal();});
+  pd.querySelector('#pkOk').addEventListener('click',()=>{
+    if(DP.k==='sd')shift(DP.d,EV.st);
+    else if(DP.k==='ed'){EV.ed=DP.d;if(EV.ed<EV.sd)EV.sd=EV.ed;const s0=dparse(EV.sd,EV.st),e0=dparse(EV.ed,EV.et);if(s0&&e0&&e0<s0){const e2=new Date(s0.getTime()+36e5);EV.ed=dstr(e2);EV.et=tstr(e2);}}
+    else evSetTime(DP.k,DP.H,DP.M);
+    pd.close();evUi();});
+  pd.querySelector('#ckH').addEventListener('click',()=>{DP.ck='h';evClock();});pd.querySelector('#ckM').addEventListener('click',()=>{DP.ck='m';evClock();});
+  pd.querySelector('#ckAm').addEventListener('click',()=>{if(DP.H>=12)DP.H-=12;evClock();});
+  pd.querySelector('#ckPm').addEventListener('click',()=>{if(DP.H<12)DP.H+=12;evClock();});
+  const svg=pd.querySelector('#ckSvg');let dn=0;
+  const ang=ev=>{const r=svg.getBoundingClientRect(),dx=ev.clientX-(r.left+r.width/2),dy=ev.clientY-(r.top+r.height/2);let a=Math.atan2(dx,-dy)*180/Math.PI;if(a<0)a+=360;return a;};
+  const apply=ev=>{const a=ang(ev),pm=DP.H>=12;
+    if(DP.ck==='h'){const hh=Math.round(a/30)%12;DP.H=hh+(pm?12:0);}else DP.M=Math.round(a/6)%60;evClock();};
+  svg.addEventListener('pointerdown',ev=>{dn=1;try{svg.setPointerCapture(ev.pointerId);}catch(e){}apply(ev);ev.preventDefault();});
+  svg.addEventListener('pointermove',ev=>{if(dn)apply(ev);});
+  svg.addEventListener('pointerup',()=>{if(!dn)return;dn=0;if(DP.ck==='h'){DP.ck='m';evClock();}});
+  svg.addEventListener('pointercancel',()=>{dn=0;});
   d.querySelector('#evOff').addEventListener('click',()=>{const n=noteById(RT.nid),it=n&&n.items.find(x=>x.id===RT.iid);if(!it)return;
     it.t=it.gn||it.t;if(it.ex){if(it.ex.ev)alPendAdd(it.ex.ev);delete it.ex;calAlertSoon();}delete it.g;delete it.gs;delete it.ge;delete it.ga;delete it.gn;delete it.gt;it.u=stamp(n);d.close();fin();toast('일정을 해제했습니다 · 일반 항목으로 돌아갑니다');});
 })();
@@ -2169,9 +2230,9 @@ async function calAlertSync(manual){
 function calAlertSoon(){clearTimeout(aTimer);aTimer=setTimeout(()=>{if(alWant().length||alPend().length)calAlertSync(false);},3500);}
 function alMsg(m,k){const e=$('#alMsg');if(e){e.textContent=m||'';e.className='msg'+(k?' '+k:'');}}
 
-async function calSync(manual){
+async function calSync(manual,force){
   if(cBusy)return;if(!manual&&(!calOn()||now()<cSilent||!navigator.onLine))return;
-  if(!manual){const t=+LS.get(CK.time)||0;if(now()-t<30*60000)return;}
+  if(!manual&&!force){const t=+LS.get(CK.time)||0;if(now()-t<90*1000)return;}   /* 드라이브 동기화(2분 주기)와 같은 리듬 */
   cBusy=true;
   try{
     if(manual)calMsg('가져오는 중…');
@@ -2342,7 +2403,8 @@ async function syncNow(){
   }catch(e){gErr=e.message||'오류';gMsg(gFriendly(e.message)||'동기화 중 오류가 발생했습니다','err');}
   finally{gBusy=false;gUi();}
 }
-async function autoSync(){
+async function autoSync(force){
+  calSync(false,force===true);   /* 동기화할 때마다 구글 캘린더 일정도 함께 갱신 (90초 안의 중복은 건너뜀) */
   if(!gOn()||(gBusy&&now()-gBusyAt<180000)||!navigator.onLine||now()<gSilent)return;
   gBusy=true;gBusyAt=now();gUi();
   try{const tok=await gGetToken(false),r=await syncRun(tok);
@@ -2400,7 +2462,7 @@ function bindSet(){
   $('#setX').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d)d.close();});
   $('#segTheme').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-theme',b.dataset.t);applyTheme();for(const x of $$('#segTheme button'))x.classList.toggle('on',x===b);});
   const ds=$('#dlgSync');
-  $('#bSync').addEventListener('click',()=>{gMsg('');gUi();ds.showModal();if(gOn())autoSync();});
+  $('#bSync').addEventListener('click',()=>{gMsg('');gUi();ds.showModal();if(gOn())autoSync(true);});
   $('#syncX').addEventListener('click',()=>ds.close());ds.addEventListener('click',e=>{if(e.target===ds)ds.close();});
   $('#gsResetPull').addEventListener('click',()=>gReset('pull'));$('#gsResetPush').addEventListener('click',()=>gReset('push'));
   $('#gsNow').addEventListener('click',syncNow);$('#reGo').addEventListener('click',syncNow);
@@ -2428,7 +2490,7 @@ function init(){
   addEventListener('pagehide',persist);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&VC.on&&navigator.wakeLock)navigator.wakeLock.request('screen').then(l=>{VC.wl=l;}).catch(()=>{});if(document.hidden){persist();}else{if(gOn())setTimeout(autoSync,600);setTimeout(()=>calSync(false),900);setTimeout(rtAll,500);}});
   addEventListener('online',()=>{if(gOn())setTimeout(autoSync,1200);});
-  setInterval(()=>{if(!document.hidden&&gOn())autoSync();},120000);
+  setInterval(()=>{if(document.hidden)return;if(gOn())autoSync();calSync(false);},120000);
   if(gOn())setTimeout(autoSync,1500);
   setTimeout(()=>calSync(false),2500);
   /* 조용한 자동 로그인이 막힌 경우(구글 토큰 1시간 만료 등): 다음에 화면을 한 번 건드릴 때 로그인 확인을 이어서 자동으로 처리 */
