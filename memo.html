@@ -482,8 +482,8 @@ dialog#dlgImg .ib{position:absolute;top:10px;right:10px;color:#fff;z-index:2}
 .swr.rw{overflow:hidden}
 .swr>.swa{position:absolute;top:0;bottom:0;right:0;width:132px;display:none;align-items:center;justify-content:center;gap:10px}
 .swr.swing>.swa{display:flex}
-.swa button{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;opacity:0;transform:scale(.6);will-change:opacity,transform}
-.swa button span{display:none}.swa .i{width:21px;height:21px}
+.swa button{position:relative;flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;opacity:0;transform:scale(.6);will-change:opacity,transform}
+.swa button::after{content:'';position:absolute;inset:-8px}.swa button span{display:none}.swa .i{width:21px;height:21px}
 .swa .a1{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}.swa .a2{background:color-mix(in srgb,var(--danger) 18%,transparent);color:var(--danger)}
 .swa .a1:active{background:color-mix(in srgb,var(--accent) 34%,transparent)}.swa .a2:active{background:color-mix(in srgb,var(--danger) 32%,transparent)}
 .swr>.card,.swr>.prow{position:relative;background:var(--nc,var(--bg))}
@@ -520,29 +520,40 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 .ddo:hover{background:var(--hover)}.ddo.on{color:var(--accent);font-weight:700}
 .sbar .hint{font-size:12px;color:var(--fg2);align-self:center}
 
-/* ===== 라이트 모드 정돈: 연한 회색 바탕 + 흰 면 + 테두리 대신 부드러운 그림자 ===== */
-:root[data-theme=light]{--page:#f4f5f7;--line:#e1e4e8;--line2:#eceef1;--fg:#1b1d21;--fg2:#667085;--hover:rgba(16,24,40,.05);
-  --shadow:0 1px 2px rgba(16,24,40,.05),0 2px 8px rgba(16,24,40,.06);
-  --c-red:#fbdad6;--c-orange:#fde1cb;--c-yellow:#fff3bf;--c-green:#e1f3d9;--c-teal:#cfece6;--c-sky:#d9e9f3;--c-blue:#d1e2f1;--c-purple:#e6dbef;--c-pink:#f9e8e3;--c-brown:#eee8dc;--c-gray:#eceff2}
-:root[data-theme=light] body{background:var(--page)}
-:root[data-theme=light] .top{background:rgba(255,255,255,.9);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px);border-bottom:0;box-shadow:0 1px 0 rgba(16,24,40,.06)}
-:root[data-theme=light] .search{background:#eef0f3}
-:root[data-theme=light] .tabs{border:0;background:#e9ecf0;box-shadow:none}
-:root[data-theme=light] .tab.on{background:#fff;color:var(--fg);box-shadow:0 1px 2px rgba(16,24,40,.08),0 2px 6px rgba(16,24,40,.08)}
-:root[data-theme=light] .composer{border:0;border-radius:16px;box-shadow:var(--shadow)}
-:root[data-theme=light] .composer:hover,:root[data-theme=light] .composer:focus-within{border:0;box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 45%,transparent),var(--shadow)}
-:root[data-theme=light] .ddb{border:0;background:#fff;box-shadow:var(--shadow);border-radius:19px}
-:root[data-theme=light] .dd.open .ddb{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 55%,transparent),var(--shadow)}
-:root[data-theme=light] .ddm{border:0;box-shadow:0 10px 32px rgba(16,24,40,.16),0 1px 3px rgba(16,24,40,.08)}
-:root[data-theme=light] .card{border:0;border-radius:16px;box-shadow:var(--shadow);transition:box-shadow .18s,transform .18s}
-:root[data-theme=light] .card:hover{box-shadow:0 2px 4px rgba(16,24,40,.06),0 8px 20px rgba(16,24,40,.10)}
-:root[data-theme=light] .swr.cw{border-radius:16px;overflow:visible}:root[data-theme=light] .swr.cw.swing{overflow:hidden}
-:root[data-theme=light] .sec{font-size:12.5px;font-weight:600;letter-spacing:0;color:var(--fg2);margin:20px 6px 8px}
-:root[data-theme=light] .card .ttl{font-weight:650}
-:root[data-theme=light] .row.cg0 textarea,:root[data-theme=light] .ci.cg0 .t,:root[data-theme=light] .ppv.cg0{font-weight:600}
-:root[data-theme=light] .row.cg1 textarea,:root[data-theme=light] .ci.cg1 .t,:root[data-theme=light] .ppv.cg1,:root[data-theme=light] .row.cg2 textarea,:root[data-theme=light] .ci.cg2 .t,:root[data-theme=light] .ppv.cg2{font-weight:500}
-:root[data-theme=light] .prow{border-radius:14px}
-:root[data-theme=light] dialog{border:0;box-shadow:0 12px 40px rgba(16,24,40,.22)}
+/* ===== 전체 리모델링 (Material You: 파랑 포인트 · 톤 있는 면 · 얇은 윤곽) ===== */
+:root{--page:#131314;--bg:#1e1f20;--fg:#e3e3e3;--fg2:#bdc1c6;--line:#444746;--line2:#303134;--hover:rgba(227,227,227,.08);--dock:#1e1f20;--dockline:rgba(255,255,255,.08);
+  --accent:#a8c7fa;--accent-fg:#062e6f;--danger:#f2b8b5;--shadow:0 1px 3px rgba(0,0,0,.5);--cont:#2b2c2e;--secc:#0842a0;--secc-fg:#d3e3fd;
+  --c-red:#4d2b2a;--c-orange:#4a3524;--c-yellow:#46401f;--c-green:#233d2a;--c-teal:#1f4140;--c-sky:#1f3d4a;--c-blue:#1e3a5f;--c-purple:#3b2a4f;--c-pink:#4a2a3d;--c-brown:#3a2f26;--c-gray:#303134}
+:root[data-theme=light]{--page:#f0f4f9;--bg:#ffffff;--fg:#1f1f1f;--fg2:#5f6368;--line:#dadce0;--line2:#e8eaed;--hover:rgba(31,31,31,.07);--dock:#ffffff;--dockline:rgba(0,0,0,.08);
+  --accent:#0b57d0;--accent-fg:#ffffff;--danger:#b3261e;--shadow:0 1px 2px rgba(60,64,67,.15),0 1px 3px 1px rgba(60,64,67,.10);--cont:#e9eef6;--secc:#d3e3fd;--secc-fg:#041e49;
+  --c-red:#fce8e6;--c-orange:#feefe3;--c-yellow:#fef7cd;--c-green:#e6f4ea;--c-teal:#d9f0ee;--c-sky:#e1f0f7;--c-blue:#dce8fb;--c-purple:#f3e8fd;--c-pink:#fde7f1;--c-brown:#f1ebe6;--c-gray:#ecedef}
+body{background:var(--page);letter-spacing:-.01em}
+.top{background:var(--page);border-bottom:0;padding:10px 14px;gap:10px}
+.brand .lg{border-radius:10px}
+.search{height:48px;border-radius:24px;background:var(--cont);padding:0 16px}
+.tabs{border:0;background:var(--cont);box-shadow:none}
+.tab.on{background:var(--secc);color:var(--secc-fg);font-weight:700;box-shadow:none}
+.composer{border:0;border-radius:28px;background:var(--bg);box-shadow:var(--shadow);padding:2px 10px 2px 22px}
+.composer:hover,.composer:focus-within{border:0;box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 60%,transparent)}
+.ddb{border:1px solid var(--line);background:transparent;box-shadow:none;border-radius:19px}
+.dd.open .ddb{border-color:var(--accent);background:var(--secc);color:var(--secc-fg);box-shadow:none}
+.ddm{border:0;border-radius:18px;background:var(--cont);box-shadow:0 6px 24px rgba(0,0,0,.22)}
+.ddo.on{color:var(--accent)}
+.card{border:1px solid var(--line2);border-radius:16px;box-shadow:none;transition:box-shadow .18s}
+.card[class*=" c-"]{border-color:transparent}
+.card:hover{box-shadow:var(--shadow)}
+.swr.cw{border-radius:16px;overflow:visible}.swr.cw.swing{overflow:hidden}
+.sec{font-size:12.5px;font-weight:600;letter-spacing:0;color:var(--fg2);margin:20px 6px 8px}
+.card .ttl{font-weight:650}
+.btn{border-radius:20px}.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:transparent}
+dialog{border:0;box-shadow:0 12px 40px rgba(0,0,0,.28)}
+dialog#ed{border-radius:20px}
+dialog#set,dialog#dlgSync,dialog#dlgSc{border-radius:24px}
+.row.cg0 textarea,.ci.cg0 .t,.ppv.cg0{font-weight:600}.row.cg1 textarea,.ci.cg1 .t,.ppv.cg1,.row.cg2 textarea,.ci.cg2 .t,.ppv.cg2{font-weight:500}
+.pal-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pal-row button{display:flex;align-items:center;gap:8px;height:44px;padding:0 10px;border-radius:12px;border:1.5px solid var(--line);font-size:13.5px;font-weight:600;color:var(--fg);text-align:left}
+.pal-row button i{width:22px;height:22px;border-radius:7px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.pal-row button[aria-checked=true]{border-color:var(--accent);background:var(--secc);color:var(--secc-fg)}
 </style>
 </head>
 <body>
@@ -637,6 +648,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
     <div class="ss"><h4>화면</h4><div class="grp">
       <div class="rw"><span class="rl">테마</span><div class="seg" id="segTheme"><button data-t="auto">시스템</button><button data-t="light">라이트</button><button data-t="dark">다크</button></div></div>
+      <div class="rw" style="flex-direction:column;align-items:stretch;gap:10px"><span class="rl">테마 색</span><div class="pal-row" id="setPal" role="radiogroup" aria-label="테마 색"></div></div>
     </div></div>
 
     <div class="ss"><h4>체크리스트</h4><div class="grp">
@@ -726,7 +738,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.67';
+const VER='1.70';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -843,11 +855,37 @@ const TONE=(()=>{
   }
   return{build,tones,cr,hex2rgb};
 })();
+/* 테마 색 (늘뷰어와 같은 구성: 기본 파랑 + 몇 가지 색조) */
+const TPALS=[{id:'blue',name:'블루',sw:['#0b57d0','#a8c7fa']},
+  {id:'mint',name:'민트',h:165,sn:10,as:45,l:'#0e7a68',d:'#4fc2a8'},
+  {id:'olive',name:'올리브',h:75,sn:14,as:40,l:'#66742a',d:'#b8c76c'},
+  {id:'charcoal',name:'차콜',h:215,sn:4,as:6,l:'#3a3f47',d:'#c9ced6'},
+  {id:'navy',name:'네이비',h:222,sn:22,as:45,l:'#1e3a6e',d:'#93acea'},
+  {id:'sage',name:'세이지',h:140,sn:9,as:28,l:'#5d7a66',d:'#a9c4b0'},
+  {id:'choco',name:'초코',h:22,sn:24,as:45,l:'#5a3a2a',d:'#d4a88f'},
+  {id:'lavender',name:'라벤더',h:265,sn:22,as:55,l:'#7058b8',d:'#c4b5f0'},
+  {id:'rose',name:'로즈',h:345,sn:16,as:55,l:'#b4325a',d:'#f0a0b8'}];
+const tpalId=()=>{const t=LS.get('nm-tpal');return TPALS.some(x=>x.id===t)?t:'blue';};
+const TPALVARS=['--page','--bg','--cont','--secc','--secc-fg','--line','--line2','--fg','--fg2','--accent','--accent-fg','--dock'];
+function applyTPal(dark){
+  const r=document.documentElement.style,P=TPALS.find(x=>x.id===tpalId());
+  for(const v of TPALVARS)r.removeProperty(v);
+  if(!P||!P.h)return;
+  const h=P.h,n=P.sn,hs=(s,l)=>`hsl(${h} ${s}% ${l}%)`;
+  const o=dark?{'--page':hs(n,7.5),'--bg':hs(n,10.5),'--cont':hs(n,15),'--secc':hs(Math.max(P.as*.5,8),26),'--secc-fg':hs(Math.min(P.as+20,70),90),'--line':hs(n,23),'--line2':hs(n,17),'--fg':hs(Math.min(n,14),92),'--fg2':hs(Math.min(n,9),68),'--accent':P.d,'--accent-fg':hs(30,8),'--dock':hs(n,10.5)}
+   :{'--page':hs(n,95),'--bg':hs(Math.min(n,30),99),'--cont':hs(n,91),'--secc':hs(P.as,89),'--secc-fg':hs(Math.max(P.as,30),16),'--line':hs(n,86),'--line2':hs(n,91),'--fg':hs(Math.min(n+8,30),11),'--fg2':hs(Math.min(n,12),37),'--accent':P.l,'--accent-fg':'#ffffff','--dock':hs(Math.min(n,30),99)};
+  for(const k in o)r.setProperty(k,o[k]);
+}
+function palUi(){const box=$('#setPal');if(!box)return;const cur=tpalId(),dk=document.documentElement.dataset.theme==='dark';box.replaceChildren();
+  for(const P of TPALS){const b=h('button','');b.type='button';b.setAttribute('role','radio');b.setAttribute('aria-checked',String(P.id===cur));b.dataset.p=P.id;
+    const i=document.createElement('i'),A=P.sw?P.sw[dk?1:0]:(dk?P.d:P.l);i.style.background=A;b.append(i,P.name);box.append(b);}}
 function applyTheme(){
   const m=themeMode(),dark=m==='auto'?matchMedia('(prefers-color-scheme: dark)').matches:m==='dark';
   document.documentElement.dataset.theme=dark?'dark':'light';
+  try{applyTPal(dark);}catch(e){}
   try{TONE.build();}catch(e){}
-  let mt=$('meta[name=theme-color]');if(mt)mt.content=dark?'#202124':'#ffffff';
+  try{const mt=$('meta[name=theme-color]'),c=getComputedStyle(document.documentElement).getPropertyValue('--page').trim();if(mt)mt.content=c||(dark?'#131314':'#f0f4f9');}catch(e){}
+  try{palUi();}catch(e){}
 }
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme);}catch(e){}
 
@@ -1204,23 +1242,30 @@ function wrapNote(el,n){
   b2.addEventListener('click',e=>{e.stopPropagation();
     askTrashN(n).then(ok=>{if(ok){SWOPEN=null;toTrash(n);render();toast('휴지통으로 옮겼습니다');}else swClose();});});
   a.append(b1,b2);w.append(a,el);
-  const R=132;let x0=0,y0=0,dx=0,mode=0,lp=0,open=false,sup=0;
+  const R=132;let x0=0,y0=0,dx=0,mode=0,lp=0,open=false,sup=0,bt=null;
   w._set=(v,anim)=>{el.style.transition=anim?'transform .3s cubic-bezier(.22,.9,.3,1)':'none';el.style.transform=v?'translateX('+v+'px)':'';open=v<0;
     const p=Math.min(1,Math.max(0,-v/R)),T=anim?'opacity .26s ease,transform .3s cubic-bezier(.22,.9,.3,1)':'none';
     [[b2,Math.min(1,p*1.5)],[b1,Math.min(1,Math.max(0,(p-.2)*1.6))]].forEach(([b,q])=>{b.style.transition=T;b.style.opacity=q;b.style.transform='scale('+(.6+.4*q)+')';});};
   w.addEventListener('touchstart',e=>{if(e.touches.length>1)return;
     if(SWOPEN&&SWOPEN!==w)swClose();
+    /* 완료·삭제 버튼 위에서 시작한 터치: 스와이프/길게 누르기로 해석하지 않고, 손가락이 조금 움직여도 누른 것으로 처리 */
+    if(e.target.closest&&e.target.closest('.swa')){mode=5;bt=e.target.closest('button');clearTimeout(lp);lp=0;return;}
     x0=e.touches[0].clientX;y0=e.touches[0].clientY;mode=0;dx=0;
     clearTimeout(lp);lp=setTimeout(()=>{lp=0;if(open)return;sup=Date.now();if(navigator.vibrate)try{navigator.vibrate(25);}catch(_){}
       if(n.pin&&!SEL.on&&V.view==='memo'){mode=4;w.classList.add('lift');return;}
       mode=3;selStart(n.id);},520);
   },{passive:true});
-  w.addEventListener('touchmove',e=>{if(mode===3)return;const t=e.touches[0],mx=t.clientX-x0,my=t.clientY-y0;
+  w.addEventListener('touchmove',e=>{if(mode===3||mode===5)return;const t=e.touches[0],mx=t.clientX-x0,my=t.clientY-y0;
     if(mode===4){if(e.cancelable)e.preventDefault();if(!DRG)dragStart(w,t.clientY);dragMove(t.clientX,t.clientY);return;}
     if(!mode&&(Math.abs(mx)>8||Math.abs(my)>8)){clearTimeout(lp);lp=0;mode=(Math.abs(mx)>Math.abs(my)*1.2&&!SEL.on)?1:2;}
     if(mode===1){dx=Math.max(-R,Math.min(0,(open?-R:0)+mx));w.classList.add('swing');w._set(dx);sup=Date.now();}
   },{passive:false});
-  const end=()=>{clearTimeout(lp);lp=0;
+  const end=e=>{clearTimeout(lp);lp=0;
+    if(mode===5){const b=bt;bt=null;mode=0;sup=Date.now();
+      const t=e&&e.changedTouches&&e.changedTouches[0];
+      if(e&&e.type==='touchend'&&b&&t){const r=b.getBoundingClientRect();
+        if(Math.hypot(t.clientX-(r.left+r.width/2),t.clientY-(r.top+r.height/2))<46){if(e.cancelable)e.preventDefault();b.click();}}
+      return;}
     if(mode===4){w.classList.remove('lift');if(DRG)dragEnd();else selStart(n.id);sup=Date.now();mode=0;return;}
     if(mode===1){const o=dx<-R/2;w._set(o?-R:0,1);if(o)SWOPEN=w;else{SWOPEN=null;setTimeout(()=>w.classList.remove('swing'),320);}sup=Date.now();}
     else if(mode===3)sup=Date.now();
@@ -2486,8 +2531,9 @@ function bindSet(){
   $('#calNow').addEventListener('click',()=>{if(!calOn())LS.set(CK.on,'1');calUi();calSync(true);});
   const syUi=()=>{const t=+LS.get(GK.time)||0;$('#stSync').textContent=gOn()?(gErr?'확인이 필요합니다':'켜짐 · 자동 동기화'+(t?' · 마지막 '+gAgo(t):'')):'꺼짐 · 구글 로그인으로 켭니다';};
   $('#setSync').addEventListener('click',()=>{d.close();$('#bSync').click();});
-  $('#bSet').addEventListener('click',()=>{syUi();calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());gMsg('');gUi();d.showModal();});
+  $('#bSet').addEventListener('click',()=>{syUi();calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());palUi();gMsg('');gUi();d.showModal();});
   $('#setX').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d)d.close();});
+  $('#setPal').addEventListener('click',e=>{const b=e.target.closest('button[data-p]');if(!b)return;LS.set('nm-tpal',b.dataset.p);applyTheme();});
   $('#segTheme').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-theme',b.dataset.t);applyTheme();for(const x of $$('#segTheme button'))x.classList.toggle('on',x===b);});
   const ds=$('#dlgSync');
   $('#bSync').addEventListener('click',()=>{gMsg('');gUi();ds.showModal();if(gOn())autoSync(true);});
