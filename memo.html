@@ -480,11 +480,12 @@ dialog#dlgImg .ib{position:absolute;top:10px;right:10px;color:#fff;z-index:2}
 .swr.cw{break-inside:avoid;margin:0 0 14px;border-radius:10px;overflow:hidden}
 .swr.cw .card{margin:0}
 .swr.rw{overflow:hidden}
-.swr>.swa{position:absolute;top:0;bottom:0;right:0;width:144px;display:none}
+.swr>.swa{position:absolute;top:0;bottom:0;right:0;width:132px;display:none;align-items:center;justify-content:center;gap:10px}
 .swr.swing>.swa{display:flex}
-.swa button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#fff;font-size:13px;font-weight:700}
-.swa .i{width:22px;height:22px}
-.swa .a1{background:var(--accent);color:var(--accent-fg)}.swa .a2{background:var(--danger)}
+.swa button{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;opacity:0;transform:scale(.6);will-change:opacity,transform}
+.swa button span{display:none}.swa .i{width:21px;height:21px}
+.swa .a1{background:color-mix(in srgb,var(--accent) 20%,transparent);color:var(--accent)}.swa .a2{background:color-mix(in srgb,var(--danger) 18%,transparent);color:var(--danger)}
+.swa .a1:active{background:color-mix(in srgb,var(--accent) 34%,transparent)}.swa .a2:active{background:color-mix(in srgb,var(--danger) 32%,transparent)}
 .swr>.card,.swr>.prow{position:relative;background:var(--nc,var(--bg))}
 .swr.rw>.prow{background:var(--bg)}
 .card.sel,.prow.sel{outline:3px solid var(--accent);outline-offset:-3px}
@@ -702,7 +703,7 @@ dialog#dlgLbl h3{margin:0 0 10px;font-size:16px}
 
 <script>
 (()=>{'use strict';
-const VER='1.64';
+const VER='1.65';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1166,17 +1167,19 @@ function selStart(id){if(V.view!=='memo')return;if(SWOPEN)swClose();SEL.on=true;
 function selToggle(id){if(SEL.ids.has(id))SEL.ids.delete(id);else SEL.ids.add(id);if(!SEL.ids.size)selExit();else selPaint();}
 const selNotes=()=>S.notes.filter(n=>SEL.ids.has(n.id)&&!n.trash);
 function openOrSel(n){if(SEL.on)selToggle(n.id);else openEd(n.id);}
-function swClose(){if(SWOPEN){const w=SWOPEN;SWOPEN=null;w._set(0,1);setTimeout(()=>w.classList.remove('swing'),200);}}
+function swClose(){if(SWOPEN){const w=SWOPEN;SWOPEN=null;w._set(0,1);setTimeout(()=>w.classList.remove('swing'),320);}}
 function wrapNote(el,n){
   const isC=el.classList.contains('card'),w=h('div','swr '+(isC?'cw':'rw'));
-  const a=h('div','swa'),b1=h('button','a1'),b2=h('button','a2');b1.type=b2.type='button';
+  const a=h('div','swa'),b1=h('button','a1'),b2=h('button','a2');b1.type=b2.type='button';b1.setAttribute('aria-label','완료');b2.setAttribute('aria-label','삭제');
   b1.innerHTML=ico('done')+'<span>완료</span>';b2.innerHTML=ico('trash')+'<span>삭제</span>';
   b1.addEventListener('click',e=>{e.stopPropagation();SWOPEN=null;completeNote(n,true);render();toast(DONE_MSG);});
   b2.addEventListener('click',e=>{e.stopPropagation();
     if(confirm('이 메모를 삭제하시겠습니까?\n(휴지통으로 옮겨지며 30일 뒤 완전히 삭제됩니다)')){SWOPEN=null;toTrash(n);render();toast('휴지통으로 옮겼습니다');}else swClose();});
   a.append(b1,b2);w.append(a,el);
-  const R=144;let x0=0,y0=0,dx=0,mode=0,lp=0,open=false,sup=0;
-  w._set=(v,anim)=>{el.style.transition=anim?'transform .18s':'none';el.style.transform=v?'translateX('+v+'px)':'';open=v<0;};
+  const R=132;let x0=0,y0=0,dx=0,mode=0,lp=0,open=false,sup=0;
+  w._set=(v,anim)=>{el.style.transition=anim?'transform .3s cubic-bezier(.22,.9,.3,1)':'none';el.style.transform=v?'translateX('+v+'px)':'';open=v<0;
+    const p=Math.min(1,Math.max(0,-v/R)),T=anim?'opacity .26s ease,transform .3s cubic-bezier(.22,.9,.3,1)':'none';
+    [[b2,Math.min(1,p*1.5)],[b1,Math.min(1,Math.max(0,(p-.2)*1.6))]].forEach(([b,q])=>{b.style.transition=T;b.style.opacity=q;b.style.transform='scale('+(.6+.4*q)+')';});};
   w.addEventListener('touchstart',e=>{if(e.touches.length>1)return;
     if(SWOPEN&&SWOPEN!==w)swClose();
     x0=e.touches[0].clientX;y0=e.touches[0].clientY;mode=0;dx=0;
@@ -1191,7 +1194,7 @@ function wrapNote(el,n){
   },{passive:false});
   const end=()=>{clearTimeout(lp);lp=0;
     if(mode===4){w.classList.remove('lift');if(DRG)dragEnd();else selStart(n.id);sup=Date.now();mode=0;return;}
-    if(mode===1){const o=dx<-R/2;w._set(o?-R:0,1);if(o)SWOPEN=w;else{SWOPEN=null;setTimeout(()=>w.classList.remove('swing'),200);}sup=Date.now();}
+    if(mode===1){const o=dx<-R/2;w._set(o?-R:0,1);if(o)SWOPEN=w;else{SWOPEN=null;setTimeout(()=>w.classList.remove('swing'),320);}sup=Date.now();}
     else if(mode===3)sup=Date.now();
     mode=0;};
   w.addEventListener('touchend',end);w.addEventListener('touchcancel',end);
