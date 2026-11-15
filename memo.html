@@ -565,6 +565,13 @@ dialog#set,dialog#dlgSync,dialog#dlgSc{border-radius:24px}
 .fbar button.on{background:color-mix(in srgb,var(--fg) 16%,transparent);color:var(--fg)}
 .dchip{background:color-mix(in srgb,var(--fg) 8%,var(--nc,var(--bg)));border-color:color-mix(in srgb,var(--fg) 22%,transparent);color:var(--fg)}
 .dchip:hover{background:color-mix(in srgb,var(--fg) 14%,var(--nc,var(--bg)))}.dci{color:var(--fg)}
+/* 받아쓰기·녹음: 조작 영역은 스크롤과 상관없이 위에 고정, 쓰는 줄은 화면 가운데 */
+.mwrap.v{display:contents}
+.mwrap.v>.vbox{margin:4px 18px 8px}.mwrap.v>.alist{margin:0 18px 8px}
+.mwrap.v>.vbox.live{position:sticky;top:0;z-index:8;flex-direction:row;align-items:center;gap:10px;padding:8px 10px;background:color-mix(in srgb,var(--fg) 8%,var(--nc,var(--bg)));box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.vbox.live .vpick{flex:none}.vbox.live .vb{flex-direction:row;gap:6px;height:46px;padding:0 16px}.vbox.live .vb small{display:none}.vbox.live .vb .i{width:22px;height:22px}
+.vbox.live .vtop{flex:1;min-width:0}.vbox.live .vst{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.eb.tcen::after{content:'';display:block;height:46vh;flex:none}
 </style>
 </head>
 <body>
@@ -661,6 +668,9 @@ dialog#set,dialog#dlgSync,dialog#dlgSc{border-radius:24px}
       <div class="rw"><span class="rl">테마</span><div class="seg" id="segTheme"><button data-t="auto">시스템</button><button data-t="light">라이트</button><button data-t="dark">다크</button></div></div>
       <div class="rw" style="flex-direction:column;align-items:stretch;gap:10px"><span class="rl">테마 색</span><div class="pal-row" id="setPal" role="radiogroup" aria-label="테마 색"></div></div>
     </div></div>
+    <div class="ss"><h4>음성</h4><div class="grp">
+      <div class="rw"><span class="rl">받아쓰기 소리 증폭<small style="display:block;font-weight:400;color:var(--fg2);font-size:12px;margin-top:2px">작은 소리도 알아듣게 키웁니다 (지원 기기만)</small></span><div class="seg" id="segBoost"><button data-b="0">끔</button><button data-b="1">보통</button><button data-b="2">크게</button></div></div>
+    </div></div>
 
     <div class="ss"><h4>체크리스트</h4><div class="grp">
     </div></div>
@@ -749,7 +759,7 @@ dialog#set,dialog#dlgSync,dialog#dlgSc{border-radius:24px}
 
 <script>
 (()=>{'use strict';
-const VER='1.71';
+const VER='1.73';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1098,7 +1108,7 @@ function renderMedia(){
     add.addEventListener('click',()=>pickPhoto(async files=>{const c=cur();if(!c)return;await addPhotos(c,files);if(cur()===c)renderMedia();}));
     w.replaceChildren(...(gr.children.length?[gr]:[]),add);
   }else if(n.type==='voice'){
-    const box=w.querySelector('.vbox')||vbox();
+    w.classList.add('v');const box=w.querySelector('.vbox')||vbox();
     let al=w.querySelector('.alist');if(!al){al=h('div','alist');al.style.cssText='display:flex;flex-direction:column;gap:8px';w.append(al);}
     al.replaceChildren();
     for(const m of mActive(n,'auds')){
@@ -1113,7 +1123,7 @@ function renderMedia(){
 /* ---------- 음성 메모: 녹음하면서 바로 받아쓰기 ---------- */
 const SRec=window.SpeechRecognition||window.webkitSpeechRecognition;
 const VC={on:false,id:null,rec:null,stream:null,chunks:[],t0:0,tick:0,mime:''};
-const DK={on:false,rec:null,tmr:0,live:'',last:null,lastText:'',lastT:0,id:null};
+const DK={on:false,rec:null,id:null,nodes:[],got:0,hint:0,t0:0,track:null};
 function vbox(){
   const b=h('div','vbox');
   b.innerHTML='<div class="vpick" id="vPick"><button class="vb rec" type="button" id="vRec"></button><button class="vb dic" type="button" id="vDic"></button></div>'
@@ -1130,37 +1140,76 @@ function vbox(){
 const dkN=s=>(s||'').replace(/\s+/g,'');
 function vSt(t){const e=$('#vSt');if(e)e.textContent=t;}
 function dkShow(t){const e=$('#dkLive');if(e){e.textContent=t||'';e.hidden=!t;}}
-function dkCommit(){
-  clearTimeout(DK.tmr);const t=(DK.live||'').trim();DK.live='';dkShow('');if(!t)return;
-  const ta=$('#edBody .etx');if(!ta||ED.id!==DK.id)return;
-  const T=now();
-  if(DK.last&&DK.last.isConnected&&T-DK.lastT<5000&&dkN(t).startsWith(dkN(DK.lastText)))DK.last.textContent=t;
-  else{const d=document.createElement('div');d.textContent=t;ta.appendChild(d);DK.last=d;}
-  DK.lastText=t;DK.lastT=T;
-  ta.dispatchEvent(new Event('input',{bubbles:true}));
+/* 받아쓰기: 한 번 듣는 동안(세션)의 결과 전체를 매번 다시 계산해서 같은 자리에 덮어쓴다.
+   안드로이드는 같은 문장을 조금씩 고치며 여러 번 보내기 때문에, 이어 붙이면 같은 말이 반복된다. */
+function dkLcp(a,b){const n=Math.min(a.length,b.length);let i=0;while(i<n&&a[i]===b[i])i++;return i;}
+function dkFold(e){
+  const segs=[];
+  for(let i=0;i<e.results.length;i++){
+    const t=((e.results[i][0]&&e.results[i][0].transcript)||'').trim();if(!t)continue;
+    const L=segs.length?segs[segs.length-1]:'';
+    if(L){const a=dkN(t),b=dkN(L);
+      if(a.startsWith(b)){segs[segs.length-1]=t;continue;}          /* 앞 결과가 길어진 것 */
+      if(b.startsWith(a))continue;                                  /* 앞 결과의 짧은 반복 */
+      const c=dkLcp(a,b),m=Math.min(a.length,b.length);
+      if(m>=8&&c>=Math.max(8,m*0.6)){segs[segs.length-1]=a.length>=b.length*0.6?t:L;continue;}   /* 앞부분이 거의 같고 끝만 고쳐진 것 */
+    }
+    segs.push(t);}
+  return segs;
 }
-function dkFeed(e){
-  let t='';for(let i=e.resultIndex||0;i<e.results.length;i++)t+=(e.results[i][0]&&e.results[i][0].transcript)||'';
-  t=t.trim();if(!t)return;
-  const a=dkN(t),b=dkN(DK.live);
-  if(!b||a.startsWith(b))DK.live=t;                 /* 같은 문장이 길어지는 중 */
-  else if(b.startsWith(a)){}                         /* 짧은 반복은 무시 */
-  else{dkCommit();DK.live=t;}
-  dkShow(DK.live);clearTimeout(DK.tmr);DK.tmr=setTimeout(dkCommit,1500);
+function dkRender(segs){
+  const ta=$('#edBody .etx');if(!ta||ED.id!==DK.id)return;
+  segs.forEach((t,i)=>{let d=DK.nodes[i];
+    if(!d||!d.isConnected){d=document.createElement('div');ta.appendChild(d);DK.nodes[i]=d;}
+    if(d.textContent!==t)d.textContent=t;});
+  for(let i=segs.length;i<DK.nodes.length;i++){const d=DK.nodes[i];if(d&&d.isConnected)d.remove();}
+  DK.nodes.length=segs.length;
+  ta.dispatchEvent(new Event('input',{bubbles:true}));
+  const last=DK.nodes[segs.length-1];if(last)eCenter(last);
+}
+function dkFeed(e){dkRender(dkFold(e));}
+/* 소리 증폭: 웹 음성인식에는 민감도 설정이 없어서, 마이크 소리를 먼저 키운 뒤 그 소리를 인식기에 넘긴다 (지원하는 최신 크롬에서만 동작) */
+const DB={ctx:null,stream:null,track:null};
+const boostLv=()=>{const v=LS.get('nm-dboost');return v==null?2:+v||0;};
+const boostOk=()=>!!(SRec&&('processLocally' in SRec.prototype||typeof SRec.available==='function')&&(window.AudioContext||window.webkitAudioContext)&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+function dbClose(){try{DB.stream&&DB.stream.getTracks().forEach(t=>t.stop());}catch(e){}try{DB.ctx&&DB.ctx.close();}catch(e){}DB.ctx=DB.stream=DB.track=null;}
+async function dbOpen(){
+  const lv=boostLv();if(!lv||!boostOk()||VC.stream)return null;
+  try{
+    const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:false,autoGainControl:true}});
+    const AC=window.AudioContext||window.webkitAudioContext,ctx=new AC();DB.stream=st;DB.ctx=ctx;
+    const src=ctx.createMediaStreamSource(st),g=ctx.createGain();g.gain.value=[1,2.5,5][lv]||1;
+    const cp=ctx.createDynamicsCompressor();cp.threshold.value=-28;cp.knee.value=20;cp.ratio.value=6;cp.attack.value=.003;cp.release.value=.25;
+    const ds=ctx.createMediaStreamDestination();src.connect(g);g.connect(cp);cp.connect(ds);
+    if(ctx.state==='suspended')await ctx.resume();
+    DB.track=ds.stream.getAudioTracks()[0]||null;return DB.track;
+  }catch(e){dbClose();return null;}
 }
 function dkListen(){
   if(!DK.on||!SRec)return;
-  const r=new SRec();r.lang='ko-KR';r.continuous=true;r.interimResults=true;DK.rec=r;
-  r.onresult=e=>{DK.got=1;dkFeed(e);};
+  const r=new SRec();r.lang='ko-KR';r.continuous=true;r.interimResults=true;r.maxAlternatives=1;DK.rec=r;DK.nodes=[];
+  r.onresult=e=>{if(!DK.got){DK.got=1;clearTimeout(DK.hint);vSt('듣고 받아 적는 중… 말씀하세요');}dkFeed(e);};
   r.onerror=e=>{const er=e&&e.error;if(er&&er!=='no-speech'&&er!=='aborted')vSt('받아쓰기 오류: '+er);
     if(er==='not-allowed'||er==='service-not-allowed'){toast('마이크 권한이 거부되어 받아쓰기를 할 수 없습니다','err');DK.on=false;}
+    else if(er==='audio-capture'&&DK.track){LS.set('nm-dboost','0');dbClose();DK.track=null;toast('이 기기는 소리 증폭을 지원하지 않아 끕니다','err');vSt('소리 증폭 없이 다시 듣는 중…');}
     else if(er==='audio-capture'){toast(VC.stream&&VC.rec?'이 기기는 녹음과 받아쓰기를 동시에 못 합니다 · 「음성 파일도 함께 저장」을 끄면 받아쓰기만 됩니다':'마이크를 사용할 수 없습니다','err');DK.on=false;}
     else if(er==='network'){toast('받아쓰기 서버에 연결하지 못했습니다 (인터넷 필요)','err');DK.on=false;}};
-  r.onend=()=>{dkCommit();if(DK.on&&DK.rec===r)setTimeout(dkListen,200);};
-  try{r.start();}catch(e){}
+  r.onend=()=>{DK.nodes=[];if(DK.on&&DK.rec===r)setTimeout(dkListen,60);};   /* 끊기면 바로 다시 듣기 (말이 빠지는 구간 최소화) */
+  try{if(DK.track&&DK.track.readyState==='live')r.start(DK.track);else r.start();}catch(e){try{r.start();}catch(e2){}}
 }
-function dkStart(id){DK.got=0;clearTimeout(DK.hint);DK.hint=setTimeout(()=>{if(DK.on&&!DK.got)vSt('아직 들리는 소리가 없습니다 · 계속 안 되면 「녹음 파일도 함께 저장」을 꺼 보세요');},7000);DK.on=true;DK.id=id;DK.live='';DK.last=null;DK.lastText='';dkListen();}
-function dkStop(){DK.on=false;dkCommit();try{DK.rec&&DK.rec.stop();}catch(e){}DK.rec=null;}
+async function dkStart(id){DK.got=0;clearTimeout(DK.hint);DK.hint=setTimeout(()=>{if(DK.on&&!DK.got)vSt('아직 인식된 말이 없습니다 · 마이크에 가까이 말씀해 보세요');},12000);DK.on=true;DK.id=id;DK.nodes=[];DK.track=null;try{DK.track=await dbOpen();}catch(e){}if(!DK.on||DK.id!==id){dbClose();DK.track=null;return;}dkListen();}
+function dkStop(){DK.on=false;dbClose();DK.track=null;try{DK.rec&&DK.rec.stop();}catch(e){}DK.rec=null;DK.nodes=[];}
+/* 커서(받아쓰는 줄)가 늘 화면 가운데 오도록 스크롤 */
+function eCenter(el){
+  const sc=$('#edBody');if(!sc)return;let y=null;
+  if(el&&el.getBoundingClientRect){const rc=el.getBoundingClientRect();y=rc.bottom-14;}
+  else{const g=getSelection();if(g&&g.rangeCount&&sc.contains(g.anchorNode)){const r=g.getRangeAt(0).cloneRange();r.collapse(false);const rs=r.getClientRects();let rc=rs.length?rs[rs.length-1]:null;
+      if(!rc){const nd=g.anchorNode.nodeType===1?g.anchorNode:g.anchorNode.parentElement;rc=nd&&nd.getBoundingClientRect();}
+      if(rc)y=rc.top+rc.height/2;}}
+  if(y==null)return;
+  const b=sc.getBoundingClientRect(),stk=sc.querySelector('.vbox.live'),top=b.top+(stk?stk.offsetHeight+8:0),mid=top+(b.bottom-top)/2,d=y-mid;
+  if(d>2)sc.scrollTo({top:sc.scrollTop+d,behavior:'smooth'});
+}
 async function vcStart(mode){
   const n=cur();if(!n||VC.on)return;
   const keep=mode==='rec';VC.mode=mode;
@@ -1175,14 +1224,16 @@ async function vcStart(mode){
   }else if(!SRec){toast('이 브라우저는 받아쓰기를 지원하지 않습니다','err');return;}
   VC.on=true;VC.t0=now();try{if(navigator.wakeLock)navigator.wakeLock.request('screen').then(l=>{VC.wl=l;}).catch(()=>{});}catch(e){}
   if(!keep)dkStart(n.id);
+  {const vb=$('.vbox');if(vb)vb.classList.add('live');}
   const a=$(keep?'#vRec':'#vDic'),o=$(keep?'#vDic':'#vRec');if(a){a.classList.add('on');a.innerHTML=ico('stp')+'<span>끝내기</span>';}if(o)o.hidden=true;
-  vSt(keep?'녹음 중…':'듣고 받아 적는 중… 말씀하세요');
+  vSt(keep?'녹음 중…':'듣는 중… 말씀하세요');
   VC.tick=setInterval(()=>{const t=$('#vTm');if(t)t.textContent=fmtDur((now()-VC.t0)/1000);},250);
 }
 function vcRelease(){if(VC.stream){VC.stream.getTracks().forEach(t=>t.stop());}VC.stream=null;VC.rec=null;}
 async function vcStop(){
   if(!VC.on)return;VC.on=false;clearInterval(VC.tick);clearTimeout(DK.hint);dkStop();try{VC.wl&&VC.wl.release();}catch(e){}VC.wl=null;
   const id=VC.id,dur=(now()-VC.t0)/1000,rec=VC.rec,mime=VC.mime;
+  {const vb=$('.vbox');if(vb)vb.classList.remove('live');}
   const r1=$('#vRec'),r2=$('#vDic');if(r1){r1.classList.remove('on');r1.hidden=false;r1.innerHTML=ico('mic')+'<span>녹음</span><small>소리를 파일로 저장</small>';}if(r2){r2.classList.remove('on');r2.hidden=false;r2.innerHTML=ico('text')+'<span>받아쓰기</span><small>말을 글로 바로 적기</small>';}
   vSt('끝났습니다 · 다시 누르면 이어서 합니다');
   if(rec&&rec.state!=='inactive'){
@@ -1744,7 +1795,7 @@ function openEd(id,fresh){
   $('#edTitle').value=n.title||'';
   const pal=$('#edPal');if(!pal.children.length){for(const [c,nm] of COLORS){const s=h('button','sw c-'+(c||'none'));s.type='button';s.dataset.c=c;s.title=nm;s.setAttribute('aria-label',nm);pal.appendChild(s);}}
   pal.hidden=true;$('#edMenu').hidden=true;$('#edLbl').hidden=true;$('#edFmtBar').hidden=true;$('#fbPop').hidden=true;
-  $('#edBody').replaceChildren();edMeta();
+  $('#edBody').replaceChildren();$('#edBody').classList.toggle('tcen',isTxt(n));edMeta();
   if(!$('#ed').open)$('#ed').showModal();vvFit();requestAnimationFrame(vvFit);
   if(isTxt(n)){
     const ta=h('div','etx');ta.contentEditable='true';ta.dataset.ph=n.type==='photo'?'사진 설명…':n.type==='voice'?'받아쓴 내용이 여기에 쓰입니다 (직접 고칠 수도 있어요)':'메모 작성…';ta.setAttribute('role','textbox');ta.setAttribute('aria-multiline','true');
@@ -1754,6 +1805,7 @@ function openEd(id,fresh){
     const dc=h('div','dchips dchips-t');
     const updDc=()=>{dc.replaceChildren();const m=cur();if(!m)return;for(const ht of nextHits(ta.innerText||ta.textContent,3)){if(evDup(ht.ms,ht.title))continue;dc.appendChild(dateChip(ht,x=>rtOpen(null,null,x)));}};
     let tdm=0;ta.addEventListener('input',()=>{clearTimeout(tdm);tdm=setTimeout(updDc,400);});setTimeout(updDc,0);
+    ta.addEventListener('input',()=>{requestAnimationFrame(()=>{if(document.activeElement===ta)eCenter();});});
     ta.addEventListener('keydown',fmtKeys);
     ta.addEventListener('keydown',e=>{   /* 목록 줄에서 Tab = 한 단계 들여쓰기(기호가 다음 단계로), Shift+Tab = 내어쓰기 */
       if(e.key!=='Tab'||e.ctrlKey||e.metaKey||e.altKey||e.isComposing)return;
@@ -2542,8 +2594,9 @@ function bindSet(){
   $('#calNow').addEventListener('click',()=>{if(!calOn())LS.set(CK.on,'1');calUi();calSync(true);});
   const syUi=()=>{const t=+LS.get(GK.time)||0;$('#stSync').textContent=gOn()?(gErr?'확인이 필요합니다':'켜짐 · 자동 동기화'+(t?' · 마지막 '+gAgo(t):'')):'꺼짐 · 구글 로그인으로 켭니다';};
   $('#setSync').addEventListener('click',()=>{d.close();$('#bSync').click();});
-  $('#bSet').addEventListener('click',()=>{syUi();calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());palUi();gMsg('');gUi();d.showModal();});
+  $('#bSet').addEventListener('click',()=>{syUi();calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());palUi();for(const b of $$('#segBoost button'))b.classList.toggle('on',+b.dataset.b===boostLv());gMsg('');gUi();d.showModal();});
   $('#setX').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d)d.close();});
+  $('#segBoost').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-dboost',b.dataset.b);for(const x of $$('#segBoost button'))x.classList.toggle('on',x===b);});
   $('#setPal').addEventListener('click',e=>{const b=e.target.closest('button[data-p]');if(!b)return;LS.set('nm-tpal',b.dataset.p);applyTheme();});
   $('#segTheme').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-theme',b.dataset.t);applyTheme();for(const x of $$('#segTheme button'))x.classList.toggle('on',x===b);});
   const ds=$('#dlgSync');
