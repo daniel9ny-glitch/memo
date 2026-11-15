@@ -669,7 +669,9 @@ dialog#set,dialog#dlgSync,dialog#dlgSc{border-radius:24px}
       <div class="rw" style="flex-direction:column;align-items:stretch;gap:10px"><span class="rl">테마 색</span><div class="pal-row" id="setPal" role="radiogroup" aria-label="테마 색"></div></div>
     </div></div>
     <div class="ss"><h4>음성</h4><div class="grp">
-      <div class="rw"><span class="rl">받아쓰기 소리 증폭<small style="display:block;font-weight:400;color:var(--fg2);font-size:12px;margin-top:2px">작은 소리도 알아듣게 키웁니다 (지원 기기만)</small></span><div class="seg" id="segBoost"><button data-b="0">끔</button><button data-b="1">보통</button><button data-b="2">크게</button></div></div>
+      <div class="rw"><span class="rl">받아쓰기 소리 증폭<small style="display:block;font-weight:400;color:var(--fg2);font-size:12px;margin-top:2px">작은 소리도 알아듣게 키웁니다 (지원 기기만)</small></span><div class="seg" id="segBoost"><button data-b="0">끔(기본)</button><button data-b="1">보통</button><button data-b="2">크게</button></div></div>
+      <div class="rw"><span class="rl">받아쓰기 방식<small style="display:block;font-weight:400;color:var(--fg2);font-size:12px;margin-top:2px">고감도: 멀리서 들리는 소리·설교용. 음성이 구글(Gemini) 서버로 전송됩니다. 무료 등급은 구글이 서비스 개선에 사용할 수 있습니다</small></span><div class="seg" id="segEng"><button data-e="web">기본</button><button data-e="gemini">고감도</button></div></div>
+      <div class="rw" style="flex-direction:column;align-items:stretch;gap:6px"><span class="rl">Gemini API 키</span><input type="password" id="setKey" autocomplete="off" spellcheck="false" placeholder="AI Studio에서 발급 · AIza… (이 기기에만 저장)" style="height:44px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--fg);padding:0 12px;font:inherit;font-size:14px"></div>
     </div></div>
 
     <div class="ss"><h4>체크리스트</h4><div class="grp">
@@ -759,7 +761,7 @@ dialog#set,dialog#dlgSync,dialog#dlgSc{border-radius:24px}
 
 <script>
 (()=>{'use strict';
-const VER='1.73';
+const VER='1.76';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1133,7 +1135,7 @@ function vbox(){
   b.querySelector('#vDic').innerHTML=ico('text')+'<span>받아쓰기</span><small>말을 글로 바로 적기</small>';
   b.querySelector('#vRec').addEventListener('click',()=>{VC.on?vcStop():vcStart('rec');});
   b.querySelector('#vDic').addEventListener('click',()=>{VC.on?vcStop():vcStart('dic');});
-  if(!SRec||typeof MediaRecorder==='undefined'){const d=b.querySelector(!SRec?'#vDic':'#vRec');d.disabled=true;d.style.opacity='.45';}
+  if((!SRec&&!dwEngine())||typeof MediaRecorder==='undefined'){const d=b.querySelector((!SRec&&!dwEngine())?'#vDic':'#vRec');d.disabled=true;d.style.opacity='.45';}
   b.querySelector('#vSt').textContent=SRec?'하나를 골라 누르세요 (녹음과 받아쓰기는 폰에서 동시에 안 될 수 있어요)':'이 브라우저는 받아쓰기를 지원하지 않아 녹음만 됩니다';
   return b;
 }
@@ -1168,19 +1170,106 @@ function dkRender(segs){
   const last=DK.nodes[segs.length-1];if(last)eCenter(last);
 }
 function dkFeed(e){dkRender(dkFold(e));}
+/* ---------- 고감도 받아쓰기 (선택): 소리를 키워서 짧게 끊어 Gemini 음성인식으로 보냄 ----------
+   브라우저 기본 음성인식은 멀리 있는 소리(예배당 뒷자리 등)에 약하다. 설정에서 API 키를 넣고 켠 경우에만 동작한다. */
+const DW={on:false,id:null,ctx:null,stream:null,an:null,dest:null,q:[],busy:false,prev:'',min:9000,max:24000,sil:700,quiet:0.02,skip:0.012,pend:0,lvl:0,rec:null,iv:0};
+const dwKey=()=>(LS.get('nm-gkey')||'').trim();
+const dwEngine=()=>LS.get('nm-dengine')==='gemini'&&!!dwKey();
+function dwFilters(ctx){   /* 저음 웅웅거림(잔향)을 줄이고 말소리 대역(약 2.5kHz)을 살짝 키움 */
+  const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=160;
+  const pk=ctx.createBiquadFilter();pk.type='peaking';pk.frequency.value=2500;pk.Q.value=1;pk.gain.value=5;
+  hp.connect(pk);return [hp,pk];
+}
+const dwSleep=ms=>new Promise(r=>setTimeout(r,ms));
+function dwStat(){if(!DW.on&&!DW.q.length&&!DW.busy)return;const n=DW.q.length;vSt(DW.on?('고감도 받아쓰는 중 · 말이 잠깐 멈추면 글로 바뀝니다'+(n?' · 변환 대기 '+n:'')):('남은 부분을 글로 바꾸는 중 · '+n+'개'));}
+async function dwStart(id){
+  let st;
+  try{st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});}
+  catch(e){toast('마이크를 열 수 없습니다','err');return false;}
+  const AC=window.AudioContext||window.webkitAudioContext,ctx=new AC();
+  const src=ctx.createMediaStreamSource(st),fl=dwFilters(ctx),g=ctx.createGain();g.gain.value=[1,3.5,6][boostLv()||2]||6;
+  const cp=ctx.createDynamicsCompressor();cp.threshold.value=-32;cp.knee.value=16;cp.ratio.value=8;cp.attack.value=.003;cp.release.value=.2;
+  const an=ctx.createAnalyser();an.fftSize=1024;const ds=ctx.createMediaStreamDestination();
+  src.connect(fl[0]);fl[1].connect(g);g.connect(cp);cp.connect(an);cp.connect(ds);
+  try{if(ctx.state==='suspended')await ctx.resume();}catch(e){}
+  Object.assign(DW,{on:true,id,ctx,stream:st,an,dest:ds,q:[],busy:false,prev:''});
+  dwStat();dwSeg();return true;
+}
+function dwSeg(){
+  if(!DW.on)return;
+  const mt=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].find(m=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m))||'';
+  let rec;try{rec=mt?new MediaRecorder(DW.dest.stream,{mimeType:mt,audioBitsPerSecond:48000}):new MediaRecorder(DW.dest.stream);}catch(e){toast('이 기기에서는 고감도 받아쓰기를 쓸 수 없습니다','err');vcStop();return;}
+  const chunks=[],buf=new Float32Array(DW.an.fftSize);let t0=now(),quiet=0,peak=0;
+  rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
+  rec.onstop=()=>{clearInterval(DW.iv);dwEnqueue(new Blob(chunks,{type:rec.mimeType||mt||'audio/webm'}),peak);if(DW.on)dwSeg();else dwRelease();};
+  DW.rec=rec;rec.start();
+  DW.iv=setInterval(()=>{
+    DW.an.getFloatTimeDomainData(buf);let sum=0;for(let i=0;i<buf.length;i++)sum+=buf[i]*buf[i];const rms=Math.sqrt(sum/buf.length);DW.lvl=rms;if(rms>peak)peak=rms;
+    if(rms<DW.quiet){if(!quiet)quiet=now();}else quiet=0;
+    const el=now()-t0;   /* 최소 길이가 지난 뒤 말이 잠깐 멈추면(또는 최대 길이) 끊어서 보냄 → 단어 중간이 잘리지 않음 */
+    if(!DW.on||(el>=DW.min&&quiet&&now()-quiet>=DW.sil)||el>=DW.max){clearInterval(DW.iv);try{if(rec.state!=='inactive')rec.stop();}catch(e){}}
+  },100);
+}
+function dwEnqueue(blob,peak){
+  if(peak<DW.skip||blob.size<1500)return;     /* 소리가 거의 없는 구간은 보내지 않음 (엉뚱한 문장 방지) */
+  DW.q.push({blob,id:DW.id,n:0});dwStat();dwPump();
+}
+async function dwPump(){
+  if(DW.busy)return;DW.busy=true;
+  while(DW.q.length){
+    const it=DW.q[0],r=await dwSend(it);
+    if(r==='retry'){it.n++;if(it.n>3){DW.q.shift();toast('인터넷이 불안정해 한 구간을 건너뜁니다','err');}else await dwSleep(1500*it.n);continue;}
+    DW.q.shift();if(r==='fatal'){DW.q.length=0;break;}dwStat();
+  }
+  DW.busy=false;if(!DW.on){dwRelease();vSt('');}else dwStat();
+}
+/* 녹음 조각(webm 등)을 16kHz 모노 WAV로 바꿔 Gemini가 확실히 읽는 형식으로 보낸다 */
+async function dwWav(blob){
+  const AC=window.AudioContext||window.webkitAudioContext,c=new AC();let buf;
+  try{buf=await c.decodeAudioData(await blob.arrayBuffer());}finally{try{c.close();}catch(e){}}
+  const n=Math.max(1,Math.ceil(buf.duration*16000)),oc=new OfflineAudioContext(1,n,16000),s=oc.createBufferSource();s.buffer=buf;s.connect(oc.destination);s.start();
+  const pcm=(await oc.startRendering()).getChannelData(0),o=new DataView(new ArrayBuffer(44+pcm.length*2)),w=(p,t)=>{for(let i=0;i<t.length;i++)o.setUint8(p+i,t.charCodeAt(i));};
+  w(0,'RIFF');o.setUint32(4,36+pcm.length*2,true);w(8,'WAVEfmt ');o.setUint32(16,16,true);o.setUint16(20,1,true);o.setUint16(22,1,true);o.setUint32(24,16000,true);o.setUint32(28,32000,true);o.setUint16(32,2,true);o.setUint16(34,16,true);w(36,'data');o.setUint32(40,pcm.length*2,true);
+  for(let i=0;i<pcm.length;i++){const v=Math.max(-1,Math.min(1,pcm[i]));o.setInt16(44+i*2,v<0?v*0x8000:v*0x7fff,true);}
+  return new Uint8Array(o.buffer);
+}
+const dwB64=u=>{let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s);};
+async function dwSend(it){
+  let b64;try{b64=dwB64(await dwWav(it.blob));}catch(e){toast('녹음 조각을 변환하지 못해 건너뜁니다','err');return 'skip';}
+  const hint='기독교 예배 설교 음성입니다. 성경 구절과 하나님, 예수님, 성령님, 은혜, 복음, 아멘 같은 말이 나옵니다.';
+  const body={contents:[{parts:[{text:hint+' 이 오디오를 한국어 문장 그대로 받아적으세요. 설명·요약·번역 없이 들린 말만 쓰고, 말이 없거나 알아들을 수 없으면 아무것도 쓰지 마세요.'+(DW.prev?' 직전 내용(참고만, 다시 쓰지 말 것): '+DW.prev.slice(-200):'')},{inline_data:{mime_type:'audio/wav',data:b64}}]}],generationConfig:{temperature:0}};
+  let res;try{res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':dwKey()},body:JSON.stringify(body)});}catch(e){return 'retry';}
+  if(res.status===400||res.status===401||res.status===403){let m='';try{m=((await res.json()).error||{}).message||'';}catch(e){}
+    if(res.status===400&&!/API key/i.test(m)){toast('고감도 받아쓰기 오류 (400)','err');return 'skip';}
+    toast('Gemini API 키가 올바르지 않거나 권한이 없습니다','err');setTimeout(()=>{if(VC.on)vcStop();},0);return 'fatal';}
+  if(res.status===429){if(it.n>=3)toast('무료 사용 한도를 넘었습니다. 잠시 뒤 다시 시도하거나 기본 방식을 쓰세요','err');return 'retry';}
+  if(res.status>=500)return 'retry';
+  if(!res.ok){toast('고감도 받아쓰기 오류 ('+res.status+')','err');return 'skip';}
+  let j;try{j=await res.json();}catch(e){return 'skip';}
+  const t=(((((j.candidates||[])[0]||{}).content||{}).parts||[]).map(x=>x.text||'').join('')).trim();
+  if(t){DW.prev=(DW.prev+' '+t).slice(-300);dwAppend(it.id,t);}
+  return 'ok';
+}
+function dwAppend(id,t){
+  const ta=$('#edBody .etx');if(!ta||ED.id!==id)return;
+  const d=document.createElement('div');d.textContent=t;ta.appendChild(d);
+  ta.dispatchEvent(new Event('input',{bubbles:true}));eCenter(d);
+}
+function dwStop(){DW.on=false;try{if(DW.rec&&DW.rec.state!=='inactive')DW.rec.stop();else dwRelease();}catch(e){dwRelease();}}
+function dwRelease(){if(DW.on||DW.busy||DW.q.length)return;try{DW.stream&&DW.stream.getTracks().forEach(t=>t.stop());}catch(e){}try{DW.ctx&&DW.ctx.close();}catch(e){}DW.stream=DW.ctx=DW.an=DW.dest=DW.rec=null;}
 /* 소리 증폭: 웹 음성인식에는 민감도 설정이 없어서, 마이크 소리를 먼저 키운 뒤 그 소리를 인식기에 넘긴다 (지원하는 최신 크롬에서만 동작) */
 const DB={ctx:null,stream:null,track:null};
-const boostLv=()=>{const v=LS.get('nm-dboost');return v==null?2:+v||0;};
+const boostLv=()=>{const v=LS.get('nm-dboost');return v==null?0:+v||0;};   /* 기본 끔: 켜면 폰에 따라 인식이 오히려 안 될 수 있음 */
 const boostOk=()=>!!(SRec&&('processLocally' in SRec.prototype||typeof SRec.available==='function')&&(window.AudioContext||window.webkitAudioContext)&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
 function dbClose(){try{DB.stream&&DB.stream.getTracks().forEach(t=>t.stop());}catch(e){}try{DB.ctx&&DB.ctx.close();}catch(e){}DB.ctx=DB.stream=DB.track=null;}
 async function dbOpen(){
   const lv=boostLv();if(!lv||!boostOk()||VC.stream)return null;
   try{
-    const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:false,autoGainControl:true}});
+    const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});
     const AC=window.AudioContext||window.webkitAudioContext,ctx=new AC();DB.stream=st;DB.ctx=ctx;
     const src=ctx.createMediaStreamSource(st),g=ctx.createGain();g.gain.value=[1,2.5,5][lv]||1;
     const cp=ctx.createDynamicsCompressor();cp.threshold.value=-28;cp.knee.value=20;cp.ratio.value=6;cp.attack.value=.003;cp.release.value=.25;
-    const ds=ctx.createMediaStreamDestination();src.connect(g);g.connect(cp);cp.connect(ds);
+    const ds=ctx.createMediaStreamDestination();const fl=dwFilters(ctx);src.connect(fl[0]);fl[1].connect(g);g.connect(cp);cp.connect(ds);
     if(ctx.state==='suspended')await ctx.resume();
     DB.track=ds.stream.getAudioTracks()[0]||null;return DB.track;
   }catch(e){dbClose();return null;}
@@ -1189,16 +1278,19 @@ function dkListen(){
   if(!DK.on||!SRec)return;
   const r=new SRec();r.lang='ko-KR';r.continuous=true;r.interimResults=true;r.maxAlternatives=1;DK.rec=r;DK.nodes=[];
   r.onresult=e=>{if(!DK.got){DK.got=1;clearTimeout(DK.hint);vSt('듣고 받아 적는 중… 말씀하세요');}dkFeed(e);};
-  r.onerror=e=>{const er=e&&e.error;if(er&&er!=='no-speech'&&er!=='aborted')vSt('받아쓰기 오류: '+er);
+  r.onerror=e=>{const er=e&&e.error;DK.err=er||'';if(er&&er!=='no-speech'&&er!=='aborted')vSt('받아쓰기 오류: '+er);
     if(er==='not-allowed'||er==='service-not-allowed'){toast('마이크 권한이 거부되어 받아쓰기를 할 수 없습니다','err');DK.on=false;}
     else if(er==='audio-capture'&&DK.track){LS.set('nm-dboost','0');dbClose();DK.track=null;toast('이 기기는 소리 증폭을 지원하지 않아 끕니다','err');vSt('소리 증폭 없이 다시 듣는 중…');}
     else if(er==='audio-capture'){toast(VC.stream&&VC.rec?'이 기기는 녹음과 받아쓰기를 동시에 못 합니다 · 「음성 파일도 함께 저장」을 끄면 받아쓰기만 됩니다':'마이크를 사용할 수 없습니다','err');DK.on=false;}
     else if(er==='network'){toast('받아쓰기 서버에 연결하지 못했습니다 (인터넷 필요)','err');DK.on=false;}};
-  r.onend=()=>{DK.nodes=[];if(DK.on&&DK.rec===r)setTimeout(dkListen,60);};   /* 끊기면 바로 다시 듣기 (말이 빠지는 구간 최소화) */
+  r.onend=()=>{DK.nodes=[];DK.n=(DK.n||0)+1;if(DK.on&&DK.rec===r){if(DK.n>1)dkDbg();setTimeout(dkListen,220);}};   /* 끊기면 바로 다시 듣기 (말이 빠지는 구간 최소화) */
   try{if(DK.track&&DK.track.readyState==='live')r.start(DK.track);else r.start();}catch(e){try{r.start();}catch(e2){}}
 }
-async function dkStart(id){DK.got=0;clearTimeout(DK.hint);DK.hint=setTimeout(()=>{if(DK.on&&!DK.got)vSt('아직 인식된 말이 없습니다 · 마이크에 가까이 말씀해 보세요');},12000);DK.on=true;DK.id=id;DK.nodes=[];DK.track=null;try{DK.track=await dbOpen();}catch(e){}if(!DK.on||DK.id!==id){dbClose();DK.track=null;return;}dkListen();}
-function dkStop(){DK.on=false;dbClose();DK.track=null;try{DK.rec&&DK.rec.stop();}catch(e){}DK.rec=null;DK.nodes=[];}
+function dkDbg(){if(DK.got)return;vSt('듣는 중… 말씀하세요 · 재시작 '+DK.n+'회'+(DK.err?' · '+DK.err:''));}
+async function dkStart(id){
+  if(dwEngine()){DK.on=false;DK.id=id;const ok=await dwStart(id);if(!ok&&VC.on)vcStop();return;}
+  DK.got=0;DK.n=0;DK.err='';clearTimeout(DK.hint);DK.hint=setTimeout(()=>{if(DK.on&&!DK.got)vSt('아직 인식된 말이 없습니다 · 마이크에 가까이 말씀해 보세요');},12000);DK.on=true;DK.id=id;DK.nodes=[];DK.track=null;try{DK.track=await dbOpen();}catch(e){}if(!DK.on||DK.id!==id){dbClose();DK.track=null;return;}dkListen();}
+function dkStop(){dwStop();DK.on=false;dbClose();DK.track=null;try{DK.rec&&DK.rec.stop();}catch(e){}DK.rec=null;DK.nodes=[];}
 /* 커서(받아쓰는 줄)가 늘 화면 가운데 오도록 스크롤 */
 function eCenter(el){
   const sc=$('#edBody');if(!sc)return;let y=null;
@@ -1221,12 +1313,12 @@ async function vcStart(mode){
       VC.rec.ondataavailable=e=>{if(e.data&&e.data.size)VC.chunks.push(e.data);};
       VC.rec.start(1000);
     }catch(e){toast(e&&e.name==='NotAllowedError'?'마이크 권한이 거부되었습니다. 브라우저 설정에서 허용해 주세요':'마이크를 열 수 없습니다','err');vcRelease();return;}
-  }else if(!SRec){toast('이 브라우저는 받아쓰기를 지원하지 않습니다','err');return;}
+  }else if(!SRec&&!dwEngine()){toast('이 브라우저는 받아쓰기를 지원하지 않습니다','err');return;}
   VC.on=true;VC.t0=now();try{if(navigator.wakeLock)navigator.wakeLock.request('screen').then(l=>{VC.wl=l;}).catch(()=>{});}catch(e){}
   if(!keep)dkStart(n.id);
   {const vb=$('.vbox');if(vb)vb.classList.add('live');}
   const a=$(keep?'#vRec':'#vDic'),o=$(keep?'#vDic':'#vRec');if(a){a.classList.add('on');a.innerHTML=ico('stp')+'<span>끝내기</span>';}if(o)o.hidden=true;
-  vSt(keep?'녹음 중…':'듣는 중… 말씀하세요');
+  vSt(keep?'녹음 중…':(dwEngine()?'고감도 받아쓰기 준비 중…':'듣는 중… 말씀하세요'));
   VC.tick=setInterval(()=>{const t=$('#vTm');if(t)t.textContent=fmtDur((now()-VC.t0)/1000);},250);
 }
 function vcRelease(){if(VC.stream){VC.stream.getTracks().forEach(t=>t.stop());}VC.stream=null;VC.rec=null;}
@@ -2594,9 +2686,11 @@ function bindSet(){
   $('#calNow').addEventListener('click',()=>{if(!calOn())LS.set(CK.on,'1');calUi();calSync(true);});
   const syUi=()=>{const t=+LS.get(GK.time)||0;$('#stSync').textContent=gOn()?(gErr?'확인이 필요합니다':'켜짐 · 자동 동기화'+(t?' · 마지막 '+gAgo(t):'')):'꺼짐 · 구글 로그인으로 켭니다';};
   $('#setSync').addEventListener('click',()=>{d.close();$('#bSync').click();});
-  $('#bSet').addEventListener('click',()=>{syUi();calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());palUi();for(const b of $$('#segBoost button'))b.classList.toggle('on',+b.dataset.b===boostLv());gMsg('');gUi();d.showModal();});
+  $('#bSet').addEventListener('click',()=>{syUi();calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());palUi();$('#setKey').value=LS.get('nm-gkey')||'';for(const b of $$('#segEng button'))b.classList.toggle('on',b.dataset.e===(LS.get('nm-dengine')==='gemini'?'gemini':'web'));for(const b of $$('#segBoost button'))b.classList.toggle('on',+b.dataset.b===boostLv());gMsg('');gUi();d.showModal();});
   $('#setX').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d)d.close();});
   $('#segBoost').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-dboost',b.dataset.b);for(const x of $$('#segBoost button'))x.classList.toggle('on',x===b);});
+  $('#segEng').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.e==='gemini'&&!dwKey()){toast('먼저 아래에 Gemini API 키를 입력해 주세요','err');return;}LS.set('nm-dengine',b.dataset.e);for(const x of $$('#segEng button'))x.classList.toggle('on',x===b);});
+  $('#setKey').addEventListener('change',e=>{LS.set('nm-gkey',e.target.value.trim());if(!e.target.value.trim()&&LS.get('nm-dengine')==='gemini'){LS.set('nm-dengine','web');for(const x of $$('#segEng button'))x.classList.toggle('on',x.dataset.e==='web');}});
   $('#setPal').addEventListener('click',e=>{const b=e.target.closest('button[data-p]');if(!b)return;LS.set('nm-tpal',b.dataset.p);applyTheme();});
   $('#segTheme').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-theme',b.dataset.t);applyTheme();for(const x of $$('#segTheme button'))x.classList.toggle('on',x===b);});
   const ds=$('#dlgSync');
@@ -2639,7 +2733,7 @@ function init(){
   setInterval(()=>{if(!document.hidden){calSync(false);calAlertSoon();}},10*60e3);setTimeout(calAlertSoon,3000);
   setTimeout(rtAll,800);setInterval(()=>{if(!document.hidden)rtAll();},3600000);
   if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{}));}
-  window.__nm={TONE,parseKo,nextHits,S,BIN,addPhotos,mActive,vcStart,vcStop,renderMedia,blobSync,get notes(){return S.notes;},createNote,setDone,addItem,active,doneOf,mergeNote,ser,openEd,render,V,moveBlock,rtAll,rtAdvance,alWant,calAlertSync,calAlertSoon,rtOpen,calSync,calBuild,CK};
+  window.__nm={DW,dwEngine,TONE,parseKo,nextHits,S,BIN,addPhotos,mActive,vcStart,vcStop,renderMedia,blobSync,get notes(){return S.notes;},createNote,setDone,addItem,active,doneOf,mergeNote,ser,openEd,render,V,moveBlock,rtAll,rtAdvance,alWant,calAlertSync,calAlertSoon,rtOpen,calSync,calBuild,CK};
 }
 init();
 })();
