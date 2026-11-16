@@ -595,6 +595,13 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 .mg .mrow{min-height:64px;gap:14px}.mi{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#fff;background:var(--mc)}
 .mg .mrow .rl{flex:1;min-width:0}.mg .mrow small{display:block;font-weight:400;color:var(--fg2);font-size:12.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rw .rl small{display:block;font-weight:400;color:var(--fg2);font-size:12.5px;margin-top:2px;line-height:1.4}
+
+.dgw{display:flex;flex-direction:column;gap:8px}
+.dgc{border-radius:14px;padding:12px 14px;background:var(--hover);border-left:4px solid var(--line)}
+.dgc.good{border-left-color:#188038}.dgc.warn{border-left-color:#e8710a}.dgc.info{border-left-color:var(--accent)}
+.dgc b{font-size:14px}.dgc p{margin:4px 0 0;font-size:13px;line-height:1.5;color:var(--fg2)}.dgc p.ad{color:var(--fg)}
+.dgb{height:42px;border-radius:21px;background:var(--accent);color:var(--accent-fg);font-weight:600;font-size:14px}.dgb:disabled{opacity:.6}
+.dgai{white-space:pre-wrap;font-size:13.5px;line-height:1.6}.dgai:empty{display:none}
 </style>
 </head>
 <body>
@@ -793,7 +800,7 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 
 <script>
 (()=>{'use strict';
-const VER='1.78';
+const VER='1.79';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -2752,6 +2759,65 @@ function statData(){
   for(const n of S.notes){if(n.trash||n.type!=='list')continue;for(const it of n.items){if(it.x||!it.d)continue;total++;const k=dkey(it.d);days.set(k,(days.get(k)||0)+1);dow[new Date(it.d).getDay()]++;}}
   return {days,dow,total};
 }
+/* ---------- 생활 패턴 진단 (기기 안에서 계산 · 글 내용은 쓰지 않음) ---------- */
+function statDiag(){
+  const D=Date.now(),DAY=864e5,ts=[],over=[];let act=0;
+  for(const n of S.notes){if(n.trash||n.type!=='list')continue;
+    for(const it of n.items){if(it.x)continue;
+      if(it.d){ts.push(it.d);}
+      else if((it.t||'').trim()&&!n.dn){act++;const du=dueOf(it);if(du&&du<D)over.push({t:it.t,du});}}}
+  const w28=ts.filter(t=>t>D-28*DAY),res={n28:w28.length,items:[]};
+  if(w28.length<10){res.few=true;return res;}
+  const add=(k,ti,tx,ad)=>res.items.push({k,ti,tx,ad});
+  const hr=new Array(24).fill(0),dw=[0,0,0,0,0,0,0];
+  for(const t of w28){const d=new Date(t);hr[d.getHours()]++;dw[d.getDay()]++;}
+  /* 시간대 */
+  let bi=0,bv=-1;for(let h=0;h<24;h++){const v=hr[h]+hr[(h+1)%24];if(v>bv){bv=v;bi=h;}}
+  const pct=Math.round(bv/w28.length*100),fh=h=>(h%24<12?'오전 ':'오후 ')+((h%12)||12)+'시';
+  add('info','가장 잘 움직이는 시간',`최근 4주 완료의 ${pct}%가 ${fh(bi)}~${fh(bi+2)} 사이에 몰려 있습니다.`,'중요한 일이나 미루던 일을 이 시간대에 먼저 배치해 보세요. 집중이 잘 되는 시간입니다.');
+  /* 늦은 밤 */
+  const late=w28.filter(t=>{const h=new Date(t).getHours();return h>=23||h<5;}).length,lp=Math.round(late/w28.length*100);
+  if(lp>=20)add('warn','늦은 밤 처리가 많습니다',`완료의 ${lp}%가 밤 11시~새벽 5시입니다.`,'수면이 줄면 다음 날 생산성이 떨어집니다. 밤에 하던 일 중 하나를 저녁 시간으로 옮겨 보세요.');
+  /* 요일 */
+  const nm=['일','월','화','수','목','금','토'];let mx=0,mn=0;for(let i=1;i<7;i++){if(dw[i]>dw[mx])mx=i;if(dw[i]<dw[mn])mn=i;}
+  if(dw[mx]>0&&dw[mx]>=dw[mn]*2)add('info','요일 편차',`${nm[mx]}요일에 가장 많이(${dw[mx]}개), ${nm[mn]}요일에 가장 적게(${dw[mn]}개) 끝냅니다.`,`${nm[mn]}요일은 부담이 적은 일 위주로, ${nm[mx]}요일에는 큰 일을 배치하면 균형이 맞습니다.`);
+  /* 추세 */
+  const a=ts.filter(t=>t>D-14*DAY).length,b=ts.filter(t=>t>D-28*DAY&&t<=D-14*DAY).length;
+  if(b>=5){const ch=Math.round((a-b)/b*100);
+    if(ch<=-25)add('warn','최근 2주 완료가 줄었습니다',`직전 2주(${b}개)보다 ${Math.abs(ch)}% 적은 ${a}개입니다.`,'일이 많아서인지 쌓아 둔 탓인지 먼저 확인해 보세요. 항목을 더 잘게 쪼개면 다시 탄력이 붙습니다.');
+    else if(ch>=25)add('good','최근 2주 완료가 늘었습니다',`직전 2주(${b}개)보다 ${ch}% 많은 ${a}개입니다.`,'좋은 흐름입니다. 무리하지 말고 쉬는 날도 함께 정해 두세요.');}
+  /* 꾸준함 */
+  const dset=new Set(w28.map(t=>dkey(t))),ad=dset.size;let best=0,run=0;for(let o=27;o>=0;o--){const d=new Date(D-o*DAY);if(dset.has(dkey(d.getTime()))){run++;best=Math.max(best,run);}else run=0;}
+  if(ad>=22)add('good','매우 꾸준합니다',`최근 28일 중 ${ad}일에 기록이 있고, 가장 긴 연속은 ${best}일입니다.`,'습관이 자리 잡았습니다. 이제는 양보다 중요한 일의 비중을 늘려 보세요.');
+  else if(ad<=12)add('warn','기록이 듬성듬성합니다',`최근 28일 중 ${ad}일만 기록이 있습니다.`,'하루 한 가지만 체크해도 좋으니 매일 같은 시간에 확인하는 습관을 만들어 보세요.');
+  else add('info','꾸준함',`최근 28일 중 ${ad}일에 기록이 있고, 가장 긴 연속은 ${best}일입니다.`,'쉬는 날이 규칙적인지 살펴보세요. 연속이 끊기는 요일이 있다면 그날 할 일을 줄이면 됩니다.');
+  /* 몰아서 체크 */
+  const so=[...w28].sort((x,y)=>x-y);let cl=0;for(let i=0;i<so.length;){let j=i;while(j+1<so.length&&so[j+1]-so[i]<=10*60e3)j++;if(j-i+1>=5)cl+=j-i+1;i=j+1;}
+  const cp=Math.round(cl/w28.length*100);
+  if(cp>=30)add('warn','몰아서 체크하는 편입니다',`완료의 ${cp}%가 10분 안에 한꺼번에 체크됐습니다.`,'끝낸 직후에 체크해야 실제 소요 시간과 흐름이 기록에 남습니다. 그렇지 않으면 통계가 실제와 달라집니다.');
+  /* 밀린 일 */
+  if(over.length){over.sort((x,y)=>x.du-y.du);const od=Math.floor((D-over[0].du)/DAY);
+    add('warn',`기한이 지난 항목 ${over.length}개`,`가장 오래된 것은 ${od}일 전입니다: “${over[0].t.slice(0,24)}”`,'오늘 하나만 끝내거나, 더 이상 필요 없으면 삭제해서 목록을 가볍게 하세요. 지난 항목이 쌓이면 목록을 보기 싫어집니다.');}
+  /* 쌓인 양 */
+  const wk=w28.length/4;if(act>0&&wk>0){const wks=act/wk;
+    if(wks>=3)add('warn','할 일이 많이 쌓여 있습니다',`남은 항목 ${act}개는 지금 속도(주 ${Math.round(wk)}개)로 약 ${Math.round(wks)}주 분량입니다.`,'이번 주에 할 것만 남기고 나머지는 별도 메모로 옮기면 부담이 줄어듭니다.');
+    else add('good','할 일 양이 감당 가능합니다',`남은 항목 ${act}개는 지금 속도(주 ${Math.round(wk)}개)로 약 ${Math.max(1,Math.round(wks))}주 분량입니다.`,'이 정도면 관리되고 있습니다. 새 항목을 넣을 때 기한을 같이 적어 두세요.');}
+  res.sum={n28:w28.length,act,over:over.length,activeDays:ad,bestStreak:best,pctPeak:pct,peakStart:bi,latePct:lp,clusterPct:cp,weekdayCounts:dw,trend:b>=5?Math.round((a-b)/b*100):null};
+  return res;
+}
+async function statAi(btn,box){
+  const k=LS.get('nm-gkey');if(!k){toast('설정 → 음성 받아쓰기에서 Gemini API 키를 먼저 입력해 주세요','err');return;}
+  const r=statDiag();if(!r.sum){toast('기록이 더 쌓이면 분석할 수 있습니다');return;}
+  btn.disabled=true;btn.textContent='분석 중…';box.textContent='';
+  try{
+    const q='다음은 한 사용자의 최근 4주 할 일 완료 통계(숫자만, 항목 내용 없음)입니다. 한국어로, 생활 패턴을 진단하고 생산성을 높일 구체적 조언 4가지를 간결하게 작성하세요. 의학적·심리적 진단은 하지 말고, 숫자에 근거하지 않은 추측은 하지 마세요. 요일 배열은 일~토 순서입니다.\n'+JSON.stringify(r.sum);
+    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify({contents:[{parts:[{text:q}]}],generationConfig:{temperature:.4}})});
+    if(!res.ok)throw new Error(res.status===429?'무료 사용 한도를 넘었습니다. 잠시 뒤 다시 시도해 주세요':'분석을 가져오지 못했습니다 ('+res.status+')');
+    const j=await res.json(),t=((((j.candidates||[])[0]||{}).content||{}).parts||[]).map(x=>x.text||'').join('').trim();
+    box.textContent=t||'분석 결과가 비어 있습니다.';
+  }catch(e){box.textContent=e.message||'분석에 실패했습니다';}
+  btn.disabled=false;btn.textContent='AI로 더 자세히 분석';
+}
 function statOpen(){
   const {days,dow,total}=statData(),B=$('#stBody');B.replaceChildren();
   const D=new Date(),key=d=>d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(),at=o=>{const d=new Date(D.getFullYear(),D.getMonth(),D.getDate()-o);return d;};
@@ -2762,6 +2828,12 @@ function statOpen(){
   let streak=0;for(let o=cnt(0)?0:1;cnt(o);o++)streak++;
   const cards=h('div','stc');for(const [v,l] of [[cnt(0),'오늘'],[week,'이번 주'],[mon,'이번 달'],[streak,'연속 일']]){const d=h('div');d.append(h('b',null,String(v)),h('span',null,l));cards.appendChild(d);}
   B.appendChild(cards);
+  {const dg=statDiag(),w=h('div','dgw');w.appendChild(h('h5',null,'생활 패턴 진단 · 최근 4주'));
+    if(dg.few)w.appendChild(h('p','stn','완료 기록이 10개 이상 쌓이면 진단과 조언을 보여 드립니다. (최근 4주 '+dg.n28+'개)'));
+    else{for(const x of dg.items){const c=h('div','dgc '+x.k);c.append(h('b',null,x.ti),h('p',null,x.tx),h('p','ad','→ '+x.ad));w.appendChild(c);}
+      const ab=h('button','dgb','AI로 더 자세히 분석');ab.type='button';const ao=h('div','dgai');
+      ab.addEventListener('click',()=>statAi(ab,ao));w.append(ab,ao,h('p','stn','진단은 이 기기 안에서 계산되며 글 내용은 쓰지 않습니다. AI 분석은 합계 숫자만 구글(Gemini)로 보냅니다. 의학적 진단이 아닌 참고용입니다.'));}
+    B.appendChild(w);}
   const bars=(title,vals,labels)=>{const mx=Math.max(1,...vals),w=h('div');w.appendChild(h('h5',null,title));
     const bs=h('div','bars'),bl=h('div','bl');vals.forEach((v,k)=>{const c=h('div','bc'),i=h('i',v?'':'z');i.style.height=Math.max(2,Math.round(v/mx*74))+'px';if(v)c.appendChild(h('em',null,String(v)));c.appendChild(i);bs.appendChild(c);bl.appendChild(h('span',null,labels[k]));});
     w.append(bs,bl);return w;};
@@ -2843,7 +2915,7 @@ function init(){
   setInterval(()=>{if(!document.hidden){calSync(false);calAlertSoon();}},10*60e3);setTimeout(calAlertSoon,3000);
   setTimeout(rtAll,800);setInterval(()=>{if(!document.hidden)rtAll();},3600000);
   if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{}));}
-  window.__nm={save,removeItem,uStep,UH,statData,exportAll,importAll,DW,dwEngine,TONE,parseKo,nextHits,S,BIN,addPhotos,mActive,vcStart,vcStop,renderMedia,blobSync,get notes(){return S.notes;},createNote,setDone,addItem,active,doneOf,mergeNote,ser,openEd,render,V,moveBlock,rtAll,rtAdvance,alWant,calAlertSync,calAlertSoon,rtOpen,calSync,calBuild,CK};
+  window.__nm={statDiag,save,removeItem,uStep,UH,statData,exportAll,importAll,DW,dwEngine,TONE,parseKo,nextHits,S,BIN,addPhotos,mActive,vcStart,vcStop,renderMedia,blobSync,get notes(){return S.notes;},createNote,setDone,addItem,active,doneOf,mergeNote,ser,openEd,render,V,moveBlock,rtAll,rtAdvance,alWant,calAlertSync,calAlertSoon,rtOpen,calSync,calBuild,CK};
 }
 init();
 })();
