@@ -602,6 +602,16 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 .dgc b{font-size:14px}.dgc p{margin:4px 0 0;font-size:13px;line-height:1.5;color:var(--fg2)}.dgc p.ad{color:var(--fg)}
 .dgb{height:42px;border-radius:21px;background:var(--accent);color:var(--accent-fg);font-weight:600;font-size:14px}.dgb:disabled{opacity:.6}
 .dgai{white-space:pre-wrap;font-size:13.5px;line-height:1.6}.dgai:empty{display:none}
+
+.stp{display:flex;flex-direction:column;gap:18px}.stp[hidden]{display:none}
+.sttab{align-self:stretch}.sttab button{height:38px;font-size:14px}
+.dgh{position:relative;border-radius:18px;padding:16px 16px 14px;background:var(--secc);color:var(--secc-fg)}
+.dgh small{font-size:12px;opacity:.8}.dgh b{display:block;font-size:18px;margin:2px 0 6px;padding-right:76px}.dgh p{margin:0;font-size:13.5px;line-height:1.55}
+.dgt{position:absolute;top:14px;right:16px;display:flex;align-items:baseline;gap:2px}.dgt i{font-style:normal;font-size:30px;font-weight:700}.dgt span{font-size:12px;opacity:.8}
+.dgs{display:flex;flex-direction:column;gap:9px}.dgr{display:grid;grid-template-columns:78px 1fr 28px;align-items:center;gap:10px;font-size:13px}.dgr em{font-style:normal;text-align:right;color:var(--fg2)}
+.dgbar{height:8px;border-radius:4px;background:var(--hover);overflow:hidden}.dgbar i{display:block;height:100%;border-radius:4px}.dgbar i.g{background:#188038}.dgbar i.m{background:var(--accent)}.dgbar i.w{background:#e8710a}
+.dgm{display:grid;grid-template-columns:34px repeat(7,1fr);gap:3px}.dgm span{height:28px;border-radius:6px;display:grid;place-items:center;font-size:11.5px}.dgm .hl{height:auto;color:var(--fg2);font-size:11.5px}
+.dgp{margin:0;padding-left:20px;font-size:13.5px;line-height:1.6;display:flex;flex-direction:column;gap:6px}
 </style>
 </head>
 <body>
@@ -800,7 +810,7 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 
 <script>
 (()=>{'use strict';
-const VER='1.79';
+const VER='1.80';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -2759,67 +2769,110 @@ function statData(){
   for(const n of S.notes){if(n.trash||n.type!=='list')continue;for(const it of n.items){if(it.x||!it.d)continue;total++;const k=dkey(it.d);days.set(k,(days.get(k)||0)+1);dow[new Date(it.d).getDay()]++;}}
   return {days,dow,total};
 }
-/* ---------- 생활 패턴 진단 (기기 안에서 계산 · 글 내용은 쓰지 않음) ---------- */
+/* ---------- 생활 패턴 진단 (기기 안에서 계산 · 글 내용은 AI로 보내지 않음) ---------- */
 function statDiag(){
-  const D=Date.now(),DAY=864e5,ts=[],over=[];let act=0;
+  const D=Date.now(),DAY=864e5,rec=[],over=[],stale=[];let act=0,dueN=0,rtN=0;
   for(const n of S.notes){if(n.trash||n.type!=='list')continue;
     for(const it of n.items){if(it.x)continue;
-      if(it.d){ts.push(it.d);}
-      else if((it.t||'').trim()&&!n.dn){act++;const du=dueOf(it);if(du&&du<D)over.push({t:it.t,du});}}}
-  const w28=ts.filter(t=>t>D-28*DAY),res={n28:w28.length,items:[]};
+      if(it.d){rec.push({d:it.d,c:itC(n,it),h:!!it.h});if(it.h||it.rt)rtN++;}
+      else if((it.t||'').trim()&&!n.dn){act++;const du=dueOf(it);if(du){dueN++;if(du<D)over.push({t:it.t,du});}
+        if(!it.rt&&!du){const c=itC(n,it);if(c&&D-c>=30*DAY)stale.push({t:it.t,age:Math.floor((D-c)/DAY)});}}}}
+  const w28=rec.filter(r=>r.d>D-28*DAY),res={n28:w28.length,items:[],plan:[]};
   if(w28.length<10){res.few=true;return res;}
-  const add=(k,ti,tx,ad)=>res.items.push({k,ti,tx,ad});
-  const hr=new Array(24).fill(0),dw=[0,0,0,0,0,0,0];
-  for(const t of w28){const d=new Date(t);hr[d.getHours()]++;dw[d.getDay()]++;}
+  const ts=w28.map(r=>r.d),hr=new Array(24).fill(0),dw=[0,0,0,0,0,0,0],heat=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  for(const t of ts){const d=new Date(t),H=d.getHours();hr[H]++;dw[d.getDay()]++;heat[H<6?0:H<12?1:H<18?2:3][(d.getDay()+6)%7]++;}
+  const NM=['일','월','화','수','목','금','토'],fh=H=>{H=((H%24)+24)%24;return (H<12?'오전 ':'오후 ')+((H%12)||12)+'시';};
+  const add=(k,ti,tx,ad)=>res.items.push({k,ti,tx,ad}),plan=s=>res.plan.push(s);
   /* 시간대 */
-  let bi=0,bv=-1;for(let h=0;h<24;h++){const v=hr[h]+hr[(h+1)%24];if(v>bv){bv=v;bi=h;}}
-  const pct=Math.round(bv/w28.length*100),fh=h=>(h%24<12?'오전 ':'오후 ')+((h%12)||12)+'시';
-  add('info','가장 잘 움직이는 시간',`최근 4주 완료의 ${pct}%가 ${fh(bi)}~${fh(bi+2)} 사이에 몰려 있습니다.`,'중요한 일이나 미루던 일을 이 시간대에 먼저 배치해 보세요. 집중이 잘 되는 시간입니다.');
+  let bi=0,bv=-1;for(let H=0;H<24;H++){const v=hr[H]+hr[(H+1)%24]+hr[(H+2)%24];if(v>bv){bv=v;bi=H;}}
+  const pct=Math.round(bv/ts.length*100),band=bi>=5&&bi<11?'오전형':bi>=11&&bi<17?'낮 시간형':bi>=17&&bi<22?'저녁형':'야행성';
+  add('info','집중 시간대',`최근 4주 완료의 ${pct}%가 ${fh(bi)}~${fh(bi+3)} 사이(3시간)에 몰려 있습니다. 하루 중 일이 가장 잘 풀리는 구간으로 보입니다.`,`가장 부담스럽거나 중요한 일 1개를 이 시간대에 먼저 배치하세요. 회의·연락처럼 끊기는 일은 이 시간을 피해 두는 것이 좋습니다.`);
+  plan(`${fh(bi)}~${fh(bi+3)}에는 가장 중요한 일 1개만 먼저 처리하세요(방해받지 않는 시간으로 비워 두기).`);
   /* 늦은 밤 */
-  const late=w28.filter(t=>{const h=new Date(t).getHours();return h>=23||h<5;}).length,lp=Math.round(late/w28.length*100);
-  if(lp>=20)add('warn','늦은 밤 처리가 많습니다',`완료의 ${lp}%가 밤 11시~새벽 5시입니다.`,'수면이 줄면 다음 날 생산성이 떨어집니다. 밤에 하던 일 중 하나를 저녁 시간으로 옮겨 보세요.');
+  const late=ts.filter(t=>{const H=new Date(t).getHours();return H>=23||H<5;}).length,lp=Math.round(late/ts.length*100);
+  if(lp>=20){add('warn','늦은 밤 처리 비중이 높습니다',`완료의 ${lp}%(${late}개)가 밤 11시~새벽 5시입니다.`,'수면이 줄면 다음 날 집중 시간대의 효율이 떨어집니다. 밤에 하던 일 가운데 가장 가벼운 것부터 저녁 시간으로 옮기세요.');plan('밤 11시 이후에는 새 일을 하지 말고, 내일 첫 할 일 1개만 적고 마무리하세요.');}
   /* 요일 */
-  const nm=['일','월','화','수','목','금','토'];let mx=0,mn=0;for(let i=1;i<7;i++){if(dw[i]>dw[mx])mx=i;if(dw[i]<dw[mn])mn=i;}
-  if(dw[mx]>0&&dw[mx]>=dw[mn]*2)add('info','요일 편차',`${nm[mx]}요일에 가장 많이(${dw[mx]}개), ${nm[mn]}요일에 가장 적게(${dw[mn]}개) 끝냅니다.`,`${nm[mn]}요일은 부담이 적은 일 위주로, ${nm[mx]}요일에는 큰 일을 배치하면 균형이 맞습니다.`);
+  let mx=0,mn=0;for(let i=1;i<7;i++){if(dw[i]>dw[mx])mx=i;if(dw[i]<dw[mn])mn=i;}
+  const mean=dw.reduce((x,y)=>x+y,0)/7,sd=Math.sqrt(dw.reduce((x,y)=>x+(y-mean)*(y-mean),0)/7),bal=Math.max(0,Math.min(100,Math.round(100-sd/Math.max(1,mean)*100)));
+  if(dw[mx]>0&&dw[mx]>=Math.max(2,dw[mn])*2){add('info','요일에 따른 리듬',`${NM[mx]}요일이 가장 많고(${dw[mx]}개), ${NM[mn]}요일이 가장 적습니다(${dw[mn]}개). 요일별 편차가 큰 편입니다.`,`${NM[mx]}요일은 이미 일이 잘 되는 날이니 큰 일을 배치하고, ${NM[mn]}요일은 ‘쉬는 날’로 두거나 가벼운 일만 넣어 부담을 맞추세요.`);plan(`${NM[mx]}요일에 큰 일을, ${NM[mn]}요일에는 가벼운 일이나 휴식을 배치하세요.`);}
   /* 추세 */
-  const a=ts.filter(t=>t>D-14*DAY).length,b=ts.filter(t=>t>D-28*DAY&&t<=D-14*DAY).length;
-  if(b>=5){const ch=Math.round((a-b)/b*100);
-    if(ch<=-25)add('warn','최근 2주 완료가 줄었습니다',`직전 2주(${b}개)보다 ${Math.abs(ch)}% 적은 ${a}개입니다.`,'일이 많아서인지 쌓아 둔 탓인지 먼저 확인해 보세요. 항목을 더 잘게 쪼개면 다시 탄력이 붙습니다.');
-    else if(ch>=25)add('good','최근 2주 완료가 늘었습니다',`직전 2주(${b}개)보다 ${ch}% 많은 ${a}개입니다.`,'좋은 흐름입니다. 무리하지 말고 쉬는 날도 함께 정해 두세요.');}
+  const a=rec.filter(r=>r.d>D-14*DAY).length,b=rec.filter(r=>r.d>D-28*DAY&&r.d<=D-14*DAY).length;let trend=null;
+  if(b>=5){trend=Math.round((a-b)/b*100);
+    if(trend<=-25){add('warn','최근 2주 완료가 줄었습니다',`직전 2주(${b}개)보다 ${Math.abs(trend)}% 적은 ${a}개입니다.`,'원인을 둘로 나눠 보세요. ① 해야 할 일 자체가 줄었다면 문제없습니다. ② 해야 할 일은 그대로인데 못 하고 있다면 항목이 너무 크다는 신호이니 15~30분 단위로 쪼개세요.');plan('큰 항목 1개를 15~30분짜리 3개로 쪼개서 오늘 하나만 끝내 보세요.');}
+    else if(trend>=25)add('good','최근 2주 완료가 늘었습니다',`직전 2주(${b}개)보다 ${trend}% 많은 ${a}개입니다.`,'좋은 흐름입니다. 다만 늘어난 만큼 쉬는 날도 함께 정해 두어야 오래 갑니다.');
+    else add('info','최근 2주 흐름',`직전 2주 ${b}개 → 최근 2주 ${a}개로 큰 변화 없이 유지되고 있습니다.`,'안정적인 상태입니다. 양을 늘리기보다 중요도 높은 일의 비율을 높이는 방향을 권합니다.');}
   /* 꾸준함 */
-  const dset=new Set(w28.map(t=>dkey(t))),ad=dset.size;let best=0,run=0;for(let o=27;o>=0;o--){const d=new Date(D-o*DAY);if(dset.has(dkey(d.getTime()))){run++;best=Math.max(best,run);}else run=0;}
-  if(ad>=22)add('good','매우 꾸준합니다',`최근 28일 중 ${ad}일에 기록이 있고, 가장 긴 연속은 ${best}일입니다.`,'습관이 자리 잡았습니다. 이제는 양보다 중요한 일의 비중을 늘려 보세요.');
-  else if(ad<=12)add('warn','기록이 듬성듬성합니다',`최근 28일 중 ${ad}일만 기록이 있습니다.`,'하루 한 가지만 체크해도 좋으니 매일 같은 시간에 확인하는 습관을 만들어 보세요.');
-  else add('info','꾸준함',`최근 28일 중 ${ad}일에 기록이 있고, 가장 긴 연속은 ${best}일입니다.`,'쉬는 날이 규칙적인지 살펴보세요. 연속이 끊기는 요일이 있다면 그날 할 일을 줄이면 됩니다.');
+  const dset=new Set(ts.map(t=>dkey(t))),ad=dset.size;let best=0,run=0;for(let o=27;o>=0;o--){if(dset.has(dkey(D-o*DAY)))run++,best=Math.max(best,run);else run=0;}
+  if(ad>=22)add('good','매우 꾸준합니다',`최근 28일 중 ${ad}일에 기록이 있고, 가장 긴 연속은 ${best}일입니다.`,'습관이 자리 잡았습니다. 이제는 개수보다 ‘중요한 일 비율’을 늘리는 단계입니다.');
+  else if(ad<=12){add('warn','기록이 듬성듬성합니다',`최근 28일 중 ${ad}일만 기록이 있고, 가장 긴 연속은 ${best}일입니다.`,'하루에 한 가지만 해도 되니 ‘최소 기준’을 낮추세요. 매일 같은 시각에 확인하는 루틴을 만들면 연속이 쉽게 늘어납니다.');plan('매일 같은 시각(예: 저녁 식사 후)에 늘메모를 열어 오늘 한 일 1개만 체크하는 루틴을 만드세요.');}
+  else add('info','꾸준함',`최근 28일 중 ${ad}일에 기록이 있고, 가장 긴 연속은 ${best}일입니다.`,'연속이 끊기는 요일이 있다면 그날은 할 일을 줄여 두면 이어가기 쉽습니다.');
   /* 몰아서 체크 */
-  const so=[...w28].sort((x,y)=>x-y);let cl=0;for(let i=0;i<so.length;){let j=i;while(j+1<so.length&&so[j+1]-so[i]<=10*60e3)j++;if(j-i+1>=5)cl+=j-i+1;i=j+1;}
-  const cp=Math.round(cl/w28.length*100);
-  if(cp>=30)add('warn','몰아서 체크하는 편입니다',`완료의 ${cp}%가 10분 안에 한꺼번에 체크됐습니다.`,'끝낸 직후에 체크해야 실제 소요 시간과 흐름이 기록에 남습니다. 그렇지 않으면 통계가 실제와 달라집니다.');
-  /* 밀린 일 */
+  const so=[...ts].sort((x,y)=>x-y);let cl=0;for(let i=0;i<so.length;){let j=i;while(j+1<so.length&&so[j+1]-so[i]<=10*60e3)j++;if(j-i+1>=5)cl+=j-i+1;i=j+1;}
+  const cp=Math.round(cl/ts.length*100);
+  if(cp>=30){add('warn','몰아서 체크하는 편입니다',`완료의 ${cp}%가 10분 안에 한꺼번에 체크됐습니다.`,'끝낸 직후에 체크해야 실제 흐름이 기록에 남고, 이 진단도 정확해집니다. 지금은 시간대·요일 분석이 실제와 어긋날 수 있습니다.');plan('일을 끝낸 직후 바로 체크하세요. 어렵다면 점심·저녁 두 번만 정해서 체크하세요.');}
+  /* 처리 속도 */
+  const lt=w28.filter(r=>r.c>1.5e12&&r.d>r.c&&!r.h).map(r=>r.d-r.c).sort((x,y)=>x-y);let leadTxt='';
+  if(lt.length>=8){const med=lt[Math.floor(lt.length/2)],same=Math.round(lt.filter(x=>x<DAY).length/lt.length*100),slow=Math.round(lt.filter(x=>x>7*DAY).length/lt.length*100);
+    const mt=med<36e5?'1시간 이내':med<DAY?Math.round(med/36e5)+'시간':Math.round(med/DAY)+'일';leadTxt=mt;
+    add(slow>=30?'warn':'info','항목 처리 속도',`항목을 만든 뒤 완료까지 중앙값은 ${mt}이고, ${same}%는 만든 당일에 끝냈으며 ${slow}%는 일주일 넘게 걸렸습니다.`,slow>=30?'오래 걸리는 항목이 많습니다. 만들 때 기한이나 첫 행동(“무엇부터”)을 함께 적어 두면 미루는 일이 줄어듭니다.':'만들면 곧바로 처리하는 편입니다. 이 속도를 유지하되, 중요한 일이 급한 일에 밀리지 않는지만 가끔 점검하세요.');}
+  /* 기한 */
+  let due=null;
   if(over.length){over.sort((x,y)=>x.du-y.du);const od=Math.floor((D-over[0].du)/DAY);
-    add('warn',`기한이 지난 항목 ${over.length}개`,`가장 오래된 것은 ${od}일 전입니다: “${over[0].t.slice(0,24)}”`,'오늘 하나만 끝내거나, 더 이상 필요 없으면 삭제해서 목록을 가볍게 하세요. 지난 항목이 쌓이면 목록을 보기 싫어집니다.');}
+    add('warn',`기한이 지난 항목 ${over.length}개`,`가장 오래된 것은 ${od}일 전입니다: “${over[0].t.slice(0,24)}”`,'지난 항목은 ① 오늘 끝내거나 ② 새 기한을 주거나 ③ 필요 없으면 삭제, 셋 중 하나로 정리하세요. 쌓아 두면 목록을 열기가 싫어집니다.');plan(`기한이 지난 “${over[0].t.slice(0,16)}”부터 끝내거나 삭제·재설정하세요.`);}
+  if(dueN)due=Math.round((1-over.length/dueN)*100);
+  /* 방치 */
+  if(stale.length>=3){stale.sort((x,y)=>y.age-x.age);add('warn',`30일 넘게 방치된 항목 ${stale.length}개`,`가장 오래된 것: “${stale[0].t.slice(0,22)}” (${stale[0].age}일). 기한이 없어서 계속 뒤로 밀린 항목들입니다.`,'기한 없는 항목은 영원히 급하지 않게 됩니다. 이번 주에 3개만 골라 기한을 주고, 나머지는 ‘언젠가’ 메모로 옮기거나 삭제하세요.');plan('방치된 항목 중 3개에 이번 주 안 기한을 주고, 나머지는 정리하세요.');}
+  res.stale=stale.slice(0,5);
   /* 쌓인 양 */
-  const wk=w28.length/4;if(act>0&&wk>0){const wks=act/wk;
-    if(wks>=3)add('warn','할 일이 많이 쌓여 있습니다',`남은 항목 ${act}개는 지금 속도(주 ${Math.round(wk)}개)로 약 ${Math.round(wks)}주 분량입니다.`,'이번 주에 할 것만 남기고 나머지는 별도 메모로 옮기면 부담이 줄어듭니다.');
-    else add('good','할 일 양이 감당 가능합니다',`남은 항목 ${act}개는 지금 속도(주 ${Math.round(wk)}개)로 약 ${Math.max(1,Math.round(wks))}주 분량입니다.`,'이 정도면 관리되고 있습니다. 새 항목을 넣을 때 기한을 같이 적어 두세요.');}
-  res.sum={n28:w28.length,act,over:over.length,activeDays:ad,bestStreak:best,pctPeak:pct,peakStart:bi,latePct:lp,clusterPct:cp,weekdayCounts:dw,trend:b>=5?Math.round((a-b)/b*100):null};
+  const wk=ts.length/4;let load=100;
+  if(act>0&&wk>0){const wks=act/wk;load=Math.max(0,Math.min(100,Math.round(100-(wks-1)*20)));
+    if(wks>=3){add('warn','할 일이 많이 쌓여 있습니다',`남은 항목 ${act}개는 지금 속도(주 ${Math.round(wk)}개)로 약 ${Math.round(wks)}주 분량입니다.`,'이번 주에 할 것만 남기고 나머지는 별도 메모로 옮기세요. 눈앞의 목록이 짧아야 시작하기 쉽습니다.');plan('이번 주에 할 항목만 남기고 나머지는 ‘다음에’ 메모로 옮겨 목록을 줄이세요.');}
+    else add('good','할 일 양이 감당 가능합니다',`남은 항목 ${act}개는 지금 속도(주 ${Math.round(wk)}개)로 약 ${Math.max(1,Math.round(wks))}주 분량입니다.`,'관리되고 있습니다. 새 항목을 넣을 때 기한을 같이 적는 습관만 유지하세요.');}
+  /* 점수 */
+  const sc=[['꾸준함',Math.round(ad/28*100)],['요일 균형',bal],['체크 즉시성',100-cp],['할 일 여유',load]];if(due!=null)sc.splice(3,0,['기한 준수',due]);
+  const tot=Math.round(sc.reduce((x,y)=>x+y[1],0)/sc.length);
+  const hab=cp>=30?'몰아치기':ad>=22?'꾸준한 실행':ad<=12?'불규칙한':'균형 잡힌';
+  res.sc=sc;res.tot=tot;res.heat=heat;res.type=`${band} · ${hab} 스타일`;
+  res.head=`최근 4주 ${ts.length}개를 완료했고, 하루 중에는 ${fh(bi)}~${fh(bi+3)}에 가장 집중합니다. `+(tot>=75?'전반적으로 안정적인 운영입니다. 이제는 양보다 중요한 일의 비중을 높일 때입니다.':tot>=55?'기본기는 갖춰졌고, 아래 약한 부분 한두 가지만 손보면 눈에 띄게 좋아집니다.':'개선 여지가 큰 시기입니다. 한꺼번에 바꾸지 말고 아래 실행 제안 중 한 가지만 먼저 시작해 보세요.');
+  res.sum={n28:ts.length,act,over:over.length,dueItems:dueN,staleOver30d:stale.length,activeDays:ad,bestStreak:best,hourly:hr,weekdayCountsSunToSat:dw,heatBlocks_0to6_6to12_12to18_18to24_by_MonToSun:heat,latePct:lp,clusterPct:cp,trend2wPct:trend,medianLeadTime:leadTxt||null,routineCompletions:rtN,scores:Object.fromEntries(sc),peak:fh(bi)+'~'+fh(bi+3)};
   return res;
+}
+function statDiagView(box){
+  box.replaceChildren();const dg=statDiag();
+  if(dg.few){box.appendChild(h('p','stn','완료 기록이 10개 이상 쌓이면 진단과 조언을 보여 드립니다. (최근 4주 '+dg.n28+'개)'));return;}
+  const hd=h('div','dgh');hd.append(h('small',null,'종합 진단'),h('b',null,dg.type),h('p',null,dg.head));
+  const tw=h('div','dgt');tw.append(h('i',null,String(dg.tot)),h('span',null,'/100'));hd.appendChild(tw);box.appendChild(hd);
+  const sw=h('div','dgs');for(const [n,v] of dg.sc){const r=h('div','dgr');const bar=h('div','dgbar'),f=h('i');f.style.width=v+'%';f.className=v>=70?'g':v>=45?'m':'w';bar.appendChild(f);r.append(h('span',null,n),bar,h('em',null,String(v)));sw.appendChild(r);}box.appendChild(sw);
+  const hw=h('div');hw.appendChild(h('h5',null,'언제 일을 끝내는가 (최근 4주)'));
+  const hm=h('div','dgm'),mx=Math.max(1,...dg.heat.flat()),rows=['새벽','오전','오후','저녁'];hm.appendChild(h('span'));for(const d of ['월','화','수','목','금','토','일'])hm.appendChild(h('span','hl',d));
+  dg.heat.forEach((row,ri)=>{hm.appendChild(h('span','hl',rows[ri]));row.forEach(v=>{const c=h('span','hc',v?String(v):'');c.style.background=v?`color-mix(in srgb,var(--accent) ${Math.round(18+v/mx*72)}%,transparent)`:'var(--hover)';if(v/mx>.55)c.style.color='var(--accent-fg)';hm.appendChild(c);});});
+  hw.appendChild(hm);box.appendChild(hw);
+  const fw=h('div','dgw');fw.appendChild(h('h5',null,'핵심 발견과 조언'));for(const x of dg.items){const c=h('div','dgc '+x.k);c.append(h('b',null,x.ti),h('p',null,x.tx),h('p','ad','→ '+x.ad));fw.appendChild(c);}box.appendChild(fw);
+  const pw=h('div','dgw');pw.appendChild(h('h5',null,'이번 주 실행 제안'));const ol=h('ol','dgp');for(const t of dg.plan.slice(0,5))ol.appendChild(h('li',null,t));
+  ol.appendChild(h('li',null,'일요일 저녁에 5분만 내어 이번 주 완료 기록을 훑어보고, 다음 주에 할 일 3개를 정하세요.'));pw.appendChild(ol);box.appendChild(pw);
+  if(dg.stale&&dg.stale.length){const sw2=h('div','dgw');sw2.appendChild(h('h5',null,'오래 방치된 항목'));for(const x of dg.stale){sw2.appendChild(h('p','stn','· '+x.t.slice(0,30)+' ('+x.age+'일)'));}box.appendChild(sw2);}
+  const ab=h('button','dgb','AI로 더 깊이 분석받기');ab.type='button';const ao=h('div','dgai');ab.addEventListener('click',()=>statAi(ab,ao));
+  box.append(ab,ao,h('p','stn','위 진단은 이 기기 안에서 계산되며 글 내용은 쓰지 않습니다. AI 분석은 합계 숫자만 구글(Gemini)로 보냅니다(항목 제목은 보내지 않음). 의학적 진단이 아닌 참고용입니다.'));
 }
 async function statAi(btn,box){
   const k=LS.get('nm-gkey');if(!k){toast('설정 → 음성 받아쓰기에서 Gemini API 키를 먼저 입력해 주세요','err');return;}
   const r=statDiag();if(!r.sum){toast('기록이 더 쌓이면 분석할 수 있습니다');return;}
   btn.disabled=true;btn.textContent='분석 중…';box.textContent='';
   try{
-    const q='다음은 한 사용자의 최근 4주 할 일 완료 통계(숫자만, 항목 내용 없음)입니다. 한국어로, 생활 패턴을 진단하고 생산성을 높일 구체적 조언 4가지를 간결하게 작성하세요. 의학적·심리적 진단은 하지 말고, 숫자에 근거하지 않은 추측은 하지 마세요. 요일 배열은 일~토 순서입니다.\n'+JSON.stringify(r.sum);
+    const q='당신은 개인 생산성 코치입니다. 아래는 한 사용자의 최근 4주 할 일 완료 통계(숫자만, 항목 내용 없음)입니다. 이 숫자에 근거해서만 한국어로 답하세요. 의학적·심리적 진단이나 숫자에 없는 추측은 하지 마세요. 항목은 번호로 구분하고, 각 항목은 숫자를 인용해 2~4문장으로 쓰세요.\n① 종합 진단(이 사람의 일하는 방식과 특징)\n② 강점 2가지\n③ 위험 신호 2~3가지(가장 시급한 순)\n④ 이번 주 실행 계획(요일·시간대를 구체적으로 지정한 행동 4가지)\n⑤ 한 달 뒤 달성할 구체적 목표 2가지와 측정 방법\n참고: weekdayCountsSunToSat은 일~토 순서, hourly는 0~23시, heatBlocks는 4행(새벽·오전·오후·저녁)×7열(월~일)입니다.\n'+JSON.stringify(r.sum);
     const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify({contents:[{parts:[{text:q}]}],generationConfig:{temperature:.4}})});
     if(!res.ok)throw new Error(res.status===429?'무료 사용 한도를 넘었습니다. 잠시 뒤 다시 시도해 주세요':'분석을 가져오지 못했습니다 ('+res.status+')');
     const j=await res.json(),t=((((j.candidates||[])[0]||{}).content||{}).parts||[]).map(x=>x.text||'').join('').trim();
     box.textContent=t||'분석 결과가 비어 있습니다.';
   }catch(e){box.textContent=e.message||'분석에 실패했습니다';}
-  btn.disabled=false;btn.textContent='AI로 더 자세히 분석';
+  btn.disabled=false;btn.textContent='AI로 더 깊이 분석받기';
 }
 function statOpen(){
-  const {days,dow,total}=statData(),B=$('#stBody');B.replaceChildren();
+  const {days,dow,total}=statData(),TOP=$('#stBody');TOP.replaceChildren();
+  const tabs=h('div','seg sttab');const t1=h('button','on','통계'),t2=h('button',null,'진단 · 조언');t1.type=t2.type='button';tabs.append(t1,t2);
+  const B=h('div','stp'),P2=h('div','stp');P2.hidden=true;TOP.append(tabs,B,P2);let built=false;
+  const sel=k=>{t1.classList.toggle('on',k===1);t2.classList.toggle('on',k===2);B.hidden=k!==1;P2.hidden=k!==2;TOP.scrollTop=0;if(k===2&&!built){built=true;statDiagView(P2);}};
+  t1.addEventListener('click',()=>sel(1));t2.addEventListener('click',()=>sel(2));
   const D=new Date(),key=d=>d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(),at=o=>{const d=new Date(D.getFullYear(),D.getMonth(),D.getDate()-o);return d;};
   const cnt=o=>days.get(key(at(o)))||0;
   const sumR=(a,b)=>{let x=0;for(let o=a;o<=b;o++)x+=cnt(o);return x;};
@@ -2828,12 +2881,6 @@ function statOpen(){
   let streak=0;for(let o=cnt(0)?0:1;cnt(o);o++)streak++;
   const cards=h('div','stc');for(const [v,l] of [[cnt(0),'오늘'],[week,'이번 주'],[mon,'이번 달'],[streak,'연속 일']]){const d=h('div');d.append(h('b',null,String(v)),h('span',null,l));cards.appendChild(d);}
   B.appendChild(cards);
-  {const dg=statDiag(),w=h('div','dgw');w.appendChild(h('h5',null,'생활 패턴 진단 · 최근 4주'));
-    if(dg.few)w.appendChild(h('p','stn','완료 기록이 10개 이상 쌓이면 진단과 조언을 보여 드립니다. (최근 4주 '+dg.n28+'개)'));
-    else{for(const x of dg.items){const c=h('div','dgc '+x.k);c.append(h('b',null,x.ti),h('p',null,x.tx),h('p','ad','→ '+x.ad));w.appendChild(c);}
-      const ab=h('button','dgb','AI로 더 자세히 분석');ab.type='button';const ao=h('div','dgai');
-      ab.addEventListener('click',()=>statAi(ab,ao));w.append(ab,ao,h('p','stn','진단은 이 기기 안에서 계산되며 글 내용은 쓰지 않습니다. AI 분석은 합계 숫자만 구글(Gemini)로 보냅니다. 의학적 진단이 아닌 참고용입니다.'));}
-    B.appendChild(w);}
   const bars=(title,vals,labels)=>{const mx=Math.max(1,...vals),w=h('div');w.appendChild(h('h5',null,title));
     const bs=h('div','bars'),bl=h('div','bl');vals.forEach((v,k)=>{const c=h('div','bc'),i=h('i',v?'':'z');i.style.height=Math.max(2,Math.round(v/mx*74))+'px';if(v)c.appendChild(h('em',null,String(v)));c.appendChild(i);bs.appendChild(c);bl.appendChild(h('span',null,labels[k]));});
     w.append(bs,bl);return w;};
