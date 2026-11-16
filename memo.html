@@ -616,6 +616,7 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 .dkr{display:grid;grid-template-columns:96px 1fr 54px;align-items:center;gap:10px;font-size:13px}.dkn b{display:block;font-size:13px}.dkn small{font-size:11px;color:var(--fg2)}
 .dkb{display:flex;flex-direction:column;gap:3px}.dkb i{display:block;height:8px;border-radius:4px}.dkb i.d{background:var(--accent)}.dkb i.a{background:var(--line);opacity:.9}
 .dkr em{font-style:normal;text-align:right;color:var(--fg2);font-size:12px}.dgb2{background:var(--hover);color:var(--fg)}
+.klink{display:flex;align-items:center;justify-content:center;height:44px;border-radius:12px;background:var(--hover);color:var(--accent);font-size:14px;font-weight:600;text-decoration:none}
 </style>
 </head>
 <body>
@@ -730,7 +731,7 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 
     <div class="sp" data-p="voice" hidden><div class="grp">
       <div class="rw"><span class="rl">받아쓰기 방식<small>고감도는 멀리서 들리는 설교·강연용입니다</small></span><div class="seg" id="segEng"><button data-e="web">기본</button><button data-e="gemini">고감도</button></div></div>
-      <div class="rw" id="keyRow" hidden style="flex-direction:column;align-items:stretch;gap:8px"><span class="rl">Gemini API 키<small style="white-space:normal">aistudio.google.com 에서 무료로 발급합니다. 키는 이 기기에만 저장되고, 음성은 구글로 전송됩니다(무료 등급은 구글이 서비스 개선에 사용할 수 있음).</small></span><input type="password" id="setKey" autocomplete="off" spellcheck="false" placeholder="AIza…" style="height:44px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--fg);padding:0 12px;font:inherit;font-size:14px"></div>
+      <div class="rw" id="keyRow" hidden style="flex-direction:column;align-items:stretch;gap:8px"><span class="rl">Gemini API 키<small style="white-space:normal">aistudio.google.com 에서 무료로 발급합니다. 키는 이 기기에만 저장되고, 음성은 구글로 전송됩니다(무료 등급은 구글이 서비스 개선에 사용할 수 있음).</small></span><input type="password" id="setKey" autocomplete="off" spellcheck="false" placeholder="AIza…" style="height:44px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--fg);padding:0 12px;font:inherit;font-size:14px"><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="klink">API 키 발급받기 (Google AI Studio) ↗</a></div>
       <div class="rw"><span class="rl">소리 증폭<small>기본 방식에서 작은 소리를 키웁니다. 기기에 따라 인식이 나빠질 수 있어 끔을 권합니다</small></span><div class="seg" id="segBoost"><button data-b="0">끔</button><button data-b="1">보통</button><button data-b="2">크게</button></div></div>
     </div></div>
 
@@ -814,7 +815,7 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 
 <script>
 (()=>{'use strict';
-const VER='1.82';
+const VER='1.83';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
