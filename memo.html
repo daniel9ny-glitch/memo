@@ -907,7 +907,7 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 
 <script>
 (()=>{'use strict';
-const VER='2.02';
+const VER='2.04';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1345,7 +1345,7 @@ const dwIv=()=>{const v=+LS.get('nm-dint');return [30,60].includes(v)?v:30;};
 const DW={on:false,id:null,ctx:null,stream:null,an:null,dest:null,q:[],busy:false,prev:'',min:9000,max:24000,sil:700,quiet:0.02,skip:0.012,pend:0,lvl:0,rec:null,iv:0};
 const dwKey=()=>(LS.get('nm-gkey')||'').trim();
 const dmode=()=>LS.get('nm-dmode')==='after'?'after':'live';
-function voiceUi(){const g=LS.get('nm-dengine')==='gemini',a=dmode()==='after';const k=$('#keyRow'),m=$('#modeRow'),ir=$('#intRow'),br=$('#boostRow');if(k)k.hidden=!(g||a);if(m)m.hidden=g;if(ir)ir.hidden=!g;if(br)br.hidden=!g&&a;   /* 간격은 고감도만, 증폭은 실시간 받아적기(기본)·고감도에서만 */for(const x of $$('#segMode button'))x.classList.toggle('on',x.dataset.m===dmode());}
+function voiceUi(){const g=LS.get('nm-dengine')==='gemini',a=dmode()==='after';const k=$('#keyRow'),m=$('#modeRow'),ir=$('#intRow'),br=$('#boostRow');if(k)k.hidden=!(g||a);if(m)m.hidden=g;if(ir)ir.hidden=!g;if(br)br.hidden=!g&&a;{const lv=g?gLv():boostLv();for(const x of $$('#segBoost button')){x.classList.toggle('on',+x.dataset.b===lv);if(x.dataset.b==='0')x.hidden=g;}const bs=br&&br.querySelector('small');if(bs)bs.textContent=g?'고감도에서 작은 소리를 키웁니다. 기본은 크게(×6)이며, 소리가 찢어지면 보통(×3.5)으로 낮추세요':'기본 방식에서 작은 소리를 키웁니다. 기기에 따라 인식이 나빠질 수 있어 끔을 권합니다';}   /* 간격은 고감도만, 증폭은 실시간 받아적기(기본)·고감도에서만 */for(const x of $$('#segMode button'))x.classList.toggle('on',x.dataset.m===dmode());}
 const dwEngine=()=>LS.get('nm-dengine')==='gemini'&&!!dwKey();
 function dwFilters(ctx){   /* 저음 웅웅거림(잔향)을 줄이고 말소리 대역(약 2.5kHz)을 살짝 키움 */
   const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=160;
@@ -1359,7 +1359,7 @@ async function dwStart(id){
   try{st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});}
   catch(e){toast('마이크를 열 수 없습니다','err');return false;}
   const AC=window.AudioContext||window.webkitAudioContext,ctx=new AC();
-  const src=ctx.createMediaStreamSource(st),fl=dwFilters(ctx),g=ctx.createGain();g.gain.value=[1,3.5,6][boostLv()||2]||6;
+  const src=ctx.createMediaStreamSource(st),fl=dwFilters(ctx),g=ctx.createGain();g.gain.value=[1,3.5,6][gLv()]||6;
   const cp=ctx.createDynamicsCompressor();cp.threshold.value=-32;cp.knee.value=16;cp.ratio.value=8;cp.attack.value=.003;cp.release.value=.2;
   const an=ctx.createAnalyser();an.fftSize=1024;const ds=ctx.createMediaStreamDestination();
   src.connect(fl[0]);fl[1].connect(g);g.connect(cp);cp.connect(an);cp.connect(ds);
@@ -1462,6 +1462,7 @@ function dwStop(){DW.on=false;try{if(DW.rec&&DW.rec.state!=='inactive')DW.rec.st
 function dwRelease(){if(DW.on||DW.busy||DW.q.length)return;try{DW.stream&&DW.stream.getTracks().forEach(t=>t.stop());}catch(e){}try{DW.ctx&&DW.ctx.close();}catch(e){}DW.stream=DW.ctx=DW.an=DW.dest=DW.rec=null;}
 /* 소리 증폭: 웹 음성인식에는 민감도 설정이 없어서, 마이크 소리를 먼저 키운 뒤 그 소리를 인식기에 넘긴다 (지원하는 최신 크롬에서만 동작) */
 const DB={ctx:null,stream:null,track:null};
+const gLv=()=>boostLv()||2;   /* 고감도는 '끔'이 없고 기본이 크게(×6) */
 const boostLv=()=>{const v=LS.get('nm-dboost');return v==null?0:+v||0;};   /* 기본 끔: 켜면 폰에 따라 인식이 오히려 안 될 수 있음 */
 const boostOk=()=>!!(SRec&&('processLocally' in SRec.prototype||typeof SRec.available==='function')&&(window.AudioContext||window.webkitAudioContext)&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
 function dbClose(){try{DB.stream&&DB.stream.getTracks().forEach(t=>t.stop());}catch(e){}try{DB.ctx&&DB.ctx.close();}catch(e){}DB.ctx=DB.stream=DB.track=null;}
@@ -1492,8 +1493,8 @@ function dkListen(){
 function dkDbg(){if(DK.got)return;vSt('듣는 중… 말씀하세요 · 재시작 '+DK.n+'회'+(DK.err?' · '+DK.err:''));}
 async function dkStart(id){
   if(dwEngine()){DK.on=false;DK.id=id;const ok=await dwStart(id);if(!ok&&VC.on)vcStop();return;}
-  DK.got=0;DK.n=0;DK.err='';clearTimeout(DK.hint);DK.hint=setTimeout(()=>{if(DK.on&&!DK.got)vSt('아직 인식된 말이 없습니다 · 마이크에 가까이 말씀해 보세요');},12000);DK.on=true;DK.id=id;DK.nodes=[];DK.track=null;try{DK.track=await dbOpen();}catch(e){}if(!DK.on||DK.id!==id){dbClose();DK.track=null;return;}dkListen();}
-function dkStop(){dwStop();DK.on=false;dbClose();DK.track=null;try{DK.rec&&DK.rec.stop();}catch(e){}DK.rec=null;DK.nodes=[];}
+  DK.got=0;DK.n=0;DK.err='';clearTimeout(DK.hint);DK.hint=setTimeout(()=>{if(DK.on&&!DK.got)vSt('아직 인식된 말이 없습니다 · 마이크에 가까이 말씀해 보세요');},12000);clearTimeout(DK.fb);DK.fb=setTimeout(()=>{if(DK.on&&!DK.got&&DK.track){LS.set('nm-dboost','0');dbClose();DK.track=null;toast('소리 증폭 때문에 인식이 안 돼 끄고 다시 듣습니다','err');vSt('소리 증폭 없이 다시 듣는 중…');try{DK.rec&&DK.rec.stop();}catch(e){}}},6000);DK.on=true;DK.id=id;DK.nodes=[];DK.track=null;try{DK.track=await dbOpen();}catch(e){}if(!DK.on||DK.id!==id){dbClose();DK.track=null;return;}dkListen();}
+function dkStop(){clearTimeout(DK.fb);dwStop();DK.on=false;dbClose();DK.track=null;try{DK.rec&&DK.rec.stop();}catch(e){}DK.rec=null;DK.nodes=[];}
 /* 커서(받아쓰는 줄)가 늘 화면 가운데 오도록 스크롤 */
 function eCenter(el){
   const sc=$('#edBody');if(!sc)return;let y=null;
@@ -1517,7 +1518,7 @@ async function vcStart(){
   VC.id=n.id;VC.chunks=[];VC.rec=null;VC.stream=null;VC.later=textLater;VC.last=null;{const a=$('#vAct');if(a)a.hidden=true;}
   try{
     if(shared){if(!(await dwStart(n.id)))return;DK.on=false;DK.id=n.id;vcRecOn(DW.stream);}   /* 마이크 하나로 녹음과 받아쓰기를 같이 */
-    else if(wr){VC.stream=await navigator.mediaDevices.getUserMedia({audio:true});vcRecOn(VC.stream);}
+    else if(wr){try{VC.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});}catch(e){if(e&&e.name==='NotAllowedError')throw e;VC.stream=await navigator.mediaDevices.getUserMedia({audio:true});}vcRecOn(VC.stream);}
   }catch(e){toast(e&&e.name==='NotAllowedError'?'마이크 권한이 거부되었습니다. 브라우저 설정에서 허용해 주세요':'마이크를 열 수 없습니다','err');vcRelease();return;}
   VC.on=true;VC.t0=now();try{if(navigator.wakeLock)navigator.wakeLock.request('screen').then(l=>{VC.wl=l;}).catch(()=>{});}catch(e){}
   if(wd&&!shared&&!textLater)dkStart(n.id);
@@ -3154,7 +3155,7 @@ function bindSet(){
   $('#calNow').addEventListener('click',()=>{if(!calOn())LS.set(CK.on,'1');calUi();calSync(true);});
   const syUi=()=>{const t=+LS.get(GK.time)||0;$('#stSync').textContent=gOn()?(gErr?'확인이 필요합니다':'켜짐 · 자동 동기화'+(t?' · 마지막 '+gAgo(t):'')):'꺼짐 · 구글 로그인으로 켭니다';};
   $('#setSync').addEventListener('click',()=>{d.close();$('#bSync').click();});
-  $('#bSet').addEventListener('click',()=>{for(const b of $$('#segCs button'))b.classList.toggle('on',b.dataset.c===(LS.get('nm-cst')||'fill'));for(const b of $$('#segCp button'))b.classList.toggle('on',b.dataset.c===(LS.get('nm-comp')||'top'));stUse();syUi();calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());palUi();$('#setKey').value=LS.get('nm-gkey')||'';for(const b of $$('#segEng button'))b.classList.toggle('on',b.dataset.e===(LS.get('nm-dengine')==='gemini'?'gemini':'web'));for(const b of $$('#segBoost button'))b.classList.toggle('on',+b.dataset.b===boostLv());for(const b of $$('#segInt button'))b.classList.toggle('on',+b.dataset.i===dwIv());gMsg('');gUi();goP(window.__goto||'main');window.__goto=null;sums();d.showModal();});
+  $('#bSet').addEventListener('click',()=>{for(const b of $$('#segCs button'))b.classList.toggle('on',b.dataset.c===(LS.get('nm-cst')||'fill'));for(const b of $$('#segCp button'))b.classList.toggle('on',b.dataset.c===(LS.get('nm-comp')||'top'));stUse();syUi();calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());palUi();$('#setKey').value=LS.get('nm-gkey')||'';for(const b of $$('#segEng button'))b.classList.toggle('on',b.dataset.e===(LS.get('nm-dengine')==='gemini'?'gemini':'web'));voiceUi();for(const b of $$('#segInt button'))b.classList.toggle('on',+b.dataset.i===dwIv());gMsg('');gUi();goP(window.__goto||'main');window.__goto=null;sums();d.showModal();});
   /* 설정: 메인 목록 → 하위 화면 */
   const PT={main:'설정',google:'구글 연동',look:'화면',voice:'음성 받아쓰기',data:'데이터 · 백업'};
   const goP=k=>{for(const e of $$('#set .sp'))e.hidden=e.dataset.p!==k;$('#set .st').dataset.pg=k;$('#setTitle').textContent=PT[k];$('#setBack').hidden=k==='main';voiceUi();if(k==='data')stUse();if(k==='main')sums();d.scrollTop=0;};
@@ -3170,7 +3171,7 @@ function bindSet(){
   $('#setX').addEventListener('click',()=>d.close());d.addEventListener('click',e=>{if(e.target===d)d.close();});
   $('#segMode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-dmode',b.dataset.m);voiceUi();if(b.dataset.m==='after'&&!dwKey())toast('아래에 Gemini API 키를 입력해야 녹음 후 전사가 됩니다');});
   $('#segInt').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-dint',b.dataset.i);for(const x of $$('#segInt button'))x.classList.toggle('on',x===b);});
-  $('#segBoost').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-dboost',b.dataset.b);for(const x of $$('#segBoost button'))x.classList.toggle('on',x===b);});
+  $('#segBoost').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-dboost',b.dataset.b);voiceUi();});
   $('#segEng').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-dengine',b.dataset.e);for(const x of $$('#segEng button'))x.classList.toggle('on',x===b);voiceUi();if(b.dataset.e==='gemini'&&!dwKey())toast('아래에 Gemini API 키를 입력해야 고감도가 작동합니다');});
   $('#setKey').addEventListener('change',e=>{LS.set('nm-gkey',e.target.value.trim());if(!e.target.value.trim()&&LS.get('nm-dengine')==='gemini'){LS.set('nm-dengine','web');for(const x of $$('#segEng button'))x.classList.toggle('on',x.dataset.e==='web');}voiceUi();});
   $('#setPal').addEventListener('click',e=>{const b=e.target.closest('button[data-p]');if(!b)return;LS.set('nm-tpal',b.dataset.p);applyTheme();});
