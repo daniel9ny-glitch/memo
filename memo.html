@@ -701,6 +701,7 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 .vtg[aria-pressed=true]::before{background:currentColor;box-shadow:inset 0 0 0 2px var(--bg)}
 .vtg:disabled{cursor:not-allowed}
 .vbox.live .vtgs{display:none}
+.vst{flex:1;min-width:0}.vgear{flex:none;margin-left:auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--fg2)}.vgear:hover{background:var(--hover)}.vgear svg{width:22px;height:22px}
 .vact .vtx{width:100%;height:44px;border-radius:12px;background:var(--accent);color:var(--accent-fg);font-weight:700}
 .arow .ib.tx{font-size:13px;font-weight:700;color:var(--accent)}
 </style>
@@ -902,7 +903,7 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 
 <script>
 (()=>{'use strict';
-const VER='1.98';
+const VER='2.00';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1286,11 +1287,11 @@ function vHint(){
 function vbox(){
   const b=h('div','vbox');
   b.innerHTML='<div class="vpick" id="vPick"><button class="vb dic" type="button" id="vGo"></button><div class="vtgs"><button class="vtg" type="button" id="vtDic" aria-pressed="true">글로 받아쓰기</button><button class="vtg" type="button" id="vtRec" aria-pressed="false">소리 파일 저장</button></div></div>'
-   +'<div class="vtop"><div class="vtm" id="vTm">0:00</div><div class="vst" id="vSt"></div></div>'
+   +'<div class="vtop"><div class="vtm" id="vTm">0:00</div><div class="vst" id="vSt"></div><button class="vgear" type="button" id="vGear" title="음성 설정" aria-label="음성 설정"></button></div>'
    +'<div class="vact" id="vAct" hidden><button class="vtx" type="button" id="vTx">글로 옮기기</button></div>'
    +'<div class="vlive" id="dkLive" hidden></div>';
   const go=b.querySelector('#vGo'),td=b.querySelector('#vtDic'),tr=b.querySelector('#vtRec'),noDic=!SRec&&!dwEngine(),noRec=typeof MediaRecorder==='undefined';
-  go.innerHTML=ico('mic')+'<span>시작</span>';
+  go.innerHTML=ico('mic')+'<span>시작</span>';b.querySelector('#vGear').innerHTML=ico('gear');b.querySelector('#vGear').addEventListener('click',()=>{window.__goto='voice';$('#bSet').click();});
   const ui=()=>{td.setAttribute('aria-pressed',vtOn('nm-vtd',true)?'true':'false');tr.setAttribute('aria-pressed',vtOn('nm-vtr',dwEngine())?'true':'false');if(!VC.on)b.querySelector('#vSt').textContent=vHint();};
   if(noDic){LS.set('nm-vtd','0');LS.set('nm-vtr','1');}
   if(noRec){LS.set('nm-vtr','0');LS.set('nm-vtd','1');}
@@ -1345,7 +1346,7 @@ function dwFilters(ctx){   /* 저음 웅웅거림(잔향)을 줄이고 말소리
   hp.connect(pk);return [hp,pk];
 }
 const dwSleep=ms=>new Promise(r=>setTimeout(r,ms));
-function dwStat(){if(!DW.on&&!DW.q.length&&!DW.busy)return;const n=DW.q.length;vSt(DW.on?('고감도 받아쓰는 중 · 약 '+(dwIv()===60?'1분':dwIv()+'초')+' 간격으로 글이 나옵니다'+(n?' · 변환 대기 '+n:'')):('남은 부분을 글로 바꾸는 중 · '+n+'개'));}
+function dwStat(){if(!DW.on&&!DW.q.length&&!DW.busy)return;const n=DW.q.length;vSt(DW.on?('고감도 받아쓰는 중 · 약 '+(dwIv()===60?'1분':dwIv()+'초')+' 간격으로 글이 나옵니다'+(n?' · 변환 대기 '+n:'')):('남은 부분을 글로 바꾸는 중 · '+n+'개'))+(DW.last?' ['+DW.last+']':'');}
 async function dwStart(id){
   let st;
   try{st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});}
@@ -1393,7 +1394,10 @@ const GMODELS=['gemini-3.1-flash-lite','gemini-3.5-flash-lite','gemini-3.6-flash
 async function gGen(key,body){
   const saved=LS.get('nm-gmodel'),list=saved?[saved,...GMODELS.filter(m=>m!==saved)]:GMODELS;let res=null;
   for(const m of list){
-    res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
+    DW.last=m.replace('gemini-','')+' 요청 중';dwStat();const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),45000);
+    try{res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent',{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});}
+    catch(e){clearTimeout(tm);DW.last=m.replace('gemini-','')+' '+(e&&e.name==='AbortError'?'45초 응답 없음':'연결 실패');throw e;}
+    clearTimeout(tm);DW.last=m.replace('gemini-','')+' 응답 '+res.status;
     if(res.status===404||res.status===429)continue;   /* 모델마다 한도가 따로라서 한도에 걸리면 다음 모델로 (저장은 하지 않음) */
     if(res.ok)LS.set('nm-gmodel',m);return res;}
   return res;
@@ -3142,7 +3146,7 @@ function bindSet(){
   $('#calNow').addEventListener('click',()=>{if(!calOn())LS.set(CK.on,'1');calUi();calSync(true);});
   const syUi=()=>{const t=+LS.get(GK.time)||0;$('#stSync').textContent=gOn()?(gErr?'확인이 필요합니다':'켜짐 · 자동 동기화'+(t?' · 마지막 '+gAgo(t):'')):'꺼짐 · 구글 로그인으로 켭니다';};
   $('#setSync').addEventListener('click',()=>{d.close();$('#bSync').click();});
-  $('#bSet').addEventListener('click',()=>{for(const b of $$('#segCs button'))b.classList.toggle('on',b.dataset.c===(LS.get('nm-cst')||'fill'));for(const b of $$('#segCp button'))b.classList.toggle('on',b.dataset.c===(LS.get('nm-comp')||'top'));stUse();syUi();calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());palUi();$('#setKey').value=LS.get('nm-gkey')||'';for(const b of $$('#segEng button'))b.classList.toggle('on',b.dataset.e===(LS.get('nm-dengine')==='gemini'?'gemini':'web'));for(const b of $$('#segBoost button'))b.classList.toggle('on',+b.dataset.b===boostLv());for(const b of $$('#segInt button'))b.classList.toggle('on',+b.dataset.i===dwIv());gMsg('');gUi();goP('main');sums();d.showModal();});
+  $('#bSet').addEventListener('click',()=>{for(const b of $$('#segCs button'))b.classList.toggle('on',b.dataset.c===(LS.get('nm-cst')||'fill'));for(const b of $$('#segCp button'))b.classList.toggle('on',b.dataset.c===(LS.get('nm-comp')||'top'));stUse();syUi();calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());palUi();$('#setKey').value=LS.get('nm-gkey')||'';for(const b of $$('#segEng button'))b.classList.toggle('on',b.dataset.e===(LS.get('nm-dengine')==='gemini'?'gemini':'web'));for(const b of $$('#segBoost button'))b.classList.toggle('on',+b.dataset.b===boostLv());for(const b of $$('#segInt button'))b.classList.toggle('on',+b.dataset.i===dwIv());gMsg('');gUi();goP(window.__goto||'main');window.__goto=null;sums();d.showModal();});
   /* 설정: 메인 목록 → 하위 화면 */
   const PT={main:'설정',google:'구글 연동',look:'화면',voice:'음성 받아쓰기',data:'데이터 · 백업'};
   const goP=k=>{for(const e of $$('#set .sp'))e.hidden=e.dataset.p!==k;$('#set .st').dataset.pg=k;$('#setTitle').textContent=PT[k];$('#setBack').hidden=k==='main';const kr=$('#keyRow');if(kr)kr.hidden=!(LS.get('nm-dengine')==='gemini');if(k==='data')stUse();if(k==='main')sums();d.scrollTop=0;};
