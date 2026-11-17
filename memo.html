@@ -884,7 +884,7 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 
 <script>
 (()=>{'use strict';
-const VER='1.91';
+const VER='1.93';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1087,7 +1087,12 @@ const itC=(n,it)=>{if(it.c)return it.c;if(/^k\d/.test(n.id))return n.cr||0;const
 /* 항목의 색 구분 클래스: 캘린더 일정(임박도)·루틴(기한초과/대기) — 편집기와 메모 목록 모두에서 사용 */
 const dayTone=ms=>{const t=new Date(),g=new Date(ms),dd=Math.round((new Date(g.getFullYear(),g.getMonth(),g.getDate())-new Date(t.getFullYear(),t.getMonth(),t.getDate()))/864e5);return dd<=1?'cg0':dd<=3?'cg1':dd<=7?'cg2':'cg3';};
 /* 「11/14(토) 오전 10시: 제목」 → 날짜(알약)와 제목으로 나눈다 */
-function splitDt(t){const m=/^(\d{1,2}\/\d{1,2}\([일월화수목금토]\)[^:：]*?)\s*[:：]\s*(.*)$/.exec(t||'');return m?{d:m[1].trim(),t:m[2]}:null;}
+function splitDt(t){
+  const D='\\d{1,2}\\/\\d{1,2}\\([일월화수목금토]\\)',TM='(?:종일|\\d{1,2}:\\d{2}(?:\\s*[~\\-]\\s*\\d{1,2}:\\d{2})?|(?:오전|오후)\\s*\\d{1,2}시(?:\\s*\\d{1,2}분)?)';
+  const m=new RegExp('^('+D+'(?:\\s*[~\\-]\\s*'+D+')?(?:\\s*'+TM+')?)\\s*[:：]\\s*(.*)$').exec(t||'');
+  if(!m)return null;
+  return {d:m[1].replace(/\\s*([~\\-])\\s*/g,'$1').trim(),t:m[2].replace(new RegExp('^'+D+'\\s*'),'').trim(),raw:m[2],pre:t.slice(0,t.length-m[2].length)};
+}
 function edSplit(r,col,ta,it,open){const sp=splitDt(it.t);if(!sp)return;ta.value=sp.t;r.classList.add('hd');const pl=h('span','dp',sp.d);pl.addEventListener('click',open);col.insertBefore(pl,ta);}
 function itTone(it){
   if(it.d||it.x)return '';
@@ -2082,12 +2087,12 @@ function actRow(n,it){
   rb.addEventListener('click',()=>{const m=cur(),i=get();if(m&&i)rtOpen(m,i);});
   const x=h('button','x');x.type='button';x.innerHTML=ico('x');x.title='항목 삭제';x.setAttribute('aria-label','항목 삭제');
   x.addEventListener('click',()=>{const m=cur(),i=get();if(!m||!i)return;askDel(i).then(ok=>{if(!ok)return;const m2=cur(),i2=get();if(!m2||!i2)return;removeItem(m2,i2);save();renderItems();});});
-  ta.addEventListener('input',()=>{const m=cur(),i=get();if(!m||!i)return;i.t=ta.value;i.u=stamp(m);save();grow(ta);});
+  ta.addEventListener('input',()=>{const m=cur(),i=get();if(!m||!i)return;i.t=(ta._pre||'')+ta.value;i.u=stamp(m);save();grow(ta);});
   ta.addEventListener('paste',e=>{
     const txt=(e.clipboardData||window.clipboardData).getData('text');if(!/\n/.test(txt))return;
     e.preventDefault();const m=cur(),i=get();if(!m||!i)return;
     const lines=txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);if(!lines.length)return;
-    const a=ta.selectionStart,b=ta.selectionEnd;i.t=ta.value.slice(0,a)+lines[0]+ta.value.slice(b);i.u=stamp(m);
+    const a=ta.selectionStart,b=ta.selectionEnd;i.t=(ta._pre||'')+ta.value.slice(0,a)+lines[0]+ta.value.slice(b);i.u=stamp(m);
     let last=i;for(const l of lines.slice(1))last=addItem(m,l,i.i,last.id);save();renderItems({id:last.id});
   });
   ta.addEventListener('keydown',e=>{
@@ -2095,7 +2100,7 @@ function actRow(n,it){
     const m=cur(),i=get();if(!m||!i)return;
     if(e.key==='Enter'&&!e.shiftKey){
       e.preventDefault();const p=ta.selectionStart,before=ta.value.slice(0,p),after=ta.value.slice(ta.selectionEnd);
-      i.t=before;i.u=stamp(m);const ni=addItem(m,after,i.i,i.id);save();renderItems({id:ni.id,pos:0});
+      i.t=(ta._pre||'')+before;i.u=stamp(m);const ni=addItem(m,after,i.i,i.id);save();renderItems({id:ni.id,pos:0});
     }else if(e.key==='Backspace'&&ta.selectionStart===0&&ta.selectionEnd===0){
       if(!ta.value){e.preventDefault();const act=active(m),k=act.indexOf(i),prev=act[k-1];removeItem(m,i);save();renderItems(prev?{id:prev.id}:null);}
       else if(i.i>0){e.preventDefault();i.i=0;i.u=stamp(m);save();renderItems({id:i.id,pos:0});}
@@ -2114,13 +2119,14 @@ function actRow(n,it){
   if(it.rt){const tn=itTone(it);if(tn)r.classList.add(...tn.split(' '));
     ta.readOnly=true;ta.addEventListener('click',()=>{const m=cur(),i=get();if(m&&i)rtOpen(m,i);});edSplit(r,col,ta,it,()=>{const m=cur(),i=get();if(m&&i)rtOpen(m,i);});{const sm=h('small','cd rcap');sm.innerHTML='<span class="rpi">'+ico('repeat')+'</span>';sm.append(rtLabel(it.rt));col.appendChild(sm);}}
   else if(it.g===2&&it.gs){r.classList.add(...itTone(it).split(' '));ta.readOnly=true;ta.addEventListener('click',()=>{const m=cur(),i=get();if(m&&i)rtOpen(m,i);});edSplit(r,col,ta,it,()=>{const m=cur(),i=get();if(m&&i)rtOpen(m,i);});}
-  else if(it.g&&it.gs){r.classList.add(...itTone(it).split(' '));}
+  else if(it.g&&it.gs){r.classList.add(...itTone(it).split(' '));if(splitDt(it.t)){ta.readOnly=true;edSplit(r,col,ta,it,()=>{});}}
   else if(it.r){r.classList.add(...itTone(it).split(' '));{const sm=h('small','cd');sm.innerHTML='<span class="rpi">'+ico('repeat')+'</span>';sm.append('루틴');col.appendChild(sm);}}
   else{
     const slot=h('div','dchips');col.appendChild(slot);
     const upd=()=>{slot.replaceChildren();const hit=nextHits(ta.value,1)[0];if(hit)slot.appendChild(dateChip(hit,ht=>{const m=cur(),i=get();if(m&&i)rtOpen(m,i,ht);}));};
     upd();let tm=0;ta.addEventListener('input',()=>{clearTimeout(tm);tm=setTimeout(upd,350);});
     const c0=itC(n,it);if(c0)col.appendChild(h('small','cd','작성 '+fdt(c0)));}
+  if(!r.classList.contains('hd')){const sp=splitDt(it.t);if(sp){ta._pre=sp.pre;ta.value=sp.raw;r.classList.add('hd');const pl=h('span','dp',sp.d);pl.addEventListener('click',()=>ta.focus());col.insertBefore(pl,ta);}}
   if(it.r)r.append(g,cb,col,x);else r.append(g,cb,col,rb,x);return r;
 }
 function focusItem(id,pos){const ta=$(`#actList [data-id="${id}"] textarea`);if(!ta)return;ta.focus();const p=pos==null?ta.value.length:pos;try{ta.setSelectionRange(p,p);}catch(e){}}
@@ -3145,7 +3151,7 @@ function init(){
   setInterval(()=>{if(!document.hidden){calSync(false);calAlertSoon();}},10*60e3);setTimeout(calAlertSoon,3000);
   setTimeout(rtAll,800);setInterval(()=>{if(!document.hidden)rtAll();},3600000);
   if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{}));}
-  window.__nm={catOf,CATS,statAiClassify,gGen,statDiag,save,removeItem,uStep,UH,statData,exportAll,importAll,DW,dwEngine,TONE,parseKo,nextHits,S,BIN,addPhotos,mActive,vcStart,vcStop,renderMedia,blobSync,get notes(){return S.notes;},createNote,setDone,addItem,active,doneOf,mergeNote,ser,openEd,render,V,moveBlock,rtAll,rtAdvance,alWant,calAlertSync,calAlertSoon,rtOpen,calSync,calBuild,CK};
+  window.__nm={splitDt,catOf,CATS,statAiClassify,gGen,statDiag,save,removeItem,uStep,UH,statData,exportAll,importAll,DW,dwEngine,TONE,parseKo,nextHits,S,BIN,addPhotos,mActive,vcStart,vcStop,renderMedia,blobSync,get notes(){return S.notes;},createNote,setDone,addItem,active,doneOf,mergeNote,ser,openEd,render,V,moveBlock,rtAll,rtAdvance,alWant,calAlertSync,calAlertSoon,rtOpen,calSync,calBuild,CK};
 }
 init();
 })();
