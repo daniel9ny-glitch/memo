@@ -704,6 +704,9 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 .vst{flex:1;min-width:0}.vgear{flex:none;margin-left:auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--fg2)}.vgear:hover{background:var(--hover)}.vgear svg{width:22px;height:22px}
 .vact .vtx{width:100%;height:44px;border-radius:12px;background:var(--accent);color:var(--accent-fg);font-weight:700}
 .arow .ib.tx{font-size:13px;font-weight:700;color:var(--accent)}
+/* v2.02 음성 설정 정렬 */
+#set .rw .rl{flex:1;min-width:0}#set .rw .seg{flex:none}
+#segMode.seg{width:100%;display:flex}#segMode.seg button{flex:1;width:auto;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -819,9 +822,9 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
     <div class="sp" data-p="voice" hidden><div class="grp">
       <div class="rw"><span class="rl">받아쓰기 방식<small>고감도는 멀리서 들리는 설교·강연용입니다</small></span><div class="seg" id="segEng"><button data-e="web">기본</button><button data-e="gemini">고감도</button></div></div>
       <div class="rw" id="modeRow" style="flex-direction:column;align-items:stretch;gap:8px"><span class="rl">기본 방식 동작<small style="white-space:normal">실시간: 말하는 즉시 글이 나오지만 <b>녹음은 되지 않습니다</b>. 녹음 후 전사: 소리를 파일로 저장하고, 녹음을 마치면 Gemini로 보내 글로 받습니다 (Gemini API 키 필요)</small></span><div class="seg" id="segMode"><button data-m="live">실시간 받아적기</button><button data-m="after">녹음 후 전사</button></div></div>
-      <div class="rw"><span class="rl">글로 바뀌는 간격<small>1시간 기준 요청 수: 30초 약 120회, 1분 약 60회. 하루 한도는 앱에서 알 수 없어 AI Studio의 Rate limits에서 확인하세요</small></span><div class="seg" id="segInt"><button data-i="30">30초</button><button data-i="60">1분</button></div></div>
+      <div class="rw" id="intRow"><span class="rl">글로 바뀌는 간격<small>1시간 기준 요청 수: 30초 약 120회, 1분 약 60회. 하루 한도는 앱에서 알 수 없어 AI Studio의 Rate limits에서 확인하세요</small></span><div class="seg" id="segInt"><button data-i="30">30초</button><button data-i="60">1분</button></div></div>
       <div class="rw" id="keyRow" hidden style="flex-direction:column;align-items:stretch;gap:8px"><span class="rl">Gemini API 키<small style="white-space:normal">aistudio.google.com 에서 무료로 발급합니다. 키는 이 기기에만 저장되고, 음성은 구글로 전송됩니다(무료 등급은 구글이 서비스 개선에 사용할 수 있음).</small></span><input type="password" id="setKey" autocomplete="off" spellcheck="false" placeholder="AIza…" style="height:44px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--fg);padding:0 12px;font:inherit;font-size:14px"><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="klink">API 키 발급받기 (Google AI Studio) ↗</a></div>
-      <div class="rw"><span class="rl">소리 증폭<small>기본 방식에서 작은 소리를 키웁니다. 기기에 따라 인식이 나빠질 수 있어 끔을 권합니다</small></span><div class="seg" id="segBoost"><button data-b="0">끔</button><button data-b="1">보통</button><button data-b="2">크게</button></div></div>
+      <div class="rw" id="boostRow"><span class="rl">소리 증폭<small>기본 방식에서 작은 소리를 키웁니다. 기기에 따라 인식이 나빠질 수 있어 끔을 권합니다</small></span><div class="seg" id="segBoost"><button data-b="0">끔</button><button data-b="1">보통</button><button data-b="2">크게</button></div></div>
     </div></div>
 
     <div class="sp" data-p="data" hidden><div class="grp">
@@ -904,7 +907,7 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 
 <script>
 (()=>{'use strict';
-const VER='2.01';
+const VER='2.02';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1342,7 +1345,7 @@ const dwIv=()=>{const v=+LS.get('nm-dint');return [30,60].includes(v)?v:30;};
 const DW={on:false,id:null,ctx:null,stream:null,an:null,dest:null,q:[],busy:false,prev:'',min:9000,max:24000,sil:700,quiet:0.02,skip:0.012,pend:0,lvl:0,rec:null,iv:0};
 const dwKey=()=>(LS.get('nm-gkey')||'').trim();
 const dmode=()=>LS.get('nm-dmode')==='after'?'after':'live';
-function voiceUi(){const g=LS.get('nm-dengine')==='gemini',a=dmode()==='after';const k=$('#keyRow'),m=$('#modeRow');if(k)k.hidden=!(g||a);if(m)m.hidden=g;for(const x of $$('#segMode button'))x.classList.toggle('on',x.dataset.m===dmode());}
+function voiceUi(){const g=LS.get('nm-dengine')==='gemini',a=dmode()==='after';const k=$('#keyRow'),m=$('#modeRow'),ir=$('#intRow'),br=$('#boostRow');if(k)k.hidden=!(g||a);if(m)m.hidden=g;if(ir)ir.hidden=!g;if(br)br.hidden=!g&&a;   /* 간격은 고감도만, 증폭은 실시간 받아적기(기본)·고감도에서만 */for(const x of $$('#segMode button'))x.classList.toggle('on',x.dataset.m===dmode());}
 const dwEngine=()=>LS.get('nm-dengine')==='gemini'&&!!dwKey();
 function dwFilters(ctx){   /* 저음 웅웅거림(잔향)을 줄이고 말소리 대역(약 2.5kHz)을 살짝 키움 */
   const hp=ctx.createBiquadFilter();hp.type='highpass';hp.frequency.value=160;
