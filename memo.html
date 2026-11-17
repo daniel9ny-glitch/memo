@@ -686,6 +686,11 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 /* v1.91 세로 간격 10px 통일 */
 .tabs{margin-top:0}
 .composer{margin-bottom:10px}
+/* v1.94 목록형 폭 고정 */
+.plist,.swr.rw{display:block;padding:0;min-height:0;gap:0;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+.swr.rw+.swr.rw{border-top:0}
+.swr.rw>.prow{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+.prow .pbd{overflow:hidden}
 </style>
 </head>
 <body>
@@ -884,7 +889,7 @@ dialog#dlgStat[open]{display:flex;flex-direction:column}
 
 <script>
 (()=>{'use strict';
-const VER='1.93';
+const VER='1.94';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
