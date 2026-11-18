@@ -771,6 +771,7 @@ dialog#ed{position:fixed;inset:0 var(--dk-r,0px) var(--dk-b,0px) var(--dk-l,0px)
 .ailog .hello{margin:auto;text-align:center;padding:12px}.ailog .hello b{display:block;font-size:16px;margin-bottom:6px}.ailog .hello small{opacity:.65;line-height:1.5;display:block}
 .ainl{border:1px solid var(--accent,#3b6cf0);color:var(--accent,#3b6cf0);background:none;border-radius:12px;padding:0 8px;font-size:13px;cursor:pointer;margin:0 1px}
 .aibar{flex:none;border-top:1px solid var(--line2,rgba(128,128,128,.25));padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+.ailog .gd{padding:6px 2px 10px;text-align:left}.gd .t{display:block;font-size:16px;margin-bottom:3px}.gd .s{display:block;opacity:.65;line-height:1.5}.gd .g{margin-top:12px}.gd .g>span{display:block;font-size:12.5px;opacity:.7;margin-bottom:6px}.gd .row2{display:flex;flex-wrap:wrap;gap:6px}.gd .rec{margin-top:14px;font-size:13px;line-height:1.5;padding:8px 10px;border-radius:10px;background:var(--hover)}.gd .ft{display:block;margin-top:10px;opacity:.55;line-height:1.5}.gd .nk{margin-bottom:10px;padding:8px 10px;border-radius:10px;font-size:13px;line-height:1.5;background:color-mix(in srgb,var(--danger) 18%,transparent)}
 .aichips{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}.aichips::-webkit-scrollbar{display:none}
 .aichip{flex:none;border:1px solid var(--line);background:none;color:inherit;border-radius:16px;padding:6px 12px;font-size:13px;cursor:pointer}
 .aiq{display:flex;gap:8px;align-items:flex-end}
@@ -3476,9 +3477,35 @@ function aiChips(){
 }
 function aiLoad(){if(AI.loaded)return;AI.loaded=true;try{const a=JSON.parse(LS.get(AIK.hist)||'[]');AI.h=Array.isArray(a)?a.filter(m=>m&&(m.r==='u'||m.r==='a')&&typeof m.t==='string'):[];}catch(e){AI.h=[];}}
 function aiSave(){try{LS.set(AIK.hist,JSON.stringify(AI.h.filter(m=>!m.err).slice(-40)));}catch(e){}}
+function aiGuide(){
+  const ed=!!(ED.id&&noteById(ED.id));
+  const G=ed?[
+    ['📝 지금 열린 메모',[['이 메모 요약','지금 열려 있는 메모를 요약해 주세요.',1],['먼저 할 일 정하기','지금 메모에서 먼저 처리할 일을 순서대로 정리해 주세요.',1],['문장 다듬기 (저장 안 함)','지금 메모의 문장을 읽기 좋게 다듬은 안을 보여 주세요(저장은 하지 마세요).',1]]],
+    ['✍️ 바로 반영 (확인 후 실행)',[['이 메모에 항목 추가','지금 메모에 항목을 추가해 줘: ',0],['완료한 항목 체크','지금 메모에서 완료한 항목을 체크해 줘: ',0]]],
+    ['🔍 다른 메모 연결',[['관련 메모 찾기','지금 메모와 관련된 다른 메모가 있는지 찾아 주세요.',1]]]
+  ]:[
+    ['🔍 찾기·보기',[['최근 수정한 메모','최근에 수정한 메모 5개를 알려 주세요.',1],['고정한 메모','고정된 메모를 보여 주세요.',1],['내용으로 찾기','메모에서 찾아 줘: ',0]]],
+    ['📅 일정 점검',[['이번 주 일정','앞으로 7일 안에 일정을 날짜순으로 정리해 주세요.',1],['이번 달 일정','앞으로 30일 안에 일정을 날짜순으로 정리해 주세요.',1]]],
+    ['✅ 할 일 정리',[['미완료 항목 점검','고정된 체크리스트의 미완료 항목을 점검해서 먼저 할 일을 추천해 주세요.',1]]],
+    ['✍️ 만들기·체크 (확인 후 실행)',[['체크리스트 만들기','새 체크리스트 메모를 만들어 줘: ',0],['항목 추가','메모에 항목을 추가해 줘: ',0],['항목 체크','항목을 완료로 체크해 줘: ',0]]],
+    ['🧭 앱 조작',[['완료 기록 열기','완료 기록 탭을 열어 주세요.',1],['다크 테마로','테마를 다크로 바꿔 주세요.',1]]]
+  ];
+  const d=h('div','gd');
+  if(!dwKey()){const k=h('div','nk','Gemini API 키가 필요합니다. 오른쪽 위 ⋯ 메뉴 → “API 키 · 설정”에서 키를 넣어 주세요.');d.appendChild(k);}
+  d.appendChild(h('b','t','무엇을 도와드릴까요?'));
+  d.appendChild(h('small','s',ed?'열려 있는 메모를 기준으로 도와드려요. 아래를 눌러 보세요.':'메모를 찾고, 정리하고, 일정을 점검하고, 새 메모까지 만들 수 있어요. 아래를 눌러 보세요.'));
+  for(const g of G){const w=h('div','g');w.appendChild(h('span',null,g[0]));const r=h('div','row2');
+    for(const c of g[1]){const b=h('button','aichip',c[0]);b.type='button';b.addEventListener('click',()=>{if(c[2]){aiAsk(c[1]);return;}const i=$('#aiIn');if(i){i.value=c[1];i.focus();try{i.setSelectionRange(i.value.length,i.value.length);}catch(e){}}});r.appendChild(b);}
+    w.appendChild(r);d.appendChild(w);}
+  d.appendChild(h('div','rec',ed?'추천: 메모를 쓰다 막히면 ‘문장 다듬기’, 길어지면 ‘이 메모 요약’을 써 보세요.':'추천: 하루를 시작할 때 ‘이번 주 일정’ → ‘미완료 항목 점검’ 순서로 물어보세요.'));
+  d.appendChild(h('small','ft','삭제·덮어쓰기는 하지 못하고, 메모를 만들거나 바꿀 때는 항상 먼저 확인을 물어봅니다. 메모를 읽을 때만 내용이 Gemini로 전송됩니다.'));
+  return d;
+}
 function aiRender(){
   const box=$('#aiLog');if(!box)return;box.replaceChildren();
-  if(!AI.h.length&&!AI.busy){const d=h('div','hello');d.innerHTML='<b>무엇을 도와드릴까요?</b><small>메모 찾기·요약·일정 점검·할 일 정리, 새 메모 만들기와 항목 추가·체크까지 말로 시키세요. 메모를 읽을 때만 내용이 Gemini로 전송됩니다.</small>';box.appendChild(d);}
+  if(dwKey()&&AI.h.some(m=>m.nokey))AI.h=AI.h.filter(m=>!m.nokey);
+  const empty=!AI.h.length&&!AI.busy;
+  if(empty)box.appendChild(aiGuide());
   for(const m of AI.h){
     if(m.r==='u'){box.appendChild(h('div','u',m.t));continue;}
     const a=h('div','a'+(m.err?' err':''));a.innerHTML=aiFmt(m.t);
@@ -3487,14 +3514,15 @@ function aiRender(){
   }
   if(AI.ask){const k=h('div','aid-ask');const p=h('p',null,AI.ask.text);p.style.whiteSpace='pre-wrap';k.appendChild(p);const row=h('div','row');const no=h('button',null,'취소'),ok=h('button','ok',AI.ask.ok);no.type=ok.type='button';const fin=v=>{const r=AI.ask.res;AI.ask=null;aiRender();r(v);};no.addEventListener('click',()=>fin(false));ok.addEventListener('click',()=>fin(true));row.append(no,ok);k.appendChild(row);box.appendChild(k);}
   else if(AI.busy)box.appendChild(h('div','w',AI.st||'생각하는 중'));
-  box.scrollTop=box.scrollHeight;
+  box.scrollTop=empty?0:box.scrollHeight;
   const sb=$('#aiSend');if(sb){sb.classList.toggle('stop',AI.busy);sb.innerHTML=AI.busy?'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>':'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';sb.title=AI.busy?'멈추기':'보내기';}
 }
 function aiChipsUi(){const bx=$('#aiChips');if(!bx)return;bx.replaceChildren();for(const c of aiChips()){const b=h('button','aichip',c[0]);b.type='button';b.addEventListener('click',()=>aiAsk(c[1]));bx.appendChild(b);}
   const cx=$('#aiCtx');if(cx){const n=ED.id?noteById(ED.id):null;cx.textContent=n?'· '+titleOf(n).slice(0,16):'';}}
 async function aiAsk(q){
   q=(q||'').trim();if(!q||AI.busy)return;aiLoad();
-  if(!dwKey()){AI.h.push({r:'a',t:'Gemini API 키가 필요합니다. 오른쪽 위 ⋯ 메뉴 → “API 키 · 설정”에서 키를 넣어 주세요.',err:1});aiRender();return;}
+  if(!dwKey()){AI.h.push({r:'a',t:'Gemini API 키가 필요합니다. 오른쪽 위 ⋯ 메뉴 → “API 키 · 설정”에서 키를 넣어 주세요.',err:1,nokey:1});aiRender();return;}
+  AI.h=AI.h.filter(m=>!m.nokey);
   if(LS.get(AIK.ok)!=='1'){
     if(!await aiConfirm('AI 도우미를 쓸까요?','질문에 필요한 메모 내용이 Google Gemini로 전송됩니다(무료 등급은 구글이 서비스 개선에 사용할 수 있음). 9자리 이상 숫자(계좌·전화번호 등)는 가려서 보내고, 메모를 읽거나 바꿀 때마다 「사용한 기능」이 표시됩니다.','동의'))return;
     LS.set(AIK.ok,'1');
