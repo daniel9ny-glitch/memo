@@ -725,6 +725,33 @@ dialog.biov.s1{opacity:.2}dialog.biov.s2{opacity:1;transition:opacity 3s ease}
 .trpop .tro{padding:10px 8px;border-radius:10px;border:1px solid var(--line);font-size:14px;font-weight:600;color:var(--fg);background:transparent;text-align:center}
 .trpop .tro.tr0{width:100%}
 .trpop .tro.on{color:var(--accent);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--bg))}
+
+/* v2.13 AI 도우미 */
+#aiFab{position:fixed;left:0;top:0;z-index:60;width:48px;height:48px;border-radius:50%;border:0;background:var(--accent,#3b6cf0);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.28);touch-action:none;cursor:pointer;transition:opacity .5s,box-shadow .2s;padding:0}
+#aiFab[hidden]{display:none}#aiFab.idle{opacity:.28}#aiFab.drag{box-shadow:0 6px 18px rgba(0,0,0,.4);transition:none}
+#aiDock{border:0;padding:0;margin:0;background:var(--bg,#fff);color:var(--fg,#222);display:flex;flex-direction:column;overflow:hidden;position:fixed;inset:auto 0 var(--aikb,0px) 0;width:100%;max-width:none;height:min(72vh,640px);max-height:calc(100dvh - var(--aikb,0px) - 12px);border-radius:16px 16px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.25)}
+#aiDock:not([open]){display:none}#aiDock::backdrop{background:rgba(0,0,0,.28)}
+@media (min-width:700px){#aiDock{inset:0 0 0 auto;width:420px;height:100dvh;max-height:none;border-radius:0}}
+.aihd{display:flex;align-items:center;gap:4px;padding:10px 8px 8px 16px;border-bottom:1px solid var(--line2,rgba(128,128,128,.25));position:relative;flex:none}
+.aihd b{flex:1;font-size:16px}.aihd b small{font-weight:400;opacity:.6;font-size:12px;margin-left:6px}
+.aiib{border:0;background:none;color:inherit;font-size:20px;width:40px;height:40px;border-radius:50%;cursor:pointer}.aiib:active{background:rgba(128,128,128,.2)}
+.aimenu{position:absolute;right:8px;top:52px;background:var(--bg,#fff);border:1px solid var(--line);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:2;display:flex;flex-direction:column;min-width:190px;overflow:hidden}
+.aimenu[hidden]{display:none}.aimenu button{border:0;background:none;color:inherit;text-align:left;padding:12px 14px;font-size:14px;cursor:pointer}.aimenu button:active{background:rgba(128,128,128,.2)}
+.ailog{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.ailog .u{align-self:flex-end;max-width:86%;background:var(--accent,#3b6cf0);color:#fff;padding:8px 12px;border-radius:14px 14px 4px 14px;white-space:pre-wrap;word-break:break-word;font-size:14px}
+.ailog .a{align-self:flex-start;max-width:94%;background:rgba(128,128,128,.14);padding:8px 12px;border-radius:14px 14px 14px 4px;font-size:14px;line-height:1.55;word-break:break-word}
+.ailog .a.err{background:rgba(220,60,60,.14)}.ailog .a p{margin:0 0 4px}.ailog .a ul{margin:2px 0 4px;padding-left:18px}.ailog .a .sp{height:6px}
+.ailog .a .meta{margin-top:6px;font-size:11px;opacity:.65;display:flex;gap:10px;align-items:center}.ailog .a .meta button{border:0;background:none;color:inherit;text-decoration:underline;font-size:11px;padding:0;cursor:pointer}
+.ailog .w{align-self:flex-start;opacity:.7;font-size:13px;padding:4px 8px}
+.ailog .hello{margin:auto;text-align:center;padding:12px}.ailog .hello b{display:block;font-size:16px;margin-bottom:6px}.ailog .hello small{opacity:.65;line-height:1.5;display:block}
+.ainl{border:1px solid var(--accent,#3b6cf0);color:var(--accent,#3b6cf0);background:none;border-radius:12px;padding:0 8px;font-size:13px;cursor:pointer;margin:0 1px}
+.aibar{flex:none;border-top:1px solid var(--line2,rgba(128,128,128,.25));padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+.aichips{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}.aichips::-webkit-scrollbar{display:none}
+.aichip{flex:none;border:1px solid var(--line);background:none;color:inherit;border-radius:16px;padding:6px 12px;font-size:13px;cursor:pointer}
+.aiq{display:flex;gap:8px;align-items:flex-end}
+.aiq textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:18px;padding:9px 14px;font:inherit;font-size:15px;background:transparent;color:inherit;max-height:120px;min-height:40px;box-sizing:border-box}
+#aiSend{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:var(--accent,#3b6cf0);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}#aiSend.stop{background:#d04646}
+#edAi{display:inline-flex;align-items:center;justify-content:center}#edAi svg{width:22px;height:22px}
 </style>
 </head>
 <body>
@@ -834,6 +861,7 @@ dialog.biov.s1{opacity:.2}dialog.biov.s2{opacity:1;transition:opacity 3s ease}
       <div class="rw"><span class="rl">테마</span><div class="seg" id="segTheme"><button data-t="auto">시스템</button><button data-t="light">라이트</button><button data-t="dark">다크</button></div></div>
       <div class="rw" style="flex-direction:column;align-items:stretch;gap:10px"><span class="rl">테마 색</span><div class="pal-row" id="setPal" role="radiogroup" aria-label="테마 색"></div></div>
       <div class="rw"><span class="rl">카드 스타일<small>색 메모의 표현 방식</small></span><div class="seg" id="segCs"><button data-c="fill">채움</button><button data-c="tint">틴트</button><button data-c="bar">색 막대</button></div></div>
+      <div class="rw"><span class="rl">체크리스트 새 항목<small>항목 추가 버튼으로 만든 항목이 들어가는 자리</small></span><div class="seg" id="segAp"><button data-a="top">맨 위</button><button data-a="bottom">맨 아래</button></div></div>
       <div class="rw"><span class="rl">새 메모 만들기<small>빠른 메모 바 / 아래 + 버튼</small></span><div class="seg" id="segCp"><button data-c="top">상단 바</button><button data-c="bottom">+ 버튼</button></div></div>
     </div></div>
 
@@ -927,7 +955,7 @@ dialog.biov.s1{opacity:.2}dialog.biov.s2{opacity:1;transition:opacity 3s ease}
 
 <script>
 (()=>{'use strict';
-const VER='2.11';
+const VER='2.13';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const now=()=>Date.now();
@@ -1157,11 +1185,13 @@ const askChk=it=>ask(itTxt(it)||'(내용 없음)','완료로 체크할까요?','
 const askDel=it=>(it&&(it.t||'').trim())?ask(itTxt(it),'이 항목을 삭제할까요?','삭제',true):Promise.resolve(true);
 const noteDoneAt=n=>{if(n.type!=='list')return 0;const dn=doneOf(n);return dn.length&&!active(n).some(i=>(i.t||'').trim())?Math.max(...dn.map(i=>i.d)):0;};
 function renumber(n){n.items.filter(x=>!x.x).sort(byO).forEach((x,k)=>{x.o=(k+1)*1000;x.u=stamp(n);});}
-function addItem(n,text,ind,afterId){
+const addTop=()=>LS.get('nm-addpos')!=='bottom';   /* 체크리스트 새 항목: 기본은 맨 위(최신이 위) */
+function addItem(n,text,ind,afterId,top){
   const all=n.items.filter(x=>!x.x).sort(byO);let o;
   if(afterId){const a=all.find(x=>x.id===afterId),i=all.indexOf(a),nx=all[i+1];
     if(a&&nx&&nx.o-a.o<1e-6){renumber(n);return addItem(n,text,ind,afterId);}
     o=a?(nx?(a.o+nx.o)/2:a.o+1000):(all.length?all[all.length-1].o+1000:1000);}
+  else if(top&&all.length)o=all[0].o-1000;
   else o=all.length?all[all.length-1].o+1000:1000;
   const it={id:uid(),t:text||'',d:0,i:ind||0,o,u:0,c:now()};it.u=stamp(n);n.items.push(it);return it;
 }
@@ -1376,7 +1406,7 @@ const dwIv=()=>{const v=+LS.get('nm-dint');return (v===30||v===60||(v===15&&trLa
 const DW={on:false,id:null,ctx:null,stream:null,an:null,dest:null,q:[],busy:false,prev:'',min:9000,max:24000,sil:700,quiet:0.02,skip:0.012,pend:0,lvl:0,rec:null,iv:0};
 const dwKey=()=>(LS.get('nm-gkey')||'').trim();
 const dmode=()=>LS.get('nm-dmode')==='after'?'after':'live';
-function voiceUi(){const g=LS.get('nm-dengine')==='gemini',a=dmode()==='after';{const b15=$('#int15');if(b15)b15.hidden=!trLang();for(const x of $$('#segInt button'))x.classList.toggle('on',+x.dataset.i===dwIv());}trBtnUi();{const sel=$('#trSel');if(sel)sel.value=trLang();const tr=$('#trRow');if(tr)tr.hidden=!(g||a);const sv=$('#smV');if(sv)sv.textContent=g&&dwKey()?'고감도 (Gemini)'+(trLang()?' · '+trShort(trLang())+' 번역':''):'기본';{const vh=$('.vbox #vSt');if(vh&&!VC.on&&!DW.q.length&&!DW.busy)vh.textContent=vHint();}}{const vb=$('.vbox');if(vb){vb.classList.toggle('wm',!g&&!(typeof dwEngine==='function'&&dwEngine()));if(!VC.on){const e=vb.querySelector('#vSt');if(e)e.textContent=vHint();}for(const t of ['vtDic','vtRec']){const b=vb.querySelector('#'+t);if(b)b.setAttribute('aria-pressed',(t==='vtDic'?vtOn('nm-vtd',true):vtOn('nm-vtr',dwEngine()))?'true':'false');}}}const k=$('#keyRow'),m=$('#modeRow'),ir=$('#intRow'),br=$('#boostRow');if(k)k.hidden=!(g||a);if(m)m.hidden=g;if(ir)ir.hidden=!g;for(const x of $$('#segBi button'))x.classList.toggle('on',+x.dataset.v===biMin());if(br)br.hidden=!g&&a;{const lv=g?gLv():boostLv();for(const x of $$('#segBoost button')){x.classList.toggle('on',+x.dataset.b===lv);if(x.dataset.b==='0')x.hidden=g;}const bs=br&&br.querySelector('small');if(bs)bs.textContent=g?'고감도에서 작은 소리를 키웁니다. 기본은 크게(×6)이며, 소리가 찢어지면 보통(×3.5)으로 낮추세요':'기본 방식에서 작은 소리를 키웁니다. 기기에 따라 인식이 나빠질 수 있어 끔을 권합니다';}   /* 간격은 고감도만, 증폭은 실시간 받아적기(기본)·고감도에서만 */for(const x of $$('#segMode button'))x.classList.toggle('on',x.dataset.m===dmode());}
+function voiceUi(){const g=LS.get('nm-dengine')==='gemini',a=dmode()==='after';{const b15=$('#int15');if(b15)b15.hidden=!trLang();for(const x of $$('#segInt button'))x.classList.toggle('on',+x.dataset.i===dwIv());}trBtnUi();{const sel=$('#trSel');if(sel)sel.value=trLang();const tr=$('#trRow');if(tr)tr.hidden=!(g||a);const sv=$('#smV');if(sv)sv.textContent=g&&dwKey()?'고감도 (Gemini)'+(trLang()?' · '+trShort(trLang())+' 번역':''):'기본';{const vh=$('.vbox #vSt');if(vh&&!VC.on&&!DW.q.length&&!DW.busy)vh.textContent=vHint();}}{const vb=$('.vbox');if(vb){vb.classList.toggle('wm',!g&&!(typeof dwEngine==='function'&&dwEngine()));if(!VC.on){const e=vb.querySelector('#vSt');if(e)e.textContent=vHint();}for(const t of ['vtDic','vtRec']){const b=vb.querySelector('#'+t);if(b)b.setAttribute('aria-pressed',(t==='vtDic'?vtOn('nm-vtd',true):vtOn('nm-vtr',dwEngine()))?'true':'false');}}}const k=$('#keyRow'),m=$('#modeRow'),ir=$('#intRow'),br=$('#boostRow');if(k)k.hidden=false;if(m)m.hidden=g;if(ir)ir.hidden=!g;for(const x of $$('#segBi button'))x.classList.toggle('on',+x.dataset.v===biMin());if(br)br.hidden=!g&&a;{const lv=g?gLv():boostLv();for(const x of $$('#segBoost button')){x.classList.toggle('on',+x.dataset.b===lv);if(x.dataset.b==='0')x.hidden=g;}const bs=br&&br.querySelector('small');if(bs)bs.textContent=g?'고감도에서 작은 소리를 키웁니다. 기본은 크게(×6)이며, 소리가 찢어지면 보통(×3.5)으로 낮추세요':'기본 방식에서 작은 소리를 키웁니다. 기기에 따라 인식이 나빠질 수 있어 끔을 권합니다';}   /* 간격은 고감도만, 증폭은 실시간 받아적기(기본)·고감도에서만 */for(const x of $$('#segMode button'))x.classList.toggle('on',x.dataset.m===dmode());}
 const dwEngine=()=>LS.get('nm-dengine')==='gemini'&&!!dwKey();
 const TRL=[['en','영어'],['zh','중국어(간체)'],['ja','일본어'],['vi','베트남어'],['es','스페인어'],['fr','프랑스어'],['de','독일어'],['ru','러시아어'],['id','인도네시아어'],['th','태국어'],['tl','필리핀어'],['ar','아랍어'],['ko','한국어']];
 const trLang=()=>{const v=LS.get('nm-dtr');return TRL.some(x=>x[0]===v)?v:'';},trName=c=>(TRL.find(x=>x[0]===c)||[0,''])[1],trShort=c=>trName(c).replace(/\(.*\)/,'');
@@ -1448,13 +1478,13 @@ async function dwPump(){
 }
 /* Gemini 호출: 모델 이름이 없어지거나(404) 새 키에 열려 있지 않으면 다음 모델로 자동 전환하고, 되는 모델을 기억한다 */
 const GMODELS=['gemini-3.1-flash-lite','gemini-3.5-flash-lite','gemini-3.6-flash','gemini-3.8-flash','gemini-2.5-flash'];
-async function gGen(key,body){
+async function gGen(key,body,quiet){
   const saved=LS.get('nm-gmodel'),list=saved?[saved,...GMODELS.filter(m=>m!==saved)]:GMODELS;let res=null;
   for(const m of list){
-    DW.last=m.replace('gemini-','')+' 요청 중';dwStat();const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),45000);
+    if(!quiet){DW.last=m.replace('gemini-','')+' 요청 중';dwStat();}const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),quiet?60000:45000);
     try{res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent',{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});}
-    catch(e){clearTimeout(tm);DW.last=m.replace('gemini-','')+' '+(e&&e.name==='AbortError'?'45초 응답 없음':'연결 실패');throw e;}
-    clearTimeout(tm);DW.last=m.replace('gemini-','')+' 응답 '+res.status;
+    catch(e){clearTimeout(tm);if(!quiet)DW.last=m.replace('gemini-','')+' '+(e&&e.name==='AbortError'?'45초 응답 없음':'연결 실패');throw e;}
+    clearTimeout(tm);if(!quiet)DW.last=m.replace('gemini-','')+' 응답 '+res.status;
     if(res.status===404||res.status===429)continue;   /* 모델마다 한도가 따로라서 한도에 걸리면 다음 모델로 (저장은 하지 않음) */
     if(res.ok)LS.set('nm-gmodel',m);return res;}
   return res;
@@ -2218,7 +2248,7 @@ function openEd(id,fresh){
     $('#edFmtBar').hidden=LS.get('nm-fbar')==='0';$('#fbSize').value='15';$('#fbBlock').value='div';$('#fbFont').value='';fmtSync();
   }else{
     const a=h('div',null);a.id='actList';const add=h('button','add');add.type='button';const isCal=n.id===CAL_ID;add.innerHTML=ico('plus')+'<span>'+(isCal?'일정 추가':'항목 추가')+'</span>';
-    add.addEventListener('click',()=>{const m=cur();if(isCal){const t=new Date();t.setMinutes(0,0,0);t.setHours(t.getHours()+1);rtOpen(m,null,{ms:t.getTime(),allday:false,title:''});return;}const it=addItem(m,'',0);save();renderItems({id:it.id});});
+    add.addEventListener('click',()=>{const m=cur();if(isCal){const t=new Date();t.setMinutes(0,0,0);t.setHours(t.getHours()+1);rtOpen(m,null,{ms:t.getTime(),allday:false,title:''});return;}const it=addItem(m,'',0,null,addTop());save();renderItems({id:it.id});});
     const dw=h('div',null);dw.id='doneWrap';
     const bn=h('div','banner');bn.id='nBanner';bn.hidden=true;
     const cr=h('div','banner cdate');cr.id='tBanner';cr.textContent=tInfo(n);
@@ -3238,7 +3268,7 @@ function bindSet(){
   $('#calNow').addEventListener('click',()=>{if(!calOn())LS.set(CK.on,'1');calUi();calSync(true);});
   const syUi=()=>{const t=+LS.get(GK.time)||0;$('#stSync').textContent=gOn()?(gErr?'확인이 필요합니다':'켜짐 · 자동 동기화'+(t?' · 마지막 '+gAgo(t):'')):'꺼짐 · 구글 로그인으로 켭니다';};
   $('#setSync').addEventListener('click',()=>{d.close();$('#bSync').click();});
-  $('#bSet').addEventListener('click',()=>{for(const b of $$('#segCs button'))b.classList.toggle('on',b.dataset.c===(LS.get('nm-cst')||'fill'));for(const b of $$('#segCp button'))b.classList.toggle('on',b.dataset.c===(LS.get('nm-comp')||'top'));stUse();syUi();calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());palUi();$('#setKey').value=LS.get('nm-gkey')||'';for(const b of $$('#segEng button'))b.classList.toggle('on',b.dataset.e===(LS.get('nm-dengine')==='gemini'?'gemini':'web'));voiceUi();for(const b of $$('#segInt button'))b.classList.toggle('on',+b.dataset.i===dwIv());gMsg('');gUi();goP(window.__goto||'main');window.__goto=null;sums();d.showModal();});
+  $('#bSet').addEventListener('click',()=>{for(const b of $$('#segAp button'))b.classList.toggle('on',b.dataset.a===(addTop()?'top':'bottom'));for(const b of $$('#segCs button'))b.classList.toggle('on',b.dataset.c===(LS.get('nm-cst')||'fill'));for(const b of $$('#segCp button'))b.classList.toggle('on',b.dataset.c===(LS.get('nm-comp')||'top'));stUse();syUi();calUi();for(const b of $$('#segTheme button'))b.classList.toggle('on',b.dataset.t===themeMode());palUi();$('#setKey').value=LS.get('nm-gkey')||'';for(const b of $$('#segEng button'))b.classList.toggle('on',b.dataset.e===(LS.get('nm-dengine')==='gemini'?'gemini':'web'));voiceUi();for(const b of $$('#segInt button'))b.classList.toggle('on',+b.dataset.i===dwIv());gMsg('');gUi();goP(window.__goto||'main');window.__goto=null;sums();d.showModal();});
   /* 설정: 메인 목록 → 하위 화면 */
   const PT={main:'설정',google:'구글 연동',look:'화면',voice:'음성 받아쓰기',data:'데이터 · 백업'};
   const goP=k=>{for(const e of $$('#set .sp'))e.hidden=e.dataset.p!==k;$('#set .st').dataset.pg=k;$('#setTitle').textContent=PT[k];$('#setBack').hidden=k==='main';voiceUi();if(k==='data')stUse();if(k==='main')sums();d.scrollTop=0;};
@@ -3261,6 +3291,7 @@ function bindSet(){
   $('#setKey').addEventListener('change',e=>{LS.set('nm-gkey',e.target.value.trim());if(!e.target.value.trim()&&LS.get('nm-dengine')==='gemini'){LS.set('nm-dengine','web');for(const x of $$('#segEng button'))x.classList.toggle('on',x.dataset.e==='web');}voiceUi();});
   $('#setPal').addEventListener('click',e=>{const b=e.target.closest('button[data-p]');if(!b)return;LS.set('nm-tpal',b.dataset.p);applyTheme();});
   $('#segCs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-cst',b.dataset.c);applyLook();for(const x of $$('#segCs button'))x.classList.toggle('on',x===b);});
+  $('#segAp').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-addpos',b.dataset.a);for(const x of $$('#segAp button'))x.classList.toggle('on',x===b);});
   $('#segCp').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-comp',b.dataset.c);applyLook();for(const x of $$('#segCp button'))x.classList.toggle('on',x===b);});
   $('#segTheme').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;LS.set('nm-theme',b.dataset.t);applyTheme();for(const x of $$('#segTheme button'))x.classList.toggle('on',x===b);});
   const ds=$('#dlgSync');
@@ -3305,7 +3336,218 @@ function init(){
   setTimeout(dqRestore,2500);
   setTimeout(rtAll,800);setInterval(()=>{if(!document.hidden)rtAll();},3600000);
   if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{}));}
-  window.__nm={dwQPush,dqRestore,dwPump,splitDt,catOf,CATS,statAiClassify,gGen,statDiag,save,removeItem,uStep,UH,statData,exportAll,importAll,DW,dwEngine,TONE,parseKo,nextHits,S,BIN,addPhotos,mActive,vcStart,vcStop,renderMedia,blobSync,get notes(){return S.notes;},createNote,setDone,addItem,active,doneOf,mergeNote,ser,openEd,render,V,moveBlock,rtAll,rtAdvance,alWant,calAlertSync,calAlertSoon,rtOpen,calSync,calBuild,CK};
+/* ================= AI 도우미 (Gemini) — 늘성경과 같은 방식: 도구 호출로 앱의 메모를 읽고 정리·추가한다 ================= */
+const AIK={hist:'nm-ai-hist',fab:'nm-ai-fab',fade:'nm-ai-fade',ok:'nm-ai-ok'};
+const AI={open:false,busy:false,h:[],st:'',cancel:false,loaded:false};
+const AI_SPARK='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>';
+const aiMask=t=>String(t==null?'':t).replace(/\d(?:[\d\- ]*\d)?/g,m=>m.replace(/\D/g,'').length>=9?'[숫자 가림]':m);   /* 계좌·전화번호 등 9자리 이상 숫자는 보내지 않는다 */
+const aiPool=()=>S.notes.filter(n=>!n.trash);
+const aiTypeName=n=>n.type==='list'?'체크리스트':n.type==='voice'?'음성메모':n.type==='photo'?'사진메모':'텍스트';
+function aiNoteText(n,cap){
+  let s='';
+  if(n.type==='list'){const its=n.items.filter(x=>!x.x).sort(byO);for(const it of its){s+=(it.d?'[x] ':'[ ] ')+(it.i?'  ':'')+(it.t||'')+' {'+it.id+'}\n';}}
+  else s=n.text||'';
+  s=aiMask(s);return s.length>(cap||6000)?s.slice(0,cap||6000)+'\n…(이하 생략)':s;
+}
+function aiFind(ref){
+  ref=String(ref||'').trim();if(!ref)return {err:'메모를 지정해 주세요(id 또는 제목).'};
+  const pool=aiPool();let n=pool.find(x=>x.id===ref);if(n)return {n};
+  const ex=pool.filter(x=>titleOf(x)===ref);if(ex.length===1)return {n:ex[0]};
+  const lo=ref.toLowerCase(),part=(ex.length?ex:pool.filter(x=>titleOf(x).toLowerCase().includes(lo)));
+  if(part.length===1)return {n:part[0]};
+  if(!part.length)return {err:'해당하는 메모를 찾지 못했습니다: '+ref};
+  return {err:'같은 이름의 메모가 여러 개입니다. id로 지정해 주세요:\n'+part.slice(0,8).map(x=>'- '+x.id+' | '+aiMask(titleOf(x))+' ('+aiTypeName(x)+')').join('\n')};
+}
+const aiBrief=n=>'- id:'+n.id+' | '+aiMask(titleOf(n))+' | '+aiTypeName(n)+(n.pin?' | 고정':'')+(n.dn?' | 완료':'')+' | 수정 '+fdt(n.mod||n.cr);
+function aiParseMD(s,base){
+  const m=/(\d{1,2})\/(\d{1,2})/.exec(s);if(!m)return null;const mo=+m[1]-1,d=+m[2];let y=base.getFullYear();
+  let dt=new Date(y,mo,d);if(dt-base<-150*864e5)dt=new Date(y+1,mo,d);return dt;
+}
+const AI_TOOLS=[{functionDeclarations:[
+ {name:'search_notes',description:'메모 전체에서 낱말이 들어간 메모를 찾습니다(제목·본문·체크리스트 항목, 휴지통 제외). 띄어쓰기로 구분한 낱말이 모두 들어간 메모만 나옵니다.',parameters:{type:'OBJECT',properties:{query:{type:'STRING',description:'찾을 낱말'},limit:{type:'INTEGER',description:'최대 개수(기본 10, 최대 25)'}},required:['query']}},
+ {name:'list_notes',description:'메모 목록을 봅니다.',parameters:{type:'OBJECT',properties:{filter:{type:'STRING',enum:['recent','pinned','checklist','text','voice','done'],description:'recent 최근 수정순, pinned 고정된 메모, checklist 체크리스트, text 텍스트 메모, voice 음성메모, done 완료 처리한 메모'},limit:{type:'INTEGER',description:'최대 개수(기본 15, 최대 40)'}},required:['filter']}},
+ {name:'get_note',description:'메모 하나의 내용을 읽습니다. 체크리스트는 항목마다 [ ] 미완료 / [x] 완료와 {항목id}가 붙습니다.',parameters:{type:'OBJECT',properties:{note:{type:'STRING',description:'메모 id 또는 제목'}},required:['note']}},
+ {name:'get_schedule',description:'날짜가 적힌 항목(다가오는 일정·루틴·구글 일정 포함)을 오늘부터 N일 안에서 날짜순으로 모아 줍니다. 완료하지 않은 항목만 나옵니다.',parameters:{type:'OBJECT',properties:{days:{type:'INTEGER',description:'오늘부터 며칠(기본 7, 최대 60)'}}}},
+ {name:'add_item',description:'체크리스트 메모에 항목을 추가합니다. 사용자가 요청했을 때만 사용(추가 전에 사용자 확인을 받습니다).',parameters:{type:'OBJECT',properties:{note:{type:'STRING',description:'메모 id 또는 제목'},text:{type:'STRING',description:'항목 내용'}},required:['note','text']}},
+ {name:'create_note',description:'새 메모를 만듭니다. 사용자가 요청했을 때만 사용(만들기 전에 사용자 확인을 받습니다).',parameters:{type:'OBJECT',properties:{type:{type:'STRING',enum:['text','list']},title:{type:'STRING'},text:{type:'STRING',description:'type이 text일 때 본문'},items:{type:'ARRAY',items:{type:'STRING'},description:'type이 list일 때 항목들'}},required:['type','title']}},
+ {name:'set_item_done',description:'체크리스트 항목을 완료로 체크하거나 되돌립니다. 루틴·구글 일정 항목은 안 됩니다. 사용자가 요청했을 때만 사용(확인을 받습니다).',parameters:{type:'OBJECT',properties:{note:{type:'STRING',description:'메모 id 또는 제목'},item_id:{type:'STRING',description:'get_note에서 본 {항목id}'},done:{type:'BOOLEAN'}},required:['note','item_id','done']}},
+ {name:'open_note',description:'앱 화면에서 메모를 엽니다(사용자가 "열어줘/보여줘"라고 할 때).',parameters:{type:'OBJECT',properties:{note:{type:'STRING',description:'메모 id 또는 제목'}},required:['note']}},
+ {name:'show_view',description:'앱의 탭을 바꿉니다.',parameters:{type:'OBJECT',properties:{view:{type:'STRING',enum:['memo','done','trash'],description:'memo 메모, done 완료 기록, trash 휴지통'}},required:['view']}},
+ {name:'set_theme',description:'앱 테마를 바꿉니다.',parameters:{type:'OBJECT',properties:{theme:{type:'STRING',enum:['auto','light','dark']}},required:['theme']}}
+]}];
+const AI_SYS='당신은 "늘메모" 앱(목사님이 쓰는 체크리스트·텍스트·음성 메모 앱) 안에 들어 있는 AI 도우미입니다. 한국어로 답하고, 메모 정리·일정 점검·할 일 우선순위·글 다듬기를 돕습니다.\n규칙:\n'+
+ '- 메모 내용에 대한 질문은 반드시 도구(search_notes, get_note, list_notes, get_schedule)로 확인한 뒤 답하세요. 기억이나 추측으로 메모 내용을 말하지 마세요. 도구에서 확인하지 못한 것은 "확인 불가"라고 말하세요.\n'+
+ '- 서로 다른 사람·메모의 정보를 섞어 답하지 마세요.\n'+
+ '- 메모를 언급할 때는 ⟦메모id|메모제목⟧ 형식으로 쓰세요(앱에서 눌러 열 수 있게 됩니다).\n'+
+ '- 메모를 만들거나 항목을 추가·체크하는 일은 사용자가 분명히 요청했을 때만 하세요(실행 전에 사용자 확인을 받습니다). 삭제·휴지통 이동·덮어쓰기는 할 수 없다고 솔직히 말하세요.\n'+
+ '- 계좌·전화번호 같은 긴 숫자는 보안 때문에 [숫자 가림]으로 보입니다. 그 값을 추측하지 말고 앱에서 직접 확인하라고 안내하세요.\n'+
+ '- 불필요한 인사말은 생략하고 간결하게, 목록은 "- "로 쓰세요.';
+function aiCtx(){
+  const o=['[현재 시각] '+new Date().toLocaleString('ko-KR',{dateStyle:'full',timeStyle:'short'})];
+  const n=ED.id?noteById(ED.id):null;
+  if(n){o.push('[지금 화면] 메모 편집 중 — id:'+n.id+' | 제목: '+aiMask(titleOf(n))+' ('+aiTypeName(n)+')');o.push('[편집 중인 메모 내용]\n'+aiNoteText(n,2500));}
+  else{const p=aiPool().filter(x=>!x.dn);o.push('[지금 화면] '+({memo:'메모 목록',done:'완료 기록',trash:'휴지통'}[V.view]||V.view)+' (메모 '+p.length+'개)');}
+  return o.join('\n');
+}
+async function aiRun(name,a){
+  a=a||{};
+  if(name==='search_notes'){
+    const q=String(a.query||'').trim().toLowerCase();if(!q)return '찾을 낱말이 비어 있습니다.';const toks=q.split(/\s+/),lim=Math.max(1,Math.min(25,+a.limit||10));
+    const hits=[];for(const n of aiPool()){const its=n.type==='list'?n.items.filter(x=>!x.x).map(x=>x.t||''):[];const body=(titleOf(n)+'\n'+(n.text||'')+'\n'+its.join('\n')).toLowerCase();
+      if(!toks.every(t=>body.includes(t)))continue;
+      let sn='';const m=its.find(t=>toks.every(k=>t.toLowerCase().includes(k)))||its.find(t=>t.toLowerCase().includes(toks[0]));
+      if(m)sn=m;else{const tx=n.text||'',i=tx.toLowerCase().indexOf(toks[0]);if(i>=0)sn=tx.slice(Math.max(0,i-30),i+60).replace(/\n/g,' ');}
+      hits.push(aiBrief(n)+(sn?'\n    └ '+aiMask(sn).slice(0,100):''));if(hits.length>=lim)break;}
+    return hits.length?hits.join('\n'):'일치하는 메모가 없습니다.';
+  }
+  if(name==='list_notes'){
+    const f=a.filter,lim=Math.max(1,Math.min(40,+a.limit||15));let ns=S.notes.filter(n=>!n.trash);
+    if(f==='done')ns=ns.filter(n=>n.dn);else ns=ns.filter(n=>!n.dn);
+    if(f==='pinned')ns=ns.filter(n=>n.pin);else if(f==='checklist')ns=ns.filter(n=>n.type==='list');else if(f==='text')ns=ns.filter(n=>n.type==='text');else if(f==='voice')ns=ns.filter(n=>n.type==='voice');
+    ns.sort((x,y)=>(y.mod||y.cr||0)-(x.mod||x.cr||0));return ns.length?ns.slice(0,lim).map(aiBrief).join('\n'):'해당하는 메모가 없습니다.';
+  }
+  if(name==='get_note'){const r=aiFind(a.note);if(r.err)return r.err;const n=r.n;return '제목: '+aiMask(titleOf(n))+'\n종류: '+aiTypeName(n)+(n.pin?' (고정)':'')+(n.dn?' (완료 처리됨)':'')+'\n수정: '+fdt(n.mod||n.cr)+'\n내용:\n'+aiNoteText(n);}
+  if(name==='get_schedule'){
+    const days=Math.max(1,Math.min(60,+a.days||7)),base=new Date();base.setHours(0,0,0,0);const end=new Date(+base+days*864e5);const out=[];
+    for(const n of aiPool()){if(n.dn||n.type!=='list')continue;for(const it of n.items){if(it.x||it.d)continue;const sp=splitDt(it.t);if(!sp)continue;
+      const ds=sp.d.match(/\d{1,2}\/\d{1,2}/g)||[],s=ds[0]?aiParseMD(ds[0],base):null,e=ds[1]?aiParseMD(ds[1],base):s;if(!s||!e)continue;if(e<base||s>=end)continue;
+      out.push({k:+s,l:sp.d+' '+aiMask(sp.t)+'  — 「'+aiMask(titleOf(n))+'」 id:'+n.id});}}
+    out.sort((x,y)=>x.k-y.k);return out.length?out.slice(0,60).map(x=>x.l).join('\n'):'해당 기간에 날짜가 적힌 항목이 없습니다.';
+  }
+  if(name==='add_item'){
+    const r=aiFind(a.note);if(r.err)return r.err;const n=r.n;if(n.type!=='list')return '체크리스트 메모가 아니라서 항목을 추가할 수 없습니다.';const t=String(a.text||'').trim();if(!t)return '항목 내용이 비어 있습니다.';
+    if(!await ask('「'+titleOf(n)+'」에 항목 추가','“'+t.slice(0,80)+'”','추가'))return '사용자가 취소했습니다.';
+    addItem(n,t,0,null,addTop());stamp(n);save();render();if(ED.id===n.id)renderItems();return '추가했습니다.';
+  }
+  if(name==='create_note'){
+    const type=a.type==='list'?'list':'text',title=String(a.title||'').trim();const items=type==='list'?(Array.isArray(a.items)?a.items.map(x=>String(x||'').trim()).filter(Boolean).slice(0,60):[]):[];const tx=type==='text'?String(a.text||''):'';
+    if(!await ask('새 '+(type==='list'?'체크리스트':'텍스트')+' 메모 만들기','제목: '+(title||'(없음)')+(type==='list'?'\n항목 '+items.length+'개':'\n'+tx.slice(0,100)),'만들기'))return '사용자가 취소했습니다.';
+    const n=newNote(type);n.title=title;if(type==='list'){for(const t of items)addItem(n,t,0);if(!n.items.length)addItem(n,'',0);}else{n.text=tx;n.rich=tx?tx.split('\n').map(l=>'<div>'+l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>').join(''):'';}
+    S.notes.push(n);save();render();return '만들었습니다. id:'+n.id;
+  }
+  if(name==='set_item_done'){
+    const r=aiFind(a.note);if(r.err)return r.err;const n=r.n,it=n.items.find(x=>x.id===a.item_id&&!x.x);if(!it)return '그 항목을 찾지 못했습니다.';if(it.rt||it.g)return '루틴·구글 일정 항목은 앱에서 직접 체크해 주세요.';
+    const dn=!!a.done;if(!!it.d===dn)return dn?'이미 완료된 항목입니다.':'이미 미완료 항목입니다.';
+    if(!await ask(itTxt(it)||'(내용 없음)',dn?'완료로 체크할까요?':'완료를 취소할까요?',dn?'체크':'되돌리기'))return '사용자가 취소했습니다.';
+    setDone(n,it,dn);stamp(n);save();render();if(ED.id===n.id)renderItems();return dn?'완료로 체크했습니다.':'되돌렸습니다.';
+  }
+  if(name==='open_note'){const r=aiFind(a.note);if(r.err)return r.err;aiToggle(false);openEd(r.n.id);return '열었습니다.';}
+  if(name==='show_view'){const v=['memo','done','trash'].includes(a.view)?a.view:'memo';aiToggle(false);if(ED.id&&typeof closeEd==='function')closeEd();V.view=v;render();return '이동했습니다.';}
+  if(name==='set_theme'){const t=['auto','light','dark'].includes(a.theme)?a.theme:'auto';LS.set('nm-theme',t);applyTheme();return '테마를 바꿨습니다.';}
+  return '알 수 없는 도구입니다.';
+}
+/* ---- 화면: 서식·대화 ---- */
+function aiFmt(t){
+  const esc=x=>x.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const inl=x=>x.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/⟦([^|⟧]+)\|([^⟧]*)⟧/g,(m,id,tt)=>'<button type="button" class="ainl" data-id="'+id.replace(/"/g,'')+'">'+(tt||'메모')+'</button>');
+  let h='',ul=false;
+  for(let L of esc(String(t||'')).split('\n')){L=L.replace(/^\s*#{1,4}\s*/,'');const m=/^\s*(?:[-*•]|\d+[.)])\s+(.*)$/.exec(L);
+    if(m){if(!ul){h+='<ul>';ul=true;}h+='<li>'+inl(m[1])+'</li>';}else{if(ul){h+='</ul>';ul=false;}h+=L.trim()?'<p>'+inl(L)+'</p>':'<div class="sp"></div>';}}
+  return h+(ul?'</ul>':'');
+}
+function aiChips(){
+  if(ED.id)return [['이 메모 요약','지금 열려 있는 메모를 요약해 주세요.'],['할 일 우선순위','지금 메모에서 먼저 처리할 일을 순서대로 정리해 주세요.'],['문장 다듬기','지금 메모의 문장을 읽기 좋게 다듬은 안을 보여 주세요(저장은 하지 마세요).']];
+  return [['다가오는 일정','앞으로 7일 안에 일정을 날짜순으로 정리해 주세요.'],['미완료 할 일 점검','고정된 체크리스트의 미완료 항목을 점검해서 먼저 할 일을 추천해 주세요.'],['메모 찾기','최근에 수정한 메모 5개를 알려 주세요.'],['뭘 할 수 있어?','이 AI 도우미로 늘메모에서 어떤 일들을 할 수 있는지 알려 주세요.']];
+}
+function aiLoad(){if(AI.loaded)return;AI.loaded=true;try{const a=JSON.parse(LS.get(AIK.hist)||'[]');AI.h=Array.isArray(a)?a.filter(m=>m&&(m.r==='u'||m.r==='a')&&typeof m.t==='string'):[];}catch(e){AI.h=[];}}
+function aiSave(){try{LS.set(AIK.hist,JSON.stringify(AI.h.filter(m=>!m.err).slice(-40)));}catch(e){}}
+function aiRender(){
+  const box=$('#aiLog');if(!box)return;box.replaceChildren();
+  if(!AI.h.length&&!AI.busy){const d=h('div','hello');d.innerHTML='<b>무엇을 도와드릴까요?</b><small>메모 찾기·요약·일정 점검·할 일 정리, 새 메모 만들기와 항목 추가·체크까지 말로 시키세요. 메모를 읽을 때만 내용이 Gemini로 전송됩니다.</small>';box.appendChild(d);}
+  for(const m of AI.h){
+    if(m.r==='u'){box.appendChild(h('div','u',m.t));continue;}
+    const a=h('div','a'+(m.err?' err':''));a.innerHTML=aiFmt(m.t);
+    if(!m.err){const mt=h('div','meta');if(m.m)mt.append(m.m);const cp=h('button',null,'복사');cp.type='button';cp.addEventListener('click',()=>{try{navigator.clipboard.writeText(m.t).then(()=>{cp.textContent='복사됨';setTimeout(()=>cp.textContent='복사',1200);});}catch(e){}});mt.appendChild(cp);a.appendChild(mt);}
+    box.appendChild(a);
+  }
+  if(AI.busy)box.appendChild(h('div','w',AI.st||'생각하는 중'));
+  box.scrollTop=box.scrollHeight;
+  const sb=$('#aiSend');if(sb){sb.classList.toggle('stop',AI.busy);sb.innerHTML=AI.busy?'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>':'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';sb.title=AI.busy?'멈추기':'보내기';}
+}
+function aiChipsUi(){const bx=$('#aiChips');if(!bx)return;bx.replaceChildren();for(const c of aiChips()){const b=h('button','aichip',c[0]);b.type='button';b.addEventListener('click',()=>aiAsk(c[1]));bx.appendChild(b);}
+  const cx=$('#aiCtx');if(cx){const n=ED.id?noteById(ED.id):null;cx.textContent=n?'· '+titleOf(n).slice(0,16):'';}}
+async function aiAsk(q){
+  q=(q||'').trim();if(!q||AI.busy)return;aiLoad();
+  if(!dwKey()){AI.h.push({r:'a',t:'Gemini API 키가 필요합니다. 오른쪽 위 ⋯ 메뉴 → “API 키 · 설정”에서 키를 넣어 주세요.',err:1});aiRender();return;}
+  if(LS.get(AIK.ok)!=='1'){
+    if(!await ask('AI 도우미를 쓸까요?','질문에 필요한 메모 내용이 Google Gemini로 전송됩니다(무료 등급은 구글이 서비스 개선에 사용할 수 있음). 9자리 이상 숫자(계좌·전화번호 등)는 가려서 보내고, 메모를 읽거나 바꿀 때마다 「사용한 기능」이 표시됩니다.','동의'))return;
+    LS.set(AIK.ok,'1');
+  }
+  const turns=[];for(const m of AI.h.filter(m=>!m.err).slice(-12)){const role=m.r==='u'?'user':'model',t=m.t.slice(0,3000),l=turns[turns.length-1];if(l&&l.role===role)l.parts[0].text+='\n'+t;else turns.push({role,parts:[{text:t}]});}
+  while(turns.length&&turns[0].role!=='user')turns.shift();
+  AI.h.push({r:'u',t:q});AI.busy=true;AI.cancel=false;AI.st='생각하는 중';aiRender();const log=[];
+  try{
+    const contents=[...turns,{role:'user',parts:[{text:aiCtx()+'\n\n[질문]\n'+q}]}];let text='';
+    for(let r=0;r<8;r++){
+      const body={systemInstruction:{parts:[{text:AI_SYS}]},contents,generationConfig:{temperature:.4}};if(r<7)body.tools=AI_TOOLS;
+      const res=await gGen(dwKey(),body,true);if(AI.cancel)throw new Error('cancel');
+      if(!res||!res.ok){const c=res?res.status:0;AI.h.push({r:'a',t:c===429?'Gemini 무료 사용 한도를 넘었습니다. 잠시 뒤 다시 하거나 질문을 짧게 해 보세요. 하루 한도라면 내일 다시 쓸 수 있습니다.':c===400?'요청을 처리하지 못했습니다. 질문을 나누어 다시 해 보세요.':(c===401||c===403)?'Gemini API 키가 올바르지 않거나 권한이 없습니다. ⋯ 메뉴 → “API 키 · 설정”에서 확인해 주세요.':'답을 받지 못했습니다('+(c||'연결 실패')+'). 인터넷을 확인하고 다시 시도해 주세요.',err:1});return;}
+      const j=await res.json(),parts=((((j.candidates||[])[0]||{}).content||{}).parts)||[],calls=parts.filter(x=>x.functionCall);
+      if(!calls.length){text=parts.map(x=>x.text||'').join('').trim();break;}
+      contents.push({role:'model',parts});const back=[];
+      for(const x of calls){const nm=x.functionCall.name,a=x.functionCall.args||{};
+        AI.st=({search_notes:'메모를 찾는 중',list_notes:'메모 목록을 보는 중',get_note:'메모를 읽는 중',get_schedule:'일정을 모으는 중'})[nm]||'앱에서 작업하는 중';aiRender();
+        let out;try{out=await aiRun(nm,a);}catch(e){out='도구 오류: '+(e&&e.message?e.message:e);}
+        if(AI.cancel)throw new Error('cancel');
+        log.push(({search_notes:'메모 검색',list_notes:'메모 목록',get_note:'메모 읽기',get_schedule:'일정 모으기',add_item:'항목 추가',create_note:'메모 만들기',set_item_done:'항목 체크',open_note:'메모 열기',show_view:'탭 이동',set_theme:'테마 변경'})[nm]||nm);
+        back.push({functionResponse:{name:nm,response:{result:out}}});}
+      contents.push({role:'user',parts:back});AI.st='생각하는 중';aiRender();
+    }
+    if(!text){AI.h.push({r:'a',t:'답을 만들지 못했습니다. 질문을 바꾸거나 더 구체적으로 다시 해 보세요.',err:1});return;}
+    AI.h.push({r:'a',t:text,m:log.length?'사용한 기능: '+Array.from(new Set(log)).join(' · '):''});aiSave();
+  }catch(e){
+    if(e&&e.message==='cancel')AI.h.push({r:'a',t:'멈췄습니다.',err:1});else{console.error('[AI]',e);AI.h.push({r:'a',t:'AI 응답을 받지 못했습니다. 인터넷을 확인하고 다시 시도해 주세요.',err:1});}
+  }finally{AI.busy=false;aiRender();}
+}
+function aiClear(){if(AI.busy||!AI.h.length)return;ask('대화를 모두 지울까요?','AI 도우미 대화 기록이 지워집니다.','지우기',true).then(ok=>{if(!ok)return;AI.h=[];aiSave();aiRender();});}
+function aiToggle(on){
+  const d=$('#aiDock');if(!d)return;AI.open=on==null?!AI.open:!!on;
+  if(AI.open){aiLoad();aiChipsUi();aiRender();try{if(!d.open)d.showModal();}catch(e){}$('#aiFab').hidden=true;}
+  else{try{if(d.open)d.close();}catch(e){}$('#aiFab').hidden=false;aiFabPlace();aiFabWake();}
+}
+/* ---- 플로팅 버튼: 끌어서 이동, 일정 시간 뒤 흐려짐 ---- */
+let aiFabT=0;const AIF=48;
+const aiFade=()=>{const v=LS.get(AIK.fade);return v==null?3000:Math.max(0,+v||0);};
+function aiFabPos(){let p=null;try{p=JSON.parse(LS.get(AIK.fab)||'null');}catch(e){}const W=innerWidth,H=innerHeight;let x=p&&typeof p.x==='number'?p.x*W:W-AIF-14,y=p&&typeof p.y==='number'?p.y*H:H*.6;return {x:Math.max(6,Math.min(W-AIF-6,x)),y:Math.max(6,Math.min(H-AIF-6,y))};}
+function aiFabPlace(){const f=$('#aiFab');if(!f||f.hidden)return;const p=aiFabPos();f.style.transform='translate('+p.x+'px,'+p.y+'px)';}
+function aiFabWake(){const f=$('#aiFab');if(!f)return;f.classList.remove('idle');clearTimeout(aiFabT);const ms=aiFade();if(ms>0&&!AI.open)aiFabT=setTimeout(()=>{if(!f.classList.contains('drag'))f.classList.add('idle');},ms);}
+function aiInit(){
+  if($('#aiFab'))return;
+  const f=h('button',null);f.id='aiFab';f.type='button';f.title='AI 도우미';f.setAttribute('aria-label','AI 도우미 열기');f.innerHTML=AI_SPARK;document.body.appendChild(f);
+  const d=document.createElement('dialog');d.id='aiDock';d.setAttribute('aria-label','AI 도우미');
+  d.innerHTML='<header class="aihd"><b>AI 도우미<small id="aiCtx"></small></b><button type="button" class="aiib" id="aiMore" aria-label="메뉴">⋯</button><button type="button" class="aiib" id="aiX" aria-label="닫기">✕</button><div class="aimenu" id="aiMenu" hidden><button type="button" data-m="key">API 키 · 설정</button><button type="button" data-m="clear">대화 지우기</button><button type="button" data-m="fade">버튼 흐려짐: <span id="aiFadeV"></span></button></div></header><div class="ailog" id="aiLog"></div><div class="aibar"><div class="aichips" id="aiChips"></div><div class="aiq"><textarea id="aiIn" rows="1" placeholder="무엇이든 물어보세요" enterkeyhint="send"></textarea><button type="button" id="aiSend" aria-label="보내기"></button></div></div>';
+  document.body.appendChild(d);
+  /* 끌기 */
+  let sx=0,sy=0,ox=0,oy=0,drag=false,pid=null,wasIdle=false;
+  f.addEventListener('pointerdown',e=>{if(e.button>0)return;pid=e.pointerId;try{f.setPointerCapture(pid);}catch(x){}wasIdle=f.classList.contains('idle');aiFabWake();const p=aiFabPos();ox=p.x;oy=p.y;sx=e.clientX;sy=e.clientY;drag=false;});
+  f.addEventListener('pointermove',e=>{if(pid==null||e.pointerId!==pid)return;const dx=e.clientX-sx,dy=e.clientY-sy;if(!drag&&Math.hypot(dx,dy)>7){drag=true;f.classList.add('drag');f.classList.remove('idle');clearTimeout(aiFabT);}
+    if(drag){const x=Math.max(4,Math.min(innerWidth-AIF-4,ox+dx)),y=Math.max(4,Math.min(innerHeight-AIF-4,oy+dy));f.style.transform='translate('+x+'px,'+y+'px)';f._x=x;f._y=y;e.preventDefault();}});
+  const end=e=>{if(pid==null||e.pointerId!==pid)return;try{f.releasePointerCapture(pid);}catch(x){}pid=null;f.classList.remove('drag');
+    if(drag){drag=false;LS.set(AIK.fab,JSON.stringify({x:(f._x||0)/innerWidth,y:(f._y||0)/innerHeight}));aiFabWake();return;}
+    if(e.type==='pointercancel')return;if(wasIdle){aiFabWake();return;}aiToggle(true);};
+  f.addEventListener('pointerup',end);f.addEventListener('pointercancel',end);f.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();aiToggle(true);}});
+  aiFabPlace();aiFabWake();window.addEventListener('resize',aiFabPlace);
+  /* 창 */
+  d.addEventListener('close',()=>{if(AI.open){AI.open=false;f.hidden=false;aiFabPlace();aiFabWake();}});
+  $('#aiX').addEventListener('click',()=>aiToggle(false));
+  $('#aiMore').addEventListener('click',e=>{e.stopPropagation();const m=$('#aiMenu');m.hidden=!m.hidden;$('#aiFadeV').textContent=({0:'안 함',2000:'2초',3000:'3초',5000:'5초',10000:'10초'})[aiFade()]||'3초';});
+  d.addEventListener('click',e=>{if(!e.target.closest('#aiMenu')&&!e.target.closest('#aiMore'))$('#aiMenu').hidden=true;});
+  $('#aiMenu').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const m=b.dataset.m;
+    if(m==='key'){$('#aiMenu').hidden=true;aiToggle(false);window.__goto='voice';$('#bSet').click();}
+    else if(m==='clear'){$('#aiMenu').hidden=true;aiClear();}
+    else if(m==='fade'){const o=[3000,5000,10000,0,2000],i=o.indexOf(aiFade());LS.set(AIK.fade,String(o[(i+1)%o.length]));$('#aiFadeV').textContent=({0:'안 함',2000:'2초',3000:'3초',5000:'5초',10000:'10초'})[aiFade()];}});
+  const inp=$('#aiIn'),send=()=>{const v=inp.value;if(AI.busy)return;inp.value='';inp.style.height='';aiAsk(v);};
+  $('#aiSend').addEventListener('click',()=>{if(AI.busy){AI.cancel=true;return;}send();});
+  inp.addEventListener('input',()=>{inp.style.height='auto';inp.style.height=Math.min(120,inp.scrollHeight)+'px';});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&!matchMedia('(pointer:coarse)').matches){e.preventDefault();send();}});
+  $('#aiLog').addEventListener('click',e=>{const b=e.target.closest('.ainl');if(!b)return;const n=noteById(b.dataset.id);if(!n){toast('메모를 찾지 못했습니다','err');return;}aiToggle(false);openEd(n.id);});
+  if(window.visualViewport){const vv=window.visualViewport,kb=()=>{const k=Math.max(0,innerHeight-vv.height-vv.offsetTop);document.documentElement.style.setProperty('--aikb',(k>80?k:0)+'px');};vv.addEventListener('resize',kb);vv.addEventListener('scroll',kb);}
+  /* 편집창 위쪽 버튼 */
+  const ep=$('#edPin');if(ep&&!$('#edAi')){const b=h('button','ib');b.id='edAi';b.type='button';b.title='AI 도우미';b.setAttribute('aria-label','AI 도우미');b.innerHTML=AI_SPARK;ep.parentNode.insertBefore(b,$('#edDone'));b.addEventListener('click',()=>aiToggle(true));}
+}
+
+  aiInit();
+  window.__nm={aiAsk,aiToggle,AI,aiRun,dwQPush,dqRestore,dwPump,splitDt,catOf,CATS,statAiClassify,gGen,statDiag,save,removeItem,uStep,UH,statData,exportAll,importAll,DW,dwEngine,TONE,parseKo,nextHits,S,BIN,addPhotos,mActive,vcStart,vcStop,renderMedia,blobSync,get notes(){return S.notes;},createNote,setDone,addItem,active,doneOf,mergeNote,ser,openEd,render,V,moveBlock,rtAll,rtAdvance,alWant,calAlertSync,calAlertSoon,rtOpen,calSync,calBuild,CK};
 }
 init();
 })();
